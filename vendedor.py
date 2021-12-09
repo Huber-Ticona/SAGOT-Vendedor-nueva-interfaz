@@ -208,9 +208,36 @@ class Vendedor(QMainWindow):
     def __init__(self):
         super( Vendedor,self).__init__()
         uic.loadUi('vendedor.ui',self)
-        self.iniciar_session()
+        self.datos_usuario = None
+        self.conexion = None
+        self.host = None
+        self.puerto = None
+
+        
+        #self.iniciar_session()
         self.inicializar()
+        self.mostrar_menu()
+        self.stackedWidget.setCurrentWidget(self.inicio)
+        
+        #buscar venta
+        self.btn_crear_1.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.crear_orden))
+        self.btn_atras_1.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
+        #crear orden
+        self.btn_registrar_2.clicked.connect(lambda: print('registrando...'))
+        self.btn_atras_2.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
+        #buscar orden
+        self.btn_modificar_4.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.modificar_orden))
+        self.btn_atras_4.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
+        #modificar orden
+        self.btn_guardar_5.clicked.connect(lambda: QMessageBox.about(self,'error','orden modiicada xd'))
+        self.btn_atras_5.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden))
+
+        #informes
+        #SIDE MENU BOTONES
         self.btn_buscar.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
+        self.btn_modificar.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden))
+        self.btn_orden_manual.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.manual))
+        self.btn_informe.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.informes))
         self.btn_menu.clicked.connect(self.mostrar_menu)
 
     def iniciar_session(self):
@@ -247,14 +274,15 @@ class Vendedor(QMainWindow):
         self.btn_menu.setIcon(QIcon(menu))
 
         self.lb_conexion.setText('CONECTADO')
-        if self.datos_usuario[4] == 'NO': #Si no es super usuario
-            self.btn_generar_clave.hide() #no puede generar claves
-            detalle = json.loads(self.datos_usuario[7])
-            funciones = detalle['vendedor']
-            if not 'manual' in funciones:
-                self.btn_orden_manual.hide() #no puede generar ordenes manuales
-            if not 'informes' in funciones:
-                self.btn_informe.hide() #no puede generar informes
+        if self.datos_usuario:  #Si existen los datos del usuario, x ende se inicio sesion correctamente...
+            if self.datos_usuario[4] == 'NO': #Si no es super usuario
+                self.btn_generar_clave.hide() #no puede generar claves
+                detalle = json.loads(self.datos_usuario[7])
+                funciones = detalle['vendedor']
+                if not 'manual' in funciones:
+                    self.btn_orden_manual.hide() #no puede generar ordenes manuales
+                if not 'informes' in funciones:
+                    self.btn_informe.hide() #no puede generar informes
         
 
         self.btn_atras.setIcon(QIcon('icono_imagen/atras.ico'))
@@ -264,15 +292,16 @@ class Vendedor(QMainWindow):
         
         if True:
             ancho = self.left_menu_container.width()
-            normal = 100
-            if ancho == 100:
-                extender = 200
+            normal = 70
+            if ancho == 70:
+                extender = 150
                 self.logo.show()
                 self.btn_buscar.setText('Notas de venta')
                 self.btn_modificar.setText('Ordenes de trabajo')
                 self.btn_orden_manual.setText('Ingreso manual')
                 self.btn_generar_clave.setText('Generar clave')
                 self.btn_informe.setText('Generar informe')
+                self.btn_atras.setText('Cerrar sesión')
             else:
                 self.logo.hide()
                 self.btn_buscar.setText('')
@@ -280,11 +309,13 @@ class Vendedor(QMainWindow):
                 self.btn_orden_manual.setText('')
                 self.btn_generar_clave.setText('')
                 self.btn_informe.setText('')
-                self.btn_buscar.setIcon(QIcon('icono_imagen/close.png'))
-                self.btn_modificar.setIcon(QIcon('icono_imagen/close.png'))
-                self.btn_orden_manual.setIcon(QIcon('icono_imagen/close.png'))
-                self.btn_generar_clave.setIcon(QIcon('icono_imagen/close.png'))
-                self.btn_informe.setIcon(QIcon('icono_imagen/close.png'))
+                self.btn_atras.setText('')
+                self.btn_atras.setIcon(QIcon('icono_imagen/logout.png'))
+                self.btn_buscar.setIcon(QIcon('icono_imagen/venta.png'))
+                self.btn_modificar.setIcon(QIcon('icono_imagen/orden.png'))
+                self.btn_orden_manual.setIcon(QIcon('icono_imagen/manual.png'))
+                self.btn_generar_clave.setIcon(QIcon('icono_imagen/key2.png'))
+                self.btn_informe.setIcon(QIcon('icono_imagen/informe.png'))
                 extender = normal
             
             self.animation = QPropertyAnimation(self.left_menu_container, b"maximumWidth" )
