@@ -90,7 +90,7 @@
         <widget class="QFrame" name="arriba">
          <property name="maximumSize">
           <size>
-           <width>200</width>
+           <width>150</width>
            <height>100</height>
           </size>
          </property>
@@ -447,7 +447,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="inicio">
              <widget class="QLabel" name="label_5">
@@ -558,7 +558,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                       </widget>
                      </item>
                      <item row="2" column="0">
-                      <widget class="QRadioButton" name="radioButton_8">
+                      <widget class="QRadioButton" name="radio3_1">
                        <property name="maximumSize">
                         <size>
                          <width>150</width>
@@ -571,7 +571,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                       </widget>
                      </item>
                      <item row="2" column="1">
-                      <widget class="QLineEdit" name="lineEdit_2">
+                      <widget class="QLineEdit" name="txt_cliente_1">
                        <property name="maximumSize">
                         <size>
                          <width>250</width>
@@ -581,7 +581,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                       </widget>
                      </item>
                      <item row="1" column="0">
-                      <widget class="QRadioButton" name="radioButton_7">
+                      <widget class="QRadioButton" name="radio2_1">
                        <property name="maximumSize">
                         <size>
                          <width>150</width>
@@ -604,7 +604,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                       </widget>
                      </item>
                      <item row="0" column="0">
-                      <widget class="QRadioButton" name="radioButton_6">
+                      <widget class="QRadioButton" name="radio1_1">
                        <property name="maximumSize">
                         <size>
                          <width>150</width>
@@ -704,59 +704,64 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <property name="bottomMargin">
                   <number>2</number>
                  </property>
-                 <item>
-                  <widget class="QTableWidget" name="tableWidget_1">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>50</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <property name="columnCount">
-                    <number>6</number>
-                   </property>
-                   <attribute name="horizontalHeaderHighlightSections">
-                    <bool>true</bool>
-                   </attribute>
-                   <column>
-                    <property name="text">
-                     <string>Nro Interno</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Documento</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>&lt;  Numero</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Fecha</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Vendedor</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Total</string>
-                    </property>
-                   </column>
-                  </widget>
-                 </item>
                 </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_1">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>50</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="columnCount">
+                 <number>7</number>
+                </property>
+                <attribute name="horizontalHeaderHighlightSections">
+                 <bool>true</bool>
+                </attribute>
+                <column>
+                 <property name="text">
+                  <string>Nro Interno</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Documento</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>&lt;  Numero</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Fecha</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Cliente</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Vendedor</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Total</string>
+                 </property>
+                </column>
                </widget>
               </item>
               <item alignment="Qt::AlignBottom">

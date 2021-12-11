@@ -4,6 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap , QIcon
 from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation
+from PyQt5.uic.uiparser import DEBUG
 from reportlab.lib.utils import isNonPrimitiveInstance
 import rpyc
 import socket
@@ -212,14 +213,19 @@ class Vendedor(QMainWindow):
         self.conexion = None
         self.host = None
         self.puerto = None
-
         
-        #self.iniciar_session()
+        self.vendedores = None
+        self.aux_tabla = None
+        self.bol_fact = None
+        self.guias = None
+        self.iniciar_session()
         self.inicializar()
         self.mostrar_menu()
         self.stackedWidget.setCurrentWidget(self.inicio)
         
         #buscar venta
+        self.btn_buscar_1.clicked.connect(self.buscar_documento)
+        self.comboBox_1.currentIndexChanged['QString'].connect(self.filtrar_vendedor)
         self.btn_crear_1.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.crear_orden))
         self.btn_atras_1.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
         #crear orden
@@ -234,10 +240,13 @@ class Vendedor(QMainWindow):
 
         #informes
         #SIDE MENU BOTONES
-        self.btn_buscar.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
+        self.btn_buscar.clicked.connect(self.inicializar_buscar_venta)
         self.btn_modificar.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden))
         self.btn_orden_manual.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.manual))
         self.btn_informe.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.informes))
+        self.btn_atras.clicked.connect(self.cerrar_sesion)
+        self.btn_conectar.clicked.connect(self.conectar)
+
         self.btn_menu.clicked.connect(self.mostrar_menu)
 
     def iniciar_session(self):
@@ -261,6 +270,13 @@ class Vendedor(QMainWindow):
 
     def inicializar(self):
         print('inicializando...')
+        self.btn_atras.setIcon(QIcon('icono_imagen/logout.png'))
+        self.btn_buscar.setIcon(QIcon('icono_imagen/venta.png'))
+        self.btn_modificar.setIcon(QIcon('icono_imagen/orden.png'))
+        self.btn_orden_manual.setIcon(QIcon('icono_imagen/manual.png'))
+        self.btn_generar_clave.setIcon(QIcon('icono_imagen/key2.png'))
+        self.btn_informe.setIcon(QIcon('icono_imagen/informe.png'))
+
         self.btn_generar_clave.show()
         self.btn_orden_manual.show()
         self.btn_informe.show()
@@ -272,9 +288,9 @@ class Vendedor(QMainWindow):
         self.logo.setPixmap(foto)
         menu = QPixmap(actual + '/icono_imagen/left_menu_v3.png')
         self.btn_menu.setIcon(QIcon(menu))
-
         self.lb_conexion.setText('CONECTADO')
         if self.datos_usuario:  #Si existen los datos del usuario, x ende se inicio sesion correctamente...
+            self.lb_vendedor.setText(self.datos_usuario[8])
             if self.datos_usuario[4] == 'NO': #Si no es super usuario
                 self.btn_generar_clave.hide() #no puede generar claves
                 detalle = json.loads(self.datos_usuario[7])
@@ -287,9 +303,322 @@ class Vendedor(QMainWindow):
 
         self.btn_atras.setIcon(QIcon('icono_imagen/atras.ico'))
     
+    def conectar(self):
+        if self.conexion == None:
+            try:
+                if self.host and self.puerto:
+                    self.conexion = rpyc.connect(self.host , self.puerto)
+                    self.lb_conexion.setText('CONECTADO')
+                else:
+                    self.lb_conexion.setText('Host y Puerto no encontrados')
 
-    def mostrar_menu(self):
+            except ConnectionRefusedError:
+                self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
+                
+            except socket.error:
+                self.lb_conexion.setText('SERVIDOR FUERA DE RED')
+    # ------------   FUNCIONES BUSCAR VENTA  -----------------
+    def inicializar_buscar_venta(self):
+        self.tableWidget_1.setRowCount(0)
+        self.radio2_1.setChecked(True)
+        self.dateEdit_1.setCalendarPopup(True)
+        self.dateEdit_1.setDate(datetime.now().date())
+        self.stackedWidget.setCurrentWidget(self.buscar_venta)
+
+    def buscar_documento(self):
+        largo = self.comboBox_1.count()
+        if largo > 1:
+            for i in range(largo):
+                #print("borranto: " + str(largo - 1) )
+                self.comboBox_1.removeItem(1)
+
+        if self.conexion:
+            no_encontrados = True
+            self.tableWidget_1.setRowCount(0)
+            if self.radio1_1.isChecked():  #BUSCANDO POR NUMERO INTERNO
+                inter = self.txt_interno_1.text()
+                try:
+                    inter = int(inter)
+                    consulta = self.conexion.root.buscar_venta_interno(inter)
+                    guia = self.conexion.root.obtener_guia_interno(inter)
+                    if consulta != None :
+                        no_encontrados = False
+                        print(consulta[1])
+                        fila = self.tableWidget_1.rowCount()
+                        self.tableWidget_1.insertRow(fila)
+
+                        self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[0]))) #INTERNO
+                        if consulta[3] == 0 : #es boleta
+                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'BOLETA' )) #TIPO DOCUMENTO
+                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str(consulta[4]) ))      #NRO DOCUMENTO
+                        elif consulta[4] == 0: #es factura
+                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'FACTURA' )) #TIPO DOCUMENTO
+                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[3])))      #NRO DOCUMENTO
+
+                        self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[1]  ))) #FECHA VENTA
+                        self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
+                        self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
+                        
+                        self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
+                    if guia != None:
+                        no_encontrados = False
+                        
+                        consulta = guia
+                        detalle = json.loads(consulta[2])
+
+                        fila = self.tableWidget_1.rowCount()
+                        self.tableWidget_1.insertRow(fila)
+
+                        self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #INTERNO
+                        
+                        self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'GUIA' )) #TIPO DOCUMENTO
+                        self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[0])))      #NRO DOCUMENTO
+
+                        self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[4]  ))) #FECHA VENTA
+                        self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[3]  )   ) )     #CLIENTE
+
+                        self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem( detalle['vendedor'] ))             #VENDEDOR
+                        self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
+
+                    if no_encontrados:
+                        QMessageBox.about(self,'Busqueda' ,'Documentos NO encontrados para la fecha indicada')
+                    
+                except ValueError:
+                    QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros')
+                except EOFError:
+                    self.conexion_perdida()
+
+            elif self.radio2_1.isChecked(): #BUSCANDO POR FECHA ACTUAL
+                lista_vendedores = []
+                aux_lista = []
+                date = self.dateEdit_1.date()
+                aux = date.toPyDate()
+                inicio = str(aux) + ' ' + '00:00:00'
+                fin = str(aux) + ' ' + '23:59:59'
+                try:
+                    bol_fact = self.conexion.root.buscar_venta_fecha(inicio,fin)
+                    guias = self.conexion.root.obtener_guia_fecha(inicio,fin)
+                    if bol_fact != ():
+                        no_encontrados = False
+                        self.bol_fact = bol_fact
+                        for consulta in bol_fact:
+                            fila = self.tableWidget_1.rowCount()
+                            self.tableWidget_1.insertRow(fila)
+                            self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[0]))) #INTERNO
+                            if consulta[3] == 0 : #es boleta
+                                self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'BOLETA' )) #TIPO DOCUMENTO
+                                self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str(consulta[4]) ))      #NRO DOCUMENTO
+                            elif consulta[4] == 0: #es factura
+                                self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'FACTURA' )) #TIPO DOCUMENTO
+                                self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[3])))      #NRO DOCUMENTO
+
+                            self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[1]  ))) #FECHA VENTA
+                            self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
+                            self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
+                            aux = consulta[2]
+                            aux = aux[0:10]
+                            #print(aux)
+                            
+                            if aux not in aux_lista:
+                                aux_lista.append(aux)
+                                lista_vendedores.append( consulta[2] )
+    
+                            self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
+                    
+                    if guias != ():
+                        self.guias = guias
+                        no_encontrados = False
+                        for consulta in guias:
+                            detalle = json.loads(consulta[2])
+
+                            fila = self.tableWidget_1.rowCount()
+                            self.tableWidget_1.insertRow(fila)
+
+                            self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #INTERNO
+                           
+                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'GUIA' )) #TIPO DOCUMENTO
+                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[0])))      #NRO DOCUMENTO
+
+                            self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[4]  ))) #FECHA VENTA
+                            
+                            self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[3]  )   ) )     #CLIENTE
+
+                            self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem( detalle['vendedor'] ))             #VENDEDOR
+                            aux = detalle['vendedor']
+                            aux = aux[0:10]
+                            #print(aux)
+                            
+                            if aux not in aux_lista:
+                                aux_lista.append(aux)
+                                lista_vendedores.append( detalle['vendedor'] )
+    
+                            self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
+                
+
+                    self.vendedores = lista_vendedores
+                    for item in self.vendedores:
+                        self.comboBox_1.addItem(item)
+
+                    if no_encontrados:
+                        QMessageBox.about(self,'Busqueda' ,'Documentos NO encontrados para la fecha indicada')
+
+                except EOFError:
+                    self.conexion_perdida()
+            elif self.radio3_1.isChecked(): #BUSCANDO POR NOMBRE
+                X = 0
+                lista_vendedores = []
+                aux_lista = []
+                nombre = self.txt_cliente_1.text()
+                try:
+                    bol_fact = self.conexion.root.obtener_venta_nombre(nombre)
+                    guias = self.conexion.root.obtener_guia_nombre(nombre)
+                    if bol_fact != ():
+                        no_encontrados = False
+                        self.bol_fact = bol_fact
+                        for consulta in bol_fact:
+                            fila = self.tableWidget_1.rowCount()
+                            self.tableWidget_1.insertRow(fila)
+                            self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[0]))) #INTERNO
+                            if consulta[3] == 0 : #es boleta
+                                self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'BOLETA' )) #TIPO DOCUMENTO
+                                self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str(consulta[4]) ))      #NRO DOCUMENTO
+                            elif consulta[4] == 0: #es factura
+                                self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'FACTURA' )) #TIPO DOCUMENTO
+                                self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[3])))      #NRO DOCUMENTO
+
+                            self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[1]  ))) #FECHA VENTA
+                            self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
+
+                            self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
+                            aux = consulta[2]
+                            aux = aux[0:10]
+                            #print(aux)
+                            
+                            if aux not in aux_lista:
+                                aux_lista.append(aux)
+                                lista_vendedores.append( consulta[2] )
+    
+                            self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
+                    
+                    if guias != ():
+                        self.guias = guias
+                        no_encontrados = False
+                        for consulta in guias:
+                            detalle = json.loads(consulta[2])
+
+                            fila = self.tableWidget_1.rowCount()
+                            self.tableWidget_1.insertRow(fila)
+
+                            self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #INTERNO
+                           
+                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'GUIA' )) #TIPO DOCUMENTO
+                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[0])))      #NRO DOCUMENTO
+
+                            self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[4]  ))) #FECHA VENTA
+                            
+                            self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[3] )   ))      #CLIENTE
+
+                            self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem( detalle['vendedor'] ))             #VENDEDOR
+                            aux = detalle['vendedor']
+                            aux = aux[0:10]
+                            #print(aux)
+                            
+                            if aux not in aux_lista:
+                                aux_lista.append(aux)
+                                lista_vendedores.append( detalle['vendedor'] )
+    
+                            self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
+                
+
+                    self.vendedores = lista_vendedores
+                    for item in self.vendedores:
+                        self.comboBox_1.addItem(item)
+
+                    if no_encontrados:
+                        QMessageBox.about(self,'Busqueda' ,'Documentos NO encontrados para la fecha indicada')
+
+                except EOFError:
+                    self.conexion_perdida()
+
+
+            self.aux_tabla = self.tableWidget_1
+        else:
+            self.conexion_perdida()
+
+    def rellenar_tabla(self):
+        self.tableWidget_1.setRowCount(0)
+        if self.bol_fact != None:
+            for consulta in self.bol_fact:
+                fila = self.tableWidget_1.rowCount()
+                self.tableWidget_1.insertRow(fila)
+                self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[0]))) #INTERNO
+                if consulta[3] == 0 : #es boleta
+                    self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'BOLETA' )) #TIPO DOCUMENTO
+                    self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str(consulta[4]) ))      #NRO DOCUMENTO
+                elif consulta[4] == 0: #es factura
+                    self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'FACTURA' )) #TIPO DOCUMENTO
+                    self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[3])))      #NRO DOCUMENTO
+
+                self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[1]  ))) #FECHA VENTA
+                self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
+                self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
+                self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
+
+        if self.guias != None:
+            for consulta in self.guias:
+                detalle = json.loads(consulta[2])
+                fila = self.tableWidget_1.rowCount()
+                self.tableWidget_1.insertRow(fila)
+                self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #INTERNO
+                
+                self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'GUIA' )) #TIPO DOCUMENTO
+                self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[0])))      #NRO DOCUMENTO
+
+                self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[4]  ))) #FECHA VENTA
+                self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[3] )   ))      #CLIENTE
+                self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem( detalle['vendedor'] ))             #VENDEDOR
+            
+                self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
+
+    def filtrar_vendedor(self):
+        vendedor = self.comboBox_1.currentText()
         
+        if vendedor == 'TODOS':
+            self.rellenar_tabla()
+        else:
+            self.rellenar_tabla()
+            self.tableWidget_1 = self.aux_tabla
+            remover = []
+            vendedor = vendedor[0:10]
+            print('solo: ' + vendedor)
+            column = 5 #COLUMNA DEL CVENDEDOR EN LA TABLA
+            # rowCount() This property holds the number of rows in the table
+            for row in range(self.tableWidget_1.rowCount()): 
+                # item(row, 0) Returns the item for the given row and column if one has been set; otherwise returns nullptr.
+                _item = self.tableWidget_1.item(row, column) 
+                if _item:            
+                    item = self.tableWidget_1.item(row, column).text()
+                    print(f'row: {row}, column: {column}, item={item}')
+                    aux_item = item[0:10]
+                    if aux_item != vendedor:
+                        remover.append(row)
+            print(remover)
+            k = 0
+            for i in remover:
+                self.tableWidget_1.removeRow(i - k)
+                k += 1
+
+    #  -------------------------------------------------------
+    # ------------ FUNCIONES PARA CREAR ORDEN ---------------------
+    def inicializar_crear_orden():
+        X = 0
+
+
+    def cerrar_sesion(self):
+        self.iniciar_session()
+        self.inicializar()
+
+    def mostrar_menu(self):   
         if True:
             ancho = self.left_menu_container.width()
             normal = 70
@@ -310,20 +639,21 @@ class Vendedor(QMainWindow):
                 self.btn_generar_clave.setText('')
                 self.btn_informe.setText('')
                 self.btn_atras.setText('')
-                self.btn_atras.setIcon(QIcon('icono_imagen/logout.png'))
-                self.btn_buscar.setIcon(QIcon('icono_imagen/venta.png'))
-                self.btn_modificar.setIcon(QIcon('icono_imagen/orden.png'))
-                self.btn_orden_manual.setIcon(QIcon('icono_imagen/manual.png'))
-                self.btn_generar_clave.setIcon(QIcon('icono_imagen/key2.png'))
-                self.btn_informe.setIcon(QIcon('icono_imagen/informe.png'))
+                
                 extender = normal
             
             self.animation = QPropertyAnimation(self.left_menu_container, b"maximumWidth" )
             self.animation.setDuration(500)
+            self.animation.setEasingCurve(QEasingCurve.Linear)
             self.animation.setStartValue(ancho)
             self.animation.setEndValue(extender)
-            self.animation.setEasingCurve(QEasingCurve.InOutQuart)
+            
             self.animation.start()
+
+    def conexion_perdida(self):
+        self.conexion = None
+        self.lb_conexion.setText('DESCONECTADO')
+        QMessageBox.about(self,'ERROR','Se perdio la conexion con el servidor')
 
 class InputDialog(QDialog):
     def __init__(self,label1,label2,title ,parent=None):
