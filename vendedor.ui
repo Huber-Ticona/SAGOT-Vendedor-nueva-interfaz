@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>611</height>
+    <height>610</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -54,7 +54,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>70</width>
+        <width>150</width>
         <height>16777215</height>
        </size>
       </property>
@@ -215,6 +215,19 @@ background-color: rgb(240, 218, 108);
            <widget class="QPushButton" name="btn_generar_clave">
             <property name="text">
              <string>Generar clave</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>40</width>
+              <height>40</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_estadisticas">
+            <property name="text">
+             <string>Estadisticas</string>
             </property>
             <property name="iconSize">
              <size>
@@ -447,7 +460,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="inicio">
              <widget class="QLabel" name="label_5">
@@ -484,7 +497,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <string notr="true">font: 20pt &quot;Oswald&quot;;</string>
               </property>
               <property name="text">
-               <string>SISTEMA DE ADMINISTRACIÓN Y GESTION DE ORDENES DE TRABAJO</string>
+               <string>SISTEMA DE ADMINISTRACIÓN Y GESTION DE ORDENES DE TRABAJO (SAGOT)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1537,13 +1550,13 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
                 <string>ORDEN MANUAL</string>
                </attribute>
-               <widget class="QRadioButton" name="r_pall_2">
+               <widget class="QRadioButton" name="r_pall_1">
                 <property name="geometry">
                  <rect>
                   <x>500</x>
@@ -1559,7 +1572,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>PALLETS</string>
                 </property>
                </widget>
-               <widget class="QPushButton" name="btn_registrar">
+               <widget class="QPushButton" name="btn_registrar_1">
                 <property name="geometry">
                  <rect>
                   <x>380</x>
@@ -1572,7 +1585,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>GENERAR ORDEN</string>
                 </property>
                </widget>
-               <widget class="QRadioButton" name="r_carp_2">
+               <widget class="QRadioButton" name="r_carp_1">
                 <property name="geometry">
                  <rect>
                   <x>380</x>
@@ -1588,7 +1601,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>CARPINTERIA</string>
                 </property>
                </widget>
-               <widget class="QRadioButton" name="r_elab_2">
+               <widget class="QRadioButton" name="r_elab_1">
                 <property name="geometry">
                  <rect>
                   <x>260</x>
@@ -1604,7 +1617,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>ELABORACION</string>
                 </property>
                </widget>
-               <widget class="QRadioButton" name="r_dim_3">
+               <widget class="QRadioButton" name="r_dim_1">
                 <property name="geometry">
                  <rect>
                   <x>120</x>
@@ -1620,21 +1633,21 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>DIMENSIONADO</string>
                 </property>
                </widget>
-               <widget class="QPlainTextEdit" name="txt_obs">
+               <widget class="QPlainTextEdit" name="txt_obs_1">
                 <property name="geometry">
                  <rect>
                   <x>150</x>
-                  <y>410</y>
+                  <y>400</y>
                   <width>511</width>
-                  <height>31</height>
+                  <height>41</height>
                  </rect>
                 </property>
                </widget>
                <widget class="QLabel" name="label_43">
                 <property name="geometry">
                  <rect>
-                  <x>10</x>
-                  <y>410</y>
+                  <x>20</x>
+                  <y>400</y>
                   <width>121</width>
                   <height>31</height>
                  </rect>
@@ -1691,7 +1704,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>GENERAR</string>
                 </property>
                </widget>
-               <widget class="QPushButton" name="ggg">
+               <widget class="QPushButton" name="btn_eliminar_1">
                 <property name="geometry">
                  <rect>
                   <x>600</x>
@@ -1707,7 +1720,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string/>
                 </property>
                </widget>
-               <widget class="QPushButton" name="gg">
+               <widget class="QPushButton" name="btn_agregar_1">
                 <property name="geometry">
                  <rect>
                   <x>600</x>
@@ -1723,7 +1736,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string/>
                 </property>
                </widget>
-               <widget class="QTableWidget" name="tableWidget_3">
+               <widget class="QTableWidget" name="tb_orden_manual">
                 <property name="geometry">
                  <rect>
                   <x>30</x>
@@ -1751,7 +1764,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </property>
                 </column>
                </widget>
-               <widget class="QCheckBox" name="r_enchape_2">
+               <widget class="QCheckBox" name="r_enchape_1">
                 <property name="geometry">
                  <rect>
                   <x>220</x>
@@ -1764,7 +1777,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>ENCHAPADO</string>
                 </property>
                </widget>
-               <widget class="QCheckBox" name="r_despacho_2">
+               <widget class="QCheckBox" name="r_despacho_1">
                 <property name="geometry">
                  <rect>
                   <x>330</x>
@@ -1777,7 +1790,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>DESPACHO</string>
                 </property>
                </widget>
-               <widget class="QLineEdit" name="contacto">
+               <widget class="QLineEdit" name="contacto_1">
                 <property name="geometry">
                  <rect>
                   <x>110</x>
@@ -1800,7 +1813,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>CONTACTO:</string>
                 </property>
                </widget>
-               <widget class="QLineEdit" name="telefono">
+               <widget class="QLineEdit" name="telefono_1">
                 <property name="geometry">
                  <rect>
                   <x>110</x>
@@ -1836,7 +1849,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>NOMBRE:</string>
                 </property>
                </widget>
-               <widget class="QLineEdit" name="nombre">
+               <widget class="QLineEdit" name="nombre_1">
                 <property name="geometry">
                  <rect>
                   <x>110</x>
@@ -1846,7 +1859,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </rect>
                 </property>
                </widget>
-               <widget class="QDateEdit" name="fecha_3">
+               <widget class="QDateEdit" name="fecha_1">
                 <property name="geometry">
                  <rect>
                   <x>600</x>
@@ -1869,7 +1882,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>FECHA ESTIMADA DE ENTREGA:</string>
                 </property>
                </widget>
-               <widget class="QLineEdit" name="oce">
+               <widget class="QLineEdit" name="oce_1">
                 <property name="geometry">
                  <rect>
                   <x>500</x>
@@ -1914,7 +1927,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                 <property name="title">
                  <string>CODIGO</string>
                 </property>
-                <widget class="QLineEdit" name="txt_codigo">
+                <widget class="QLineEdit" name="txt_codigo_1">
                  <property name="geometry">
                   <rect>
                    <x>20</x>
@@ -1961,7 +1974,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>Añadir</string>
                 </property>
                </widget>
-               <widget class="QCheckBox" name="r_uso_interno">
+               <widget class="QCheckBox" name="r_uso_interno_1">
                 <property name="geometry">
                  <rect>
                   <x>430</x>
@@ -1974,7 +1987,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>USO INTERNO</string>
                 </property>
                </widget>
-               <widget class="QCheckBox" name="r_facturar">
+               <widget class="QCheckBox" name="r_facturar_1">
                 <property name="geometry">
                  <rect>
                   <x>550</x>
@@ -2023,7 +2036,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                 <property name="title">
                  <string>MOTIVO:</string>
                 </property>
-                <widget class="QRadioButton" name="r_cambio">
+                <widget class="QRadioButton" name="r_cambio_6">
                  <property name="geometry">
                   <rect>
                    <x>30</x>
@@ -2036,7 +2049,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>CAMBIO</string>
                  </property>
                 </widget>
-                <widget class="QRadioButton" name="r_devolucion">
+                <widget class="QRadioButton" name="r_devolucion_6">
                  <property name="geometry">
                   <rect>
                    <x>110</x>
@@ -2049,7 +2062,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>DEVOLUCIÓN</string>
                  </property>
                 </widget>
-                <widget class="QRadioButton" name="r_otro">
+                <widget class="QRadioButton" name="r_otro_6">
                  <property name="geometry">
                   <rect>
                    <x>230</x>
@@ -2062,7 +2075,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>OTRO:</string>
                  </property>
                 </widget>
-                <widget class="QLineEdit" name="txt_otro">
+                <widget class="QLineEdit" name="txt_otro_6">
                  <property name="geometry">
                   <rect>
                    <x>300</x>
@@ -2073,7 +2086,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </property>
                 </widget>
                </widget>
-               <widget class="QTableWidget" name="tableWidget_6">
+               <widget class="QTableWidget" name="tb_reingreso_manual">
                 <property name="geometry">
                  <rect>
                   <x>20</x>
@@ -2114,7 +2127,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>SOLUCIÓN:</string>
                 </property>
                </widget>
-               <widget class="QPlainTextEdit" name="txt_solucion">
+               <widget class="QPlainTextEdit" name="txt_solucion_6">
                 <property name="geometry">
                  <rect>
                   <x>90</x>
@@ -2124,7 +2137,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </rect>
                 </property>
                </widget>
-               <widget class="QPushButton" name="btn_registrar_3">
+               <widget class="QPushButton" name="btn_registrar_6">
                 <property name="geometry">
                  <rect>
                   <x>460</x>
@@ -2199,7 +2212,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                 <property name="title">
                  <string/>
                 </property>
-                <widget class="QRadioButton" name="r_d_2">
+                <widget class="QRadioButton" name="r_d_6">
                  <property name="geometry">
                   <rect>
                    <x>90</x>
@@ -2212,7 +2225,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>DIMENSIONADO</string>
                  </property>
                 </widget>
-                <widget class="QRadioButton" name="r_e_2">
+                <widget class="QRadioButton" name="r_e_6">
                  <property name="geometry">
                   <rect>
                    <x>230</x>
@@ -2225,7 +2238,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>ELABORACION</string>
                  </property>
                 </widget>
-                <widget class="QRadioButton" name="r_c_2">
+                <widget class="QRadioButton" name="r_c_6">
                  <property name="geometry">
                   <rect>
                    <x>370</x>
@@ -2238,13 +2251,13 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <string>CARPINTERIA</string>
                  </property>
                 </widget>
-                <widget class="QRadioButton" name="r_p_2">
+                <widget class="QRadioButton" name="r_p_6">
                  <property name="geometry">
                   <rect>
                    <x>500</x>
-                   <y>20</y>
+                   <y>16</y>
                    <width>82</width>
-                   <height>17</height>
+                   <height>21</height>
                   </rect>
                  </property>
                  <property name="text">
@@ -2265,7 +2278,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </property>
                 </widget>
                </widget>
-               <widget class="QLineEdit" name="txt_nro_doc">
+               <widget class="QLineEdit" name="txt_nro_doc_6">
                 <property name="geometry">
                  <rect>
                   <x>480</x>
@@ -2294,7 +2307,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string>NUMERO DE ORDEN:</string>
                 </property>
                </widget>
-               <widget class="QLineEdit" name="txt_orden_2">
+               <widget class="QLineEdit" name="txt_orden_6">
                 <property name="geometry">
                  <rect>
                   <x>480</x>
@@ -2304,7 +2317,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </rect>
                 </property>
                </widget>
-               <widget class="QComboBox" name="comboBox_2">
+               <widget class="QComboBox" name="comboBox_6">
                 <property name="geometry">
                  <rect>
                   <x>120</x>
@@ -2313,27 +2326,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                   <height>21</height>
                  </rect>
                 </property>
-                <item>
-                 <property name="text">
-                  <string>No asignado</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>FACTURA</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>BOLETA</string>
-                 </property>
-                </item>
                </widget>
-               <widget class="QPushButton" name="ggggg">
+               <widget class="QPushButton" name="btn_agregar_6">
                 <property name="geometry">
                  <rect>
                   <x>640</x>
-                  <y>300</y>
+                  <y>280</y>
                   <width>41</width>
                   <height>51</height>
                  </rect>
@@ -2345,11 +2343,11 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string/>
                 </property>
                </widget>
-               <widget class="QPushButton" name="ggggggg">
+               <widget class="QPushButton" name="btn_eliminar_6">
                 <property name="geometry">
                  <rect>
                   <x>640</x>
-                  <y>360</y>
+                  <y>350</y>
                   <width>41</width>
                   <height>51</height>
                  </rect>
@@ -2361,7 +2359,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string/>
                 </property>
                </widget>
-               <widget class="QPlainTextEdit" name="txt_descripcion_">
+               <widget class="QPlainTextEdit" name="txt_descripcion_6">
                 <property name="geometry">
                  <rect>
                   <x>120</x>
@@ -2402,7 +2400,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                 <property name="title">
                  <string>DESCRIPCIÓN</string>
                 </property>
-                <widget class="QLineEdit" name="txt_descripcion_3">
+                <widget class="QLineEdit" name="txt_descripcion_7">
                  <property name="geometry">
                   <rect>
                    <x>20</x>
@@ -2413,7 +2411,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </property>
                 </widget>
                </widget>
-               <widget class="QComboBox" name="productos_2">
+               <widget class="QComboBox" name="productos_6">
                 <property name="geometry">
                  <rect>
                   <x>200</x>
@@ -2423,7 +2421,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </rect>
                 </property>
                </widget>
-               <widget class="QPushButton" name="btn_add_2">
+               <widget class="QPushButton" name="btn_add_6">
                 <property name="geometry">
                  <rect>
                   <x>630</x>
@@ -2864,7 +2862,39 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                    </property>
                    <layout class="QHBoxLayout" name="horizontalLayout_15">
                     <item>
+                     <widget class="QLabel" name="label_22">
+                      <property name="maximumSize">
+                       <size>
+                        <width>90</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>FOLIO DE ORDEN:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lb_folio_orden">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>TextLabel</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
                      <widget class="QLabel" name="label_21">
+                      <property name="maximumSize">
+                       <size>
+                        <width>70</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>DOCUMENTO:</string>
                       </property>
@@ -2872,6 +2902,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                     </item>
                     <item>
                      <widget class="QLabel" name="lb_doc_2">
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>TextLabel</string>
                       </property>
@@ -2905,6 +2941,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                    </item>
                    <item row="3" column="1">
                     <widget class="QLabel" name="lb_proceso_2">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>30</height>
+                      </size>
+                     </property>
                      <property name="text">
                       <string>TextLabel</string>
                      </property>
@@ -2929,6 +2971,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_58">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>30</height>
+                      </size>
+                     </property>
                      <property name="text">
                       <string>MOTIVO:</string>
                      </property>
@@ -2938,6 +2986,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                     <layout class="QHBoxLayout" name="horizontalLayout_16">
                      <item>
                       <widget class="QRadioButton" name="r_cambio_2">
+                       <property name="maximumSize">
+                        <size>
+                         <width>100</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>CAMBIO</string>
                        </property>
@@ -2945,6 +2999,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </item>
                      <item>
                       <widget class="QRadioButton" name="r_devolucion_2">
+                       <property name="maximumSize">
+                        <size>
+                         <width>100</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>DEVOLUCION</string>
                        </property>
@@ -2952,6 +3012,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </item>
                      <item>
                       <widget class="QRadioButton" name="r_otro_2">
+                       <property name="maximumSize">
+                        <size>
+                         <width>100</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>OTRO: </string>
                        </property>
@@ -2961,7 +3027,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                       <widget class="QLineEdit" name="txt_otro_2">
                        <property name="maximumSize">
                         <size>
-                         <width>250</width>
+                         <width>400</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -2992,13 +3058,34 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_17">
+                 <property name="spacing">
+                  <number>5</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>15</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>15</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_7">
                    <item row="0" column="0">
                     <widget class="QTableWidget" name="tb_reingreso_2">
+                     <property name="minimumSize">
+                      <size>
+                       <width>400</width>
+                       <height>0</height>
+                      </size>
+                     </property>
                      <property name="maximumSize">
                       <size>
-                       <width>620</width>
+                       <width>800</width>
                        <height>200</height>
                       </size>
                      </property>
@@ -3029,6 +3116,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                          <height>40</height>
                         </size>
                        </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>50</width>
+                         <height>50</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string/>
                        </property>
@@ -3040,6 +3133,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                         <size>
                          <width>40</width>
                          <height>40</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>50</width>
+                         <height>50</height>
                         </size>
                        </property>
                        <property name="text">
@@ -3069,20 +3168,63 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_20">
+                 <property name="leftMargin">
+                  <number>15</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>15</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_6">
+                   <property name="horizontalSpacing">
+                    <number>15</number>
+                   </property>
+                   <property name="verticalSpacing">
+                    <number>5</number>
+                   </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_13">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>30</height>
+                      </size>
+                     </property>
                      <property name="text">
                       <string>SOLUCIÓN:</string>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
-                    <widget class="QPlainTextEdit" name="txt_solucion_2"/>
+                    <widget class="QPlainTextEdit" name="txt_solucion_2">
+                     <property name="maximumSize">
+                      <size>
+                       <width>700</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                    </widget>
                    </item>
                    <item row="1" column="0">
                     <widget class="QPushButton" name="btn_atras_7">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>35</height>
+                      </size>
+                     </property>
                      <property name="text">
                       <string>ATRAS</string>
                      </property>
@@ -3090,10 +3232,22 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                    </item>
                    <item row="1" column="1" alignment="Qt::AlignRight">
                     <widget class="QPushButton" name="btn_generar_reingreso">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>100</horstretch>
+                       <verstretch>35</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
                      <property name="maximumSize">
                       <size>
                        <width>100</width>
-                       <height>16777215</height>
+                       <height>35</height>
                       </size>
                      </property>
                      <property name="text">
@@ -3132,14 +3286,14 @@ text-center : center;
              <widget class="QTabWidget" name="tabWidget">
               <property name="geometry">
                <rect>
-                <x>50</x>
-                <y>80</y>
-                <width>531</width>
-                <height>391</height>
+                <x>40</x>
+                <y>60</y>
+                <width>541</width>
+                <height>411</height>
                </rect>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab">
                <attribute name="title">
@@ -3239,7 +3393,7 @@ text-center : center;
                  <string>HASTA:</string>
                 </property>
                </widget>
-               <widget class="QPushButton" name="btn_generar">
+               <widget class="QPushButton" name="btn_generar_informe">
                 <property name="geometry">
                  <rect>
                   <x>180</x>
@@ -3378,7 +3532,7 @@ text-center : center;
                <zorder>comboBox</zorder>
                <zorder>d_inicio</zorder>
                <zorder>d_termino</zorder>
-               <zorder>btn_generar</zorder>
+               <zorder>btn_generar_informe</zorder>
                <zorder>r_venta</zorder>
                <zorder>groupBox</zorder>
               </widget>
@@ -3441,6 +3595,53 @@ text-center : center;
                 </property>
                </widget>
               </widget>
+             </widget>
+            </widget>
+            <widget class="QWidget" name="estadsticas">
+             <widget class="QFrame" name="frame">
+              <property name="geometry">
+               <rect>
+                <x>50</x>
+                <y>30</y>
+                <width>331</width>
+                <height>141</height>
+               </rect>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <widget class="QLabel" name="label_35">
+               <property name="geometry">
+                <rect>
+                 <x>150</x>
+                 <y>10</y>
+                 <width>161</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>ESTADISTICAS</string>
+               </property>
+              </widget>
+             </widget>
+             <widget class="QFrame" name="frame_2">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>200</y>
+                <width>471</width>
+                <height>271</height>
+               </rect>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
              </widget>
             </widget>
            </widget>
