@@ -59,9 +59,11 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">QFrame{
-	background-color: rgb(240, 218, 108);
+       <string notr="true">*{
+	background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #009900, stop:1 #006600);
+ color: white;
 }
+
 </string>
       </property>
       <property name="frameShape">
@@ -94,6 +96,12 @@
            <height>100</height>
           </size>
          </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+border: transparent;
+background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #003300);
+}</string>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -101,6 +109,21 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
           <item>
            <widget class="QLabel" name="logo">
             <property name="text">
@@ -115,23 +138,20 @@
            <widget class="QPushButton" name="btn_menu">
             <property name="maximumSize">
              <size>
-              <width>150</width>
-              <height>150</height>
+              <width>100</width>
+              <height>100</height>
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">*{
-border: 2px solid yellow;
-}
-</string>
+             <string notr="true"/>
             </property>
             <property name="text">
-             <string/>
+             <string notr="true"/>
             </property>
             <property name="iconSize">
              <size>
-              <width>60</width>
-              <height>60</height>
+              <width>70</width>
+              <height>70</height>
              </size>
             </property>
            </widget>
@@ -149,7 +169,8 @@ border: 2px solid yellow;
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
-background-color: rgb(240, 218, 108);
+border: transparent;
+background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #003300);
 }</string>
          </property>
          <property name="frameShape">
@@ -161,6 +182,9 @@ background-color: rgb(240, 218, 108);
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
            <widget class="QPushButton" name="btn_buscar">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
             <property name="text">
              <string>Notas de venta</string>
             </property>
@@ -244,7 +268,8 @@ background-color: rgb(240, 218, 108);
         <widget class="QFrame" name="abajo">
          <property name="styleSheet">
           <string notr="true">QPushButton{
-	background-color: rgb(255,180,30)
+border: transparent;
+background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #003300);
 }</string>
          </property>
          <property name="frameShape">
@@ -425,7 +450,8 @@ background-color: rgb(240, 218, 108);
          <property name="styleSheet">
           <string notr="true">#body_container{
 
-background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
+/*background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
+*/
 
 }</string>
          </property>
@@ -460,7 +486,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>7</number>
             </property>
             <widget class="QWidget" name="inicio">
              <widget class="QLabel" name="label_5">
@@ -509,14 +535,14 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
              <widget class="QLabel" name="label_23">
               <property name="geometry">
                <rect>
-                <x>210</x>
-                <y>350</y>
-                <width>221</width>
-                <height>111</height>
+                <x>10</x>
+                <y>480</y>
+                <width>71</width>
+                <height>51</height>
                </rect>
               </property>
               <property name="text">
-               <string>IMAGE</string>
+               <string>:3</string>
               </property>
              </widget>
             </widget>
@@ -711,74 +737,95 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_8">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
                  <property name="topMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <property name="bottomMargin">
                   <number>2</number>
                  </property>
+                 <item>
+                  <widget class="QTableWidget" name="tableWidget_1">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>300</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>300</height>
+                    </size>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>50</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="columnCount">
+                    <number>7</number>
+                   </property>
+                   <attribute name="horizontalHeaderHighlightSections">
+                    <bool>true</bool>
+                   </attribute>
+                   <column>
+                    <property name="text">
+                     <string>Nro Interno</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Documento</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>&lt;  Folio</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Fecha</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Cliente</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Vendedor</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Total</string>
+                    </property>
+                   </column>
+                  </widget>
+                 </item>
                 </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QTableWidget" name="tableWidget_1">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="iconSize">
-                 <size>
-                  <width>50</width>
-                  <height>20</height>
-                 </size>
-                </property>
-                <property name="columnCount">
-                 <number>7</number>
-                </property>
-                <attribute name="horizontalHeaderHighlightSections">
-                 <bool>true</bool>
-                </attribute>
-                <column>
-                 <property name="text">
-                  <string>Nro Interno</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>Documento</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>&lt;  Folio</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>Fecha</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>Cliente</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>Vendedor</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>Total</string>
-                 </property>
-                </column>
                </widget>
               </item>
               <item alignment="Qt::AlignBottom">
                <widget class="QFrame" name="abajo_3">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>40</height>
+                 </size>
+                </property>
                 <property name="frameShape">
                  <enum>QFrame::StyledPanel</enum>
                 </property>
@@ -797,6 +844,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </property>
                  <item>
                   <widget class="QPushButton" name="btn_atras_1">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>200</width>
@@ -810,10 +863,16 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_crear_1">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>200</width>
-                     <height>16777215</height>
+                     <height>90</height>
                     </size>
                    </property>
                    <property name="text">
@@ -1120,7 +1179,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </size>
                     </property>
                     <property name="text">
-                     <string/>
+                     <string>+</string>
                     </property>
                    </widget>
                   </item>
@@ -1133,7 +1192,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </size>
                     </property>
                     <property name="text">
-                     <string/>
+                     <string>-</string>
                     </property>
                    </widget>
                   </item>
@@ -1443,7 +1502,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </size>
                     </property>
                     <property name="text">
-                     <string/>
+                     <string>+</string>
                     </property>
                    </widget>
                   </item>
@@ -1456,7 +1515,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                      </size>
                     </property>
                     <property name="text">
-                     <string/>
+                     <string>-</string>
                     </property>
                    </widget>
                   </item>
@@ -1550,7 +1609,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -1707,7 +1766,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <widget class="QPushButton" name="btn_eliminar_1">
                 <property name="geometry">
                  <rect>
-                  <x>600</x>
+                  <x>620</x>
                   <y>300</y>
                   <width>41</width>
                   <height>51</height>
@@ -1717,13 +1776,13 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string notr="true">font: 75 14pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>-</string>
                 </property>
                </widget>
                <widget class="QPushButton" name="btn_agregar_1">
                 <property name="geometry">
                  <rect>
-                  <x>600</x>
+                  <x>620</x>
                   <y>240</y>
                   <width>41</width>
                   <height>51</height>
@@ -1733,15 +1792,15 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string notr="true">font: 75 14pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>+</string>
                 </property>
                </widget>
                <widget class="QTableWidget" name="tb_orden_manual">
                 <property name="geometry">
                  <rect>
-                  <x>30</x>
+                  <x>10</x>
                   <y>230</y>
-                  <width>561</width>
+                  <width>601</width>
                   <height>161</height>
                  </rect>
                 </property>
@@ -1908,7 +1967,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <widget class="QComboBox" name="productos">
                 <property name="geometry">
                  <rect>
-                  <x>30</x>
+                  <x>10</x>
                   <y>200</y>
                   <width>561</width>
                   <height>22</height>
@@ -1964,8 +2023,8 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                <widget class="QPushButton" name="btn_add">
                 <property name="geometry">
                  <rect>
-                  <x>600</x>
-                  <y>200</y>
+                  <x>580</x>
+                  <y>195</y>
                   <width>58</width>
                   <height>28</height>
                  </rect>
@@ -2340,7 +2399,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string notr="true">font: 75 14pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>+</string>
                 </property>
                </widget>
                <widget class="QPushButton" name="btn_eliminar_6">
@@ -2356,7 +2415,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                  <string notr="true">font: 75 14pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>-</string>
                 </property>
                </widget>
                <widget class="QPlainTextEdit" name="txt_descripcion_6">
@@ -3123,7 +3182,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                         </size>
                        </property>
                        <property name="text">
-                        <string/>
+                        <string>+</string>
                        </property>
                       </widget>
                      </item>
@@ -3142,7 +3201,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 cyan, stop:1 blue);
                         </size>
                        </property>
                        <property name="text">
-                        <string/>
+                        <string>-</string>
                        </property>
                       </widget>
                      </item>
@@ -3293,7 +3352,7 @@ text-center : center;
                </rect>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab">
                <attribute name="title">
@@ -3727,7 +3786,7 @@ text-center : center;
              </size>
             </property>
             <property name="text">
-             <string>App Vendedor - Versión 4.5 </string>
+             <string>App Vendedor - Versión 5.5 </string>
             </property>
            </widget>
           </item>

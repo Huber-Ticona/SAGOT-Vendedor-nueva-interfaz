@@ -3,7 +3,7 @@ import os
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap , QIcon
-from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation
+from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent
 from PyQt5.uic.uiparser import DEBUG
 from reportlab.lib.utils import isNonPrimitiveInstance
 import rpyc
@@ -238,7 +238,6 @@ class Vendedor(QMainWindow):
         #---------------
         self.iniciar_session()
         self.inicializar()
-        self.mostrar_menu()
         self.stackedWidget.setCurrentWidget(self.inicio)
         
         #buscar venta
@@ -299,7 +298,7 @@ class Vendedor(QMainWindow):
         #informes
         self.btn_generar_informe.clicked.connect(self.generar_informe)
         self.comboBox.currentIndexChanged['QString'].connect(self.vista_reingreso)
-        self.btn_eliminar_exel.clicked.connect(self.eliminar)
+        self.btn_eliminar_exel.clicked.connect(self.eliminar_excel)
         self.btn_actualizar.clicked.connect(self.actualizar)
         self.btn_abrir.clicked.connect(self.abrir)
 
@@ -343,6 +342,7 @@ class Vendedor(QMainWindow):
         self.btn_generar_clave.setIcon(QIcon('icono_imagen/key2.png'))
         self.btn_informe.setIcon(QIcon('icono_imagen/informe.png'))
         self.btn_estadisticas.setIcon(QIcon('icono_imagen/estadisticas.png'))
+        
 
         self.btn_generar_clave.show()
         self.btn_orden_manual.show()
@@ -353,9 +353,9 @@ class Vendedor(QMainWindow):
         self.carpeta = actual.replace('\\' , '/')
         self.dir_informes = actual + '/informes/'
         print(self.carpeta)
-        foto = QPixmap(actual + '/icono_imagen/madenco logo.png')
+        foto = QPixmap(actual + '/icono_imagen/ENCO_Log.png')
         self.logo.setPixmap(foto)
-        menu = QPixmap(actual + '/icono_imagen/left_menu_v3.png')
+        menu = QPixmap(actual + '/icono_imagen/menu_v4.png')
         self.btn_menu.setIcon(QIcon(menu))
         self.lb_conexion.setText('CONECTADO')
         if self.datos_usuario:  #Si existen los datos del usuario, x ende se inicio sesion correctamente...
@@ -390,11 +390,16 @@ class Vendedor(QMainWindow):
         self.radio2_1.setChecked(True)
         self.dateEdit_1.setCalendarPopup(True)
         self.dateEdit_1.setDate(datetime.now().date())
+        self.tableWidget_1.setColumnWidth(0,80) #interno
+        self.tableWidget_1.setColumnWidth(1,80) #documento
+        self.tableWidget_1.setColumnWidth(2,80) #nro doc
+        self.tableWidget_1.setColumnWidth(3,125) #fecha venta
+        self.tableWidget_1.setColumnWidth(4,200) #vendededor
+        self.tableWidget_1.setColumnWidth(5,100) #total
         self.stackedWidget.setCurrentWidget(self.buscar_venta)
     
-    
-
     def buscar_documento(self):
+        self.vendedores = []
         largo = self.comboBox_1.count()
         if largo > 1:
             for i in range(largo):
@@ -533,6 +538,7 @@ class Vendedor(QMainWindow):
 
                 except EOFError:
                     self.conexion_perdida()
+
             elif self.radio3_1.isChecked(): #BUSCANDO POR NOMBRE
                 X = 0
                 lista_vendedores = []
@@ -698,6 +704,9 @@ class Vendedor(QMainWindow):
                 self.telefono_2.setText('')
                 self.contacto_2.setText('')
                 self.oce_2.setText('')
+                self.tableWidget_2.setColumnWidth(0,80)
+                self.tableWidget_2.setColumnWidth(1,430)
+                self.tableWidget_2.setColumnWidth(2,85)
                 #------- se rellena la ventana ------------------#
                 try:
                     if aux_tipo_doc != 'GUIA' :
@@ -759,7 +768,6 @@ class Vendedor(QMainWindow):
             QMessageBox.about(self,'ERROR', 'Seleccione un Nro interno antes de continuar')
 
     def rellenar(self):
-        
         if self.items != ():
             self.tableWidget_2.setRowCount(0)
             for item in self.items:
@@ -906,7 +914,7 @@ class Vendedor(QMainWindow):
                                 QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
 
                         except EOFError:
-                            print('Se perdio la conexion con el servidor')
+                            self.conexion_perdida()
                         except AttributeError:
                             QMessageBox.about(self,'IMPORTANTE', 'Este mensaje se debe a que hubo un error al ingresar los datos a la base de datos. Contacte con el soporte')
 
@@ -929,19 +937,20 @@ class Vendedor(QMainWindow):
         else:
             print('no se encontro el documento o sucedio un error')
         
-    def buscar_nro_orden(self,tupla):
-        mayor = 0
-        for item in tupla:
-            if item[0] > mayor :
-                mayor = item[0]
-        return mayor
-
 # ------ Funciones de buscar orden de trabajo -------------
     def inicializar_buscar_orden(self):
         self.dateEdit.setDate(datetime.now().date())
         self.dateEdit.setCalendarPopup(True)
         self.r_fecha.setChecked(True)
         self.tb_buscar_orden.setRowCount(0)
+        self.tb_buscar_orden.setColumnWidth(0,70)
+        self.tb_buscar_orden.setColumnWidth(1,70)
+        self.tb_buscar_orden.setColumnWidth(2,100)
+        self.tb_buscar_orden.setColumnWidth(3,170)
+        self.tb_buscar_orden.setColumnWidth(4,120)
+        self.tb_buscar_orden.setColumnWidth(5,100)
+        self.tb_buscar_orden.setColumnWidth(6,100)
+
         self.stackedWidget.setCurrentWidget(self.buscar_orden)
 
     def buscar_dimensionado(self):
@@ -1001,7 +1010,7 @@ class Vendedor(QMainWindow):
                     else:
                         QMessageBox.about(self ,'Resultado', 'No se encontraron Ordenes de dimensionado coincidentes')
                 except EOFError:
-                    QMessageBox.about(self,'ERROR','Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
         else:
             QMessageBox.about(self ,'Conexion', 'Se perdio la conexion')
 
@@ -1086,7 +1095,7 @@ class Vendedor(QMainWindow):
                     else:
                         QMessageBox.about(self ,'Resultado', 'No se encontraron Ordenes de: '+ tipo +' coincidentes')
                 except EOFError:
-                    QMessageBox.about(self,'ERROR','Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
         else:
             QMessageBox.about(self ,'Conexion', 'Se perdio la conexion')
 
@@ -1113,6 +1122,9 @@ class Vendedor(QMainWindow):
                 self.nro_orden = int(orden)
                 tipo = self.lb_tipo_orden.text()
                 print('ventana modificar orden ... para: '+ tipo + ' -->' + str(self.nro_orden))
+                self.tb_modificar_orden.setColumnWidth(0,80)
+                self.tb_modificar_orden.setColumnWidth(1,430)
+                self.tb_modificar_orden.setColumnWidth(2,85)
                 self.rellenar_datos_orden(tipo)
                 self.stackedWidget.setCurrentWidget(self.modificar_orden)
         
@@ -1223,7 +1235,7 @@ class Vendedor(QMainWindow):
                     
 
             except EOFError:
-                QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')
+                self.conexion_perdida()
 
         else: 
             try:
@@ -1323,7 +1335,8 @@ class Vendedor(QMainWindow):
                         self.tb_modificar_orden.setItem(fila , 2 , QTableWidgetItem( str( valores_neto[j] )) ) 
                         j+=1    
             except EOFError:
-                QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')
+                self.conexion_perdida()
+
         # ------ comprobar si existe el PDF en los archivos locales -------------
         
         if tipo == "DIMENSIONADO":
@@ -1467,7 +1480,7 @@ class Vendedor(QMainWindow):
                                     QMessageBox.about(self,'ERROR','La orden de pallets NO se actualizo, porque no se modificaron los datos que ya existian.')
     
                         except EOFError:
-                            QMessageBox.about(self,'Conexion' ,'Se perdio la conexion con el servidor')
+                            self.conexion_perdida()
                         except PermissionError:
                             QMessageBox.about(self,'ERROR' ,'La orden no se actualizo debido a que otro programa esta haciendo uso del archivo. Cierre dicho programa para continuar.')
                         #except AttributeError:
@@ -1495,6 +1508,9 @@ class Vendedor(QMainWindow):
                 print('ventana  reingreso ... para: '+ tipo + ' -->' + str(self.nro_orden))
                 self.lb_folio_orden.setText(str(self.nro_orden))
                 self.tb_reingreso_2.setRowCount(0)
+                self.tb_reingreso_2.setColumnWidth(1,80)
+                self.tb_reingreso_2.setColumnWidth(0,430)
+                self.tb_reingreso_2.setColumnWidth(2,85)
                 self.rellenar_datos_reingreso()
                 self.stackedWidget.setCurrentWidget(self.reingreso)
         else:
@@ -1636,7 +1652,7 @@ class Vendedor(QMainWindow):
                             j+=1      
                                     
                 except EOFError:
-                    QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
 
             else:
                 
@@ -1681,7 +1697,7 @@ class Vendedor(QMainWindow):
                             j+=1     
 
                 except EOFError:
-                    QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
 
     def agregar_3(self):
         if self.tb_reingreso_2.rowCount() <=16 :
@@ -1721,7 +1737,7 @@ class Vendedor(QMainWindow):
                         QMessageBox.about(self,'ERROR' ,'CLAVE INVALIDA')
 
                 except EOFError:
-                    self.lb_conexion.setText('Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
 
     def rellenar_datos_manual(self):
         #-----datos de orden manual  ------
@@ -1736,6 +1752,9 @@ class Vendedor(QMainWindow):
         self.fecha_1.setDate( datetime.now())
         self.fecha_1.setCalendarPopup(True)
         self.tb_orden_manual.setRowCount(0)
+        self.tb_orden_manual.setColumnWidth(0,80)
+        self.tb_orden_manual.setColumnWidth(1,430)
+        self.tb_orden_manual.setColumnWidth(2,85)
         #-----datos de reingreso manual  ------
         self.comboBox_6.clear()
         self.comboBox_6.addItem('No asignado')
@@ -1749,6 +1768,9 @@ class Vendedor(QMainWindow):
         self.txt_solucion_6.clear()
         self.txt_descripcion_7.setText('')
         self.tb_reingreso_manual.setRowCount(0)
+        self.tb_reingreso_manual.setColumnWidth(1,80)
+        self.tb_reingreso_manual.setColumnWidth(0,430)
+        self.tb_reingreso_manual.setColumnWidth(2,85)
 
     def registrar_orden_manual(self):
         nombre = self.nombre_1.text()     #NOMBRE CLIENTE
@@ -1896,7 +1918,7 @@ class Vendedor(QMainWindow):
                             QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
 
                     except EOFError:
-                        QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')   
+                        self.conexion_perdida()   
                     #except AttributeError:
 
                      #   QMessageBox.about(self,'IMPORTANTE', 'Este mensaje se debe a que hubo un error al ingresar los datos a la base de datos. Contacte con el soporte')
@@ -1905,7 +1927,7 @@ class Vendedor(QMainWindow):
             except ValueError:
                 QMessageBox.about(self, 'ERROR', 'Solo ingrese Numeros en los campos "Telefono", "Numero de documento" y "Numero interno" ')          
         else:
-                QMessageBox.about(self, 'Sugerencia', 'Los campos "Nombre" , "Telefono" y "Observacion" son obligatorios')         
+            QMessageBox.about(self, 'Sugerencia', 'Los campos "Nombre" , "Telefono" y "Observacion" son obligatorios')         
 
     def agregar_4(self):
         if self.tb_orden_manual.rowCount() <=16 :
@@ -1924,16 +1946,23 @@ class Vendedor(QMainWindow):
     def buscar_descripcion(self):
         self.productos.clear()
         descr = self.txt_descripcion_1.text()
-        resultado = self.conexion.root.buscar_prod_descr(descr)
-        for item in resultado:
-            self.productos.addItem(item[1])
-        #print(resultado)
+        try:
+            resultado = self.conexion.root.buscar_prod_descr(descr)
+            for item in resultado:
+                self.productos.addItem(item[1])
+                #print(resultado)
+        except EOFError:
+            self.conexion_perdida()
+        
     def buscar_codigo(self):
         self.productos.clear()
         codigo = self.txt_codigo_1.text()
-        resultado = self.conexion.root.buscar_prod_cod(codigo)
-        for item in resultado:
-            self.productos.addItem(item[1])
+        try:
+            resultado = self.conexion.root.buscar_prod_cod(codigo)
+            for item in resultado:
+                self.productos.addItem(item[1])
+        except EOFError:
+            self.conexion_perdida()
     def add_descripcion(self):
         descripcion = self.productos.currentText()
 
@@ -2051,8 +2080,9 @@ class Vendedor(QMainWindow):
                         QMessageBox.about(self,'ERROR','404 NOT FOUND. Contacte con Don Huber ...problemas al registrar')
                 except ValueError:
                     QMessageBox.about(self,'ERROR','Ingresar solo numeros en los campos: "NUMERO DE ORDEN" y "NUMERO DE DOCUMENTO" ')
-
-
+                
+                except EOFError:
+                    self.conexion_perdida()
         else:
             QMessageBox.about(self,'Datos incompletos','Los campos "descripcion" , "solucion" son obligatiorios. Como tambien si selecciona "OTROS" debe rellenar su campo')
     def agregar_6(self):
@@ -2072,9 +2102,12 @@ class Vendedor(QMainWindow):
     def buscar_descripcion_2(self):
         self.productos_6.clear()
         descr = self.txt_descripcion_7.text()
-        resultado = self.conexion.root.buscar_prod_descr(descr)
-        for item in resultado:
-            self.productos_6.addItem(item[1])
+        try:
+            resultado = self.conexion.root.buscar_prod_descr(descr)
+            for item in resultado:
+                self.productos_6.addItem(item[1])
+        except EOFError:
+            self.conexion_perdida()
     def add_descripcion_2(self):
         descripcion = self.productos_6.currentText()
 
@@ -2155,12 +2188,11 @@ class Vendedor(QMainWindow):
             except PermissionError:
                 QMessageBox.about(self,'ERROR',  'Otro programa tiene abierto el documento EXCEL. Intente cerrandolo y luego proceda a generar el EXCEL')
             except EOFError:
-                QMessageBox.about(self,'ERROR','No hubo respuesta desde el servidor')
+                self.conexion_perdida()
 
         elif self.r_venta.isChecked():
-            #EN PROCESO ALGUN DIA 
-            x = 0
-
+            QMessageBox.about(self,'EN DESARROLLO', 'Informes por fecha de venta no disponible en esta version')
+            
     def informe_dimensionado(self,datos,nombre):
         if datos:
             wb = Workbook()
@@ -2383,7 +2415,7 @@ class Vendedor(QMainWindow):
         else:
             QMessageBox.about(self,'Sugerencia', 'Primero seleccione el nombre del informe para poder abrirlo ')
 
-    def eliminar(self):
+    def eliminar_excel(self):
         seleccion = self.tableWidget.selectedItems()
         if seleccion != [] :
             nombre = seleccion[0].text()
@@ -2412,7 +2444,7 @@ class Vendedor(QMainWindow):
                     else:
                         QMessageBox.about(self,'ERROR' ,'ERROR AL REGISTRAR LA CLAVE')
                 except EOFError:
-                    QMessageBox.about(self,'ERROR' ,'Se perdio la conexion con el servidor')
+                    self.conexion_perdida()
             else:
                 QMessageBox.about(self,'ERROR' ,'Ingrese una clave antes de continuar')
 
@@ -2645,13 +2677,12 @@ class Vendedor(QMainWindow):
                 extra = json.dumps(formato)
                 
                 tipo = self.lb_tipo_orden.text()
-                self.conexion.root.anular_orden( tipo.lower(), extra, self.nro_orden )
-                
-                QMessageBox.about(self,'EXITO' ,'Orden nro: ' + str(self.nro_orden) + ' Anulada')
-                self.inicializar_buscar_orden()
-                
-
-
+                try:
+                    self.conexion.root.anular_orden( tipo.lower(), extra, self.nro_orden )
+                    QMessageBox.about(self,'EXITO' ,'Orden nro: ' + str(self.nro_orden) + ' Anulada')
+                    self.inicializar_buscar_orden()
+                except EOFError:
+                    self.conexion_perdida()
         else:
             dialog = InputDialog('CLAVE:' ,'MOTIVO:', 'INGRESE UNA CLAVE Y MOTIVO DE ANULACION',self)
             dialog.resize(400,100)
@@ -2669,16 +2700,23 @@ class Vendedor(QMainWindow):
                     extra = json.dumps(formato)
                     
                     tipo = self.lb_tipo_orden.text()
-                    self.conexion.root.anular_orden( tipo.lower(), extra, self.nro_orden )
-
-                    self.conexion.root.eliminar_clave(aux_clave)
-                    QMessageBox.about(self,'EXITO' ,'Orden nro: ' + str(self.nro_orden) + ' Anulada')
-                    self.inicializar_buscar_orden()
                     
+                    try:
+                        self.conexion.root.anular_orden( tipo.lower(), extra, self.nro_orden )
+                        self.conexion.root.eliminar_clave(aux_clave)
+                        QMessageBox.about(self,'EXITO' ,'Orden nro: ' + str(self.nro_orden) + ' Anulada')
+                        self.inicializar_buscar_orden()
+                    except EOFError:
+                        self.conexion_perdida()
                 else:
-                    print('clave invalida')
+                    #print('clave invalida')
                     QMessageBox.about(self,'ERROR' ,'La clave ingresada no es valida')
-    
+    def buscar_nro_orden(self,tupla):
+        mayor = 0
+        for item in tupla:
+            if item[0] > mayor :
+                mayor = item[0]
+        return mayor
     def ver_pdf_reingreso(self):
         ruta = self.carpeta + '/reingresos/reingreso_' + str(self.nro_reingreso) + '.pdf'
         subprocess.Popen([ruta], shell=True)
@@ -2805,6 +2843,28 @@ class Vendedor(QMainWindow):
         self.lb_conexion.setText('DESCONECTADO')
         QMessageBox.about(self,'ERROR','Se perdio la conexion con el servidor')
 
+    def changeEvent(self, event):
+        if event.type() == QEvent.WindowStateChange:
+            if event.oldState() and Qt.WindowMinimized:
+                print("WindowMinimized")
+            elif event.oldState() == Qt.WindowNoState or self.windowState() == Qt.WindowMaximized:
+                print("WindowMaximized, cambiando tamaño de las tablas ...")
+                # ----- SE ADAPTAN TODAS LAS TABLAS  -------
+                #Buscar venta
+                self.tableWidget_1.setColumnWidth(0,80) #interno
+                self.tableWidget_1.setColumnWidth(1,80) #documento
+                self.tableWidget_1.setColumnWidth(2,80) #nro doc
+                self.tableWidget_1.setColumnWidth(3,125) #fecha venta
+                self.tableWidget_1.setColumnWidth(4,200) #vendededor
+                self.tableWidget_1.setColumnWidth(5,100) #total
+                #Crear venta
+                #Buscar orden
+                #Modificar orden
+                #reingreso
+                #ORDEN MANUAL
+                #REINGRESO MANUAL
+
+
 class InputDialog(QDialog):
     def __init__(self,label1,label2,title ,parent=None):
         super().__init__(parent)
@@ -2853,7 +2913,7 @@ class InputDialog2(QDialog):
 if __name__ == '__main__':
     x = 0
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('icono_imagen/madenco logo.ico'))
+    app.setWindowIcon(QIcon('icono_imagen/icono_barv3.png'))
     myappid = 'madenco.personal.area' # arbitrary string
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid) 
     vendedor = Vendedor()

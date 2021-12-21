@@ -3,3 +3,6 @@ formatos
 ordenes
 reingresos
 informes
+dist
+build
+__pycache__

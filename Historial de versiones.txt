@@ -1,0 +1,16 @@
+[Version 5.5 (20-9-2021)]
+- Nueva interfaz, iconos y aplicacion responsive.
+- Se pueden crear ordenes asociadas a guias.
+
+
+---- OLD --------
+[Version 5.4 (20-9-2021)]
+- Se añadio la busqueda por descripcion al crear un reingreso manual
+- Se añadio los creadores de ordenes al informe y a las ordenes manuales vinculados al vendedor.
+- Se añadio una marca de agua "POR FACTURAR" cuando se crea una orden manual.
+[Version 5.3 (1-09-2021)]
+ - se añadio la busqueda por descripcion y codigo de los productos al hacer una orden manual.
+[Version 5.2 (23-8-2021)]
+- Se anadio la opcion para buscar mas rapidamente los productos cuando se hace una orden manual.
+
+
