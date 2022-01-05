@@ -6,3 +6,4 @@ informes
 dist
 build
 __pycache__
+registry.txt

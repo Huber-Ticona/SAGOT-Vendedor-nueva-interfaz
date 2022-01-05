@@ -2262,7 +2262,7 @@ class Vendedor(QMainWindow):
         if datos:
             wb = Workbook()
             ws = wb.active
-            encabezado = ['TIPO DOCUMENTO','NRO DOCUMENTO','NOMBRE CLIENTE', 'NRO ORDEN', 'TELEFONO','DESCRIPCION','CANTIDAD','PRECIO NETO','VENDEDOR','FECHA VENTA','FECHA ORDEN','FECHA ESTIMADA','FECHA REAL','DESPACHO','CONTACTO','ORDEN COMPRA','OBSERVACION','ESTADO','MOTIVO','CREADA POR']
+            encabezado = ['TIPO DOCUMENTO','NRO DOCUMENTO','NOMBRE CLIENTE', 'NRO ORDEN', 'TELEFONO','DESCRIPCION','CANTIDAD','PRECIO NETO','VENDEDOR','FECHA VENTA','FECHA ORDEN','FECHA ESTIMADA','FECHA INGRESO','TRABAJADOR','FECHA REAL','DESPACHO','CONTACTO','ORDEN COMPRA','OBSERVACION','ESTADO','MOTIVO','CREADA POR']
             ws.append(encabezado)
             fv = None
             for item in datos:
@@ -2304,14 +2304,25 @@ class Vendedor(QMainWindow):
                 else:
                     estado = 'VALIDA'
                     motivo = 'Ninguno'
+                # version 5.5.1 informe actualizado compatible con personal area 5.3.1
+                if item[17]:
+                    trabajador = item[17]
+                else:
+                    trabajador = 'NO ASIGNADO'
+                if item[18]:
+                    ingreso = datetime.fromisoformat(str( item[18]) )
+                    fi = str(ingreso.strftime("%d-%m-%Y") )   #FECHA REAL
+                else:
+                    fi = 'NO INGRESADA'
+                #--------------------------------------
                 j = 0
                 while j < len(cant):
-                    fila = [ td,nd,cl,no,tel,desc[j],cant[j],net[j],ve ,fv,fo,fe,fr,de,co,oc,ob,estado,motivo,creador]
+                    fila = [ td,nd,cl,no,tel,desc[j],cant[j],net[j],ve ,fv,fo,fe,fi,trabajador,fr,de,co,oc,ob,estado,motivo,creador]
                     ws.append(fila)
                     j +=1
 
             filas_total = ws.max_row
-            tab = Table(displayName="tabla1" , ref="A1:T"+ str(filas_total) )
+            tab = Table(displayName="tabla1" , ref="A1:V"+ str(filas_total) )
             style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
                                 showLastColumn=False, showRowStripes=True, showColumnStripes=True)
             tab.tableStyleInfo = style
