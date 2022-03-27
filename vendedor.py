@@ -1,14 +1,13 @@
 import sys
 import os
-from turtle import title
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from  matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
-from PyQt5.QtChart import QChart ,QChartView,QPieSeries
 from PyQt5.QtGui import QPixmap , QIcon
-from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent
+from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel
 import rpyc
 import socket
 from time import sleep
@@ -21,7 +20,6 @@ from reportlab.lib.colors import white, black
 from openpyxl import Workbook
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
-
 from openpyxl.utils import get_column_letter
 import subprocess
 
@@ -258,6 +256,17 @@ class Vendedor(QMainWindow):
         self.btn_agregar.clicked.connect(self.agregar)
         self.btn_eliminar.clicked.connect(self.eliminar)
         self.btn_rellenar.clicked.connect(self.rellenar)
+        self.completer = QCompleter()
+        self.completer.activated.connect(self.rellenar_datos_cliente)
+        self.nombres = []
+        self.telefonos = []
+        self.contactos = []
+
+        self.r_dim.toggled.connect(lambda: self.cargar_clientes('dimensionado','normal') if(self.r_dim.isChecked()) else print('no ckeck dim') )
+        self.r_elab.toggled.connect(lambda: self.cargar_clientes('elaboracion','normal') if(self.r_elab.isChecked()) else print('no ckeck elab'))
+        self.r_carp.toggled.connect(lambda: self.cargar_clientes('carpinteria','normal') if(self.r_carp.isChecked()) else print('no ckeck carp'))
+        self.r_pall.toggled.connect(lambda: self.cargar_clientes('pallets','normal') if(self.r_pall.isChecked()) else print('no ckeck pall'))
+
         self.tableWidget_2.setColumnWidth(0,80)
         self.tableWidget_2.setColumnWidth(1,430)
         self.tableWidget_2.setColumnWidth(2,85)
@@ -292,6 +301,13 @@ class Vendedor(QMainWindow):
         self.btn_registrar_1.clicked.connect(self.registrar_orden_manual)
         self.btn_agregar_1.clicked.connect(self.agregar_4)
         self.btn_eliminar_1.clicked.connect(self.eliminar_4)
+        self.completer_manual = QCompleter()
+        self.completer_manual.activated.connect(self.rellenar_datos_cliente_manual)
+
+        self.r_dim_1.toggled.connect(lambda: self.cargar_clientes('dimensionado','manual') if(self.r_dim_1.isChecked()) else print('no ckeck dim') )
+        self.r_elab_1.toggled.connect(lambda: self.cargar_clientes('elaboracion','manual') if(self.r_elab_1.isChecked()) else print('no ckeck elab'))
+        self.r_carp_1.toggled.connect(lambda: self.cargar_clientes('carpinteria','manual') if(self.r_carp_1.isChecked()) else print('no ckeck carp'))
+        self.r_pall_1.toggled.connect(lambda: self.cargar_clientes('pallets','manual') if(self.r_pall_1.isChecked()) else print('no ckeck pall'))
         #  ---- REINGRESO MANUAL ----
         self.btn_registrar_6.clicked.connect(self.reingreso_manual)
         self.txt_descripcion_7.textChanged.connect(self.buscar_descripcion_2)
@@ -460,6 +476,7 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
 
                         self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                        self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
 
                     if guia != None:
                         no_encontrados = False
@@ -481,6 +498,7 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem( detalle['vendedor'] ))             #VENDEDOR
                         self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                         self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                        self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
 
                     if no_encontrados:
                         QMessageBox.about(self,'Busqueda' ,'Documentos NO encontrados para la fecha indicada')
@@ -518,6 +536,7 @@ class Vendedor(QMainWindow):
                             self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
                             self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
                             
+                            
                             aux = consulta[2]
                             aux = aux[0:10]
                             #print(aux)
@@ -528,6 +547,7 @@ class Vendedor(QMainWindow):
     
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                            self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
                     
                     if guias != ():
                         self.guias = guias
@@ -558,6 +578,7 @@ class Vendedor(QMainWindow):
     
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                            self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
                 
 
                     self.vendedores = lista_vendedores
@@ -606,6 +627,7 @@ class Vendedor(QMainWindow):
     
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                            self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
                     
                     if guias != ():
                         self.guias = guias
@@ -636,6 +658,7 @@ class Vendedor(QMainWindow):
     
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                            self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
                 
 
                     self.vendedores = lista_vendedores
@@ -672,6 +695,7 @@ class Vendedor(QMainWindow):
                 self.tableWidget_1.setItem(fila , 5 , QTableWidgetItem(    consulta[2] ))             #VENDEDOR
                 self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
                 self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
 
         if self.guias != None:
             for consulta in self.guias:
@@ -689,6 +713,7 @@ class Vendedor(QMainWindow):
             
                 self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                 self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
+                self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
 
     def filtrar_vendedor(self):
         vendedor = self.comboBox_1.currentText()
@@ -708,7 +733,7 @@ class Vendedor(QMainWindow):
                 _item = self.tableWidget_1.item(row, column) 
                 if _item:            
                     item = self.tableWidget_1.item(row, column).text()
-                    print(f'row: {row}, column: {column}, item={item}')
+                    #print(f'row: {row}, column: {column}, item={item}')
                     aux_item = item[0:10]
                     if aux_item != vendedor:
                         remover.append(row)
@@ -729,10 +754,14 @@ class Vendedor(QMainWindow):
                 
                 nro_interno = int(interno)
                 self.inter = nro_interno
-                print('ventana crear orden ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno))
+                rut = self.tableWidget_1.item(seleccion, 8 ).text()
+                print('ventana crear orden ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno) + ' | rut: ' + rut )
 
                 fecha = datetime.now().date()
                 self.fecha.setCalendarPopup(True)
+                self.r_facturar_1.setChecked(False) # ASI NO MUESTRA EL "POR FACTURAR" 
+                self.r_uso_interno_1.setChecked(False) # ASI NO MUESTRA EL "uso interno" 
+
                 self.fecha.setDate(fecha)    #FECHA ESTIMADA DE ENTREGA
                 self.lb_interno.setText(str(nro_interno)) #nro interno
                 self.nombre_2.setText('')
@@ -742,6 +771,7 @@ class Vendedor(QMainWindow):
                 self.tableWidget_2.setColumnWidth(0,80)
                 self.tableWidget_2.setColumnWidth(1,430)
                 self.tableWidget_2.setColumnWidth(2,85)
+
                 #------- se rellena la ventana ------------------#
                 try:
                     if aux_tipo_doc != 'GUIA' :
@@ -793,8 +823,26 @@ class Vendedor(QMainWindow):
                         self.items = items
                     print(items)
                     self.rellenar()
+                    #----- new 
+                    datos_cliente = self.conexion.root.obtener_cliente(rut)
+                    print(datos_cliente)
+                    if datos_cliente:
+                        print('cliente encontrado --> se rellenan sus datos')
+                        self.nombre_2.setText(datos_cliente[1]) #nombre del cliente
+                        self.telefono_2.setText(datos_cliente[3]) #telefono  del cliente 
+                        self.contacto_2.setText(datos_cliente[4]) #correo (o contacto) del cliente 
+                        
                     self.stackedWidget.setCurrentWidget(self.crear_orden)
-
+                    #------------
+                    #self.tabla_ordenes = self.conexion.root.obtener_clientes_de_ordenes('dimensionado')
+                    #print('cantidad de datos: ' + str(len(self.tabla_ordenes)))
+                    #ordenes = pd.DataFrame(self.tabla_ordenes)
+                    #nombres = ordenes[1].tolist()
+                    #print(ordenes.head())
+                    #print(nombres[7])
+                    #completer = QCompleter( nombres )
+                    #self.nombre_2.setCompleter(completer)
+                    
 
                 except EOFError:
                     QMessageBox.about(self, 'ERROR', 'Se perdio la conexion con el servidor')
@@ -868,6 +916,23 @@ class Vendedor(QMainWindow):
             self.tableWidget_2.removeRow(fila)
         else: 
             QMessageBox.about(self,'Consejo', 'Seleccione una fila para eliminar')
+
+    def rellenar_datos_cliente(self):
+        print('------- QCOMPLETE ACTIVADO --------------')
+        nombre_cliente = self.nombre_2.text()
+        print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+        try:
+            index = self.nombres.index(nombre_cliente)
+        except ValueError:
+            index = -1
+
+        if index >= 0:
+            #nombre_cliente = nombre_cliente.rstrip()
+            #print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+            self.telefono_2.setText(str(self.telefonos[index]))
+            self.contacto_2.setText(str(self.contactos[index]))
+        print('------- QCOMPLETE FIN --------------')
+
 
     def registrar_orden(self):
         nombre = self.nombre_2.text()
@@ -997,12 +1062,16 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self, 'Sugerencia', 'Ingrese un telefono antes de continuar')           
         else:
             QMessageBox.about(self, 'Sugerencia', 'Ingrese un nombre antes de continuar')
+    
+    
+        
 
     
         
 # ------ Funciones de buscar orden de trabajo -------------
     def inicializar_buscar_orden(self):
         self.anterior = None #SABER SI VUELVE A ESTADISTICAS O AQUI
+        self.r_facturar_1.setChecked(False) # ASI NO MUESTRA EL "POR FACTURAR" 
         self.txt_orden.setText('')
         self.txt_cliente.setText('')
         self.dateEdit.setDate(datetime.now().date())
@@ -1854,7 +1923,7 @@ class Vendedor(QMainWindow):
             if dialog.exec():
                 clave = dialog.getInputs()
                 try:
-                    resultado = self.conexion.root.obtener_clave()
+                    resultado = self.conexion.root.obtener_clave('dinamica') #v
                     end = 0
                     for item in resultado:
                         if clave == item[0]:
@@ -1885,6 +1954,7 @@ class Vendedor(QMainWindow):
         self.tb_orden_manual.setColumnWidth(0,80)
         self.tb_orden_manual.setColumnWidth(1,350)
         self.tb_orden_manual.setColumnWidth(2,85)
+       
         #-----datos de reingreso manual  ------
         self.comboBox_6.clear()
         self.comboBox_6.addItem('No asignado')
@@ -1987,7 +2057,7 @@ class Vendedor(QMainWindow):
                             
                             resultado = self.conexion.root.buscar_orden_dim_interno(interno)
                             if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave)
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                 self.clave = None
                             self.nro_orden = self.buscar_nro_orden(resultado)
                             self.conexion.root.actualizar_orden_dim_obser(observacion , self.nro_orden)
@@ -2003,7 +2073,7 @@ class Vendedor(QMainWindow):
                         elif self.r_elab_1.isChecked():
                             self.conexion.root.registrar_orden_elaboracion( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle,f_venta,vendedor)
                             if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave)
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                 self.clave = None
                             resultado = self.conexion.root.buscar_orden_elab_interno(interno)
                             self.nro_orden = self.buscar_nro_orden(resultado)
@@ -2019,7 +2089,7 @@ class Vendedor(QMainWindow):
                         elif self.r_carp_1.isChecked():
                             self.conexion.root.registrar_orden_carpinteria( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta ,vendedor)
                             if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave)
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                 self.clave = None
                             resultado = self.conexion.root.buscar_orden_carp_interno(interno)
                             self.nro_orden = self.buscar_nro_orden(resultado)
@@ -2035,7 +2105,7 @@ class Vendedor(QMainWindow):
                         elif self.r_pall_1.isChecked():
                             self.conexion.root.registrar_orden_pallets( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta,vendedor)
                             if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave)
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                 self.clave = None
                             resultado = self.conexion.root.buscar_orden_pall_interno(interno)
                             self.nro_orden = self.buscar_nro_orden(resultado)
@@ -2118,7 +2188,23 @@ class Vendedor(QMainWindow):
             self.txt_obs_1.appendPlainText(obs)
         else:
             self.txt_obs_1.clear() 
- 
+    def rellenar_datos_cliente_manual(self):
+        print('------- QCOMPLETE MANUAL ACTIVADO --------------')
+        nombre_cliente = self.nombre_1.text()
+        print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+        try:
+            index = self.nombres.index(nombre_cliente)
+        except ValueError:
+            index = -1
+
+        if index >= 0:
+            #nombre_cliente = nombre_cliente.rstrip()
+            #print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+            self.telefono_1.setText(str(self.telefonos[index]))
+            self.contacto_1.setText(str(self.contactos[index]))
+        print('------- QCOMPLETE MANUAL FIN --------------')
+
+ #------ funciones reingreso manual
     def reingreso_manual(self):
         nro_orden = self.txt_orden_6.text()           #NUMERO DE ORDEN
         tipo_doc = self.comboBox_6.currentText() #TIPO DE DOCUMENTO
@@ -2206,7 +2292,7 @@ class Vendedor(QMainWindow):
                         datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
                         self.crear_pdf_reingreso(datos)
                         if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave)
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                 self.clave = None
 
                         boton = QMessageBox.question(self, 'Reingreso registrado correctamente', 'Desea ver el reingreso?')
@@ -2700,7 +2786,7 @@ class Vendedor(QMainWindow):
             clave = dialog.getInputs()
             if clave != '':
                 try:
-                    if self.conexion.root.registrar_clave(clave):
+                    if self.conexion.root.registrar_clave(clave,'dinamica'):
                         QMessageBox.about(self,'EXITO' ,'CLAVE: ' + clave +' REGISTRADA')
                     else:
                         QMessageBox.about(self,'ERROR' ,'ERROR AL REGISTRAR LA CLAVE')
@@ -2710,6 +2796,34 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self,'ERROR' ,'Ingrese una clave antes de continuar')
 
 #----- funciones generales -----------
+    def cargar_clientes(self, tipo_orden, tipo_estado):
+        datos = []
+        print('obteniendo clientes de: ' + tipo_orden)
+        datos = self.conexion.root.obtener_clientes_de_ordenes(tipo_orden)
+        print(str(len(datos)))
+        print(str(type(datos)))
+        print('orden: '+ tipo_orden + ' | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
+        #self.txt_detalle.setText('orden: '+ tipo_orden + ' | len: ' + str(len(self.datos)) + ' | type: '+ str(type(self.datos)))
+        ordenes = pd.DataFrame(datos) #([0]nombre, [1]telefono, [2]contacto)
+        self.nombres = ordenes[0].tolist()
+        self.telefonos = ordenes[1].tolist()
+        self.contactos = ordenes[2].tolist()
+        model = QStringListModel(self.nombres)
+        print(str(type(model)))
+   
+        if tipo_estado == 'normal':
+            self.completer.setModel(model)
+            self.completer.setMaxVisibleItems(7)
+            self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+            print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+            self.nombre_2.setCompleter(self.completer)
+        elif tipo_estado == 'manual':
+            self.completer_manual.setModel(model)
+            self.completer_manual.setMaxVisibleItems(7)
+            self.completer_manual.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+            print(self.completer_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+            self.nombre_1.setCompleter(self.completer_manual)
+    
     def decidir_atras(self):
         if self.anterior: 
             self.stackedWidget.setCurrentWidget(self.estadisticas)
@@ -3021,7 +3135,7 @@ class Vendedor(QMainWindow):
             dialog.resize(400,100)
             if dialog.exec():
                 aux_clave , motivo = dialog.getInputs()
-                claves = self.conexion.root.obtener_clave()
+                claves = self.conexion.root.obtener_clave('dinamica')
                 clave = (aux_clave ,)
                 if clave in claves:
                     print('clave valida')
@@ -3036,7 +3150,7 @@ class Vendedor(QMainWindow):
                     
                     try:
                         self.conexion.root.anular_orden( tipo.lower(), extra, self.nro_orden )
-                        self.conexion.root.eliminar_clave(aux_clave)
+                        self.conexion.root.eliminar_clave(aux_clave,'dinamica')
                         QMessageBox.about(self,'EXITO' ,'Orden nro: ' + str(self.nro_orden) + ' Anulada')
                         self.inicializar_buscar_orden()
                     except EOFError:
@@ -3340,7 +3454,6 @@ class Grafico(QWidget):
 
     
 if __name__ == '__main__':
-    x = 0
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('icono_imagen/icono_barv3.png'))
     myappid = 'madenco.personal.area' # arbitrary string

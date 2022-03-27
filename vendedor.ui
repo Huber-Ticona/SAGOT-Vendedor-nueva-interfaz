@@ -558,7 +558,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="inicio">
              <widget class="QLabel" name="label_5">
@@ -845,7 +845,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
                     </size>
                    </property>
                    <property name="columnCount">
-                    <number>8</number>
+                    <number>9</number>
                    </property>
                    <attribute name="horizontalHeaderHighlightSections">
                     <bool>true</bool>
@@ -888,6 +888,11 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
                    <column>
                     <property name="text">
                      <string>Despacho domicilio</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Rut</string>
                     </property>
                    </column>
                   </widget>
@@ -1815,7 +1820,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
                  <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="tab_3">
                  <attribute name="title">
@@ -4430,7 +4435,7 @@ ORDEN DE:</string>
              </size>
             </property>
             <property name="text">
-             <string>App Vendedor - Versión 5.5 </string>
+             <string>App Vendedor - Versión 5.7</string>
             </property>
            </widget>
           </item>
