@@ -1,16 +1,22 @@
+[Version 5.8 (5-8-2022)]
+- Gestion de los reingresos habilitada(busqueda,modificar,anular,validar)
+- Pestaña de estadisticas enfocada a la busqueda de ordenes manuales, para su relleno.
+- Informes de reingreso actualizados.
+- Se habilito activar despacho a domicilio al documento asociado a una orden, cuando esta se genera.
+
 [Version 5.7 (26-3-2022)]
 - Prediccion de clientes implementada.
 - correccion de bugs(marca de uso interno)
 - 
 
-[Version 5.6 (20-9-2021)]
+[Version 5.6 (11-2-2022)]
 - modulo de asignar despacho a documento de venta implementado.
 - modulo de estadisticas y busqueda de ordenes manuales implementado.
 - ahora se genera la vinculacion al modificar el tipo_doc y nro_doc de una orden de trabajo.
 - correccion de errores al modificar ordenes manuales.
 - nuevos iconos de interfaz.
 
-[Version 5.5.1 (20-9-2021)]
+[Version 5.5.1 (5-1-2022)]
 - informes Compatibles con personal area v5.3.2
 
 [Version 5.5 (20-9-2021)]

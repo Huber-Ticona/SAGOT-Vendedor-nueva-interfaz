@@ -1,3 +1,4 @@
+from doctest import debug_script
 import sys
 import os
 import pandas as pd
@@ -10,8 +11,8 @@ from PyQt5.QtGui import QPixmap , QIcon
 from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel
 import rpyc
 import socket
-from time import sleep
-from datetime import datetime, timedelta
+from time import sleep, strftime
+from datetime import datetime, timedelta,date 
 import json
 import ctypes
 from reportlab.pdfgen import canvas
@@ -219,9 +220,10 @@ class Vendedor(QMainWindow):
         self.dir_informes = None
         
         self.vendedores = None
-        self.aux_tabla = None
+        self.aux_tabla = None #tabla de respaldo, para usar filtros. usada par fitrar x vendedor, nulas y manuales incompletas
         self.bol_fact = None # boletas y facturas encontradas
         self.guias = None    # guias encontradas
+        self.manuales = None # respaldo de solo ordenes manuales
         # -----------
         self.nro_doc = 0  
         self.nro_orden = 0 #NRO FOLIO DE LA ORDEN CREADA
@@ -238,6 +240,9 @@ class Vendedor(QMainWindow):
         self.nro_reingreso = 0
         self.aux_vendedor = None
         self.anterior = None #Determina si al volver atras, vuelve a buscar ordenes o estadisticas -> buscar ordenes manuales
+        self.anterior2 = None #Determina si volver atras vuelve a gestion de reingresos o busqueda de ordenes de trabajo.
+        self.aux_detalle = None
+        self.version = 'version-5.8'
 #--------------- FUNCIONES GLOBALES ---------
         self.iniciar_session()
         self.inicializar()
@@ -291,7 +296,15 @@ class Vendedor(QMainWindow):
         self.btn_generar_reingreso.clicked.connect(self.registrar_reingreso)
         self.btn_agregar_2.clicked.connect(self.agregar_3)
         self.btn_eliminar_2.clicked.connect(self.eliminar_3)
-        self.btn_atras_7.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden))
+        self.btn_atras_7.clicked.connect( lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden) )
+        # GESTION REINGRESO
+        self.btn_buscar_reingreso.clicked.connect(self.buscar_reingreso_1)
+        self.btn_mod_reingreso_1.clicked.connect(self.vista_modificar_reingreso)
+        self.btn_anular_reingreso.clicked.connect(lambda:  self.anular_validar_reingreso('ANULAR') )
+        self.btn_validar_reingreso.clicked.connect( lambda:  self.anular_validar_reingreso('VALIDAR')  )
+
+        self.btn_guardar_6.clicked.connect(lambda: self.reingreso_manual('actualizar')  )
+        self.btn_ver_pdf_reingreso.clicked.connect(self.verificar_pdf_reingreso)
         # INGRESO MANUAL
         #  ---- ORDEN MANUAL ----
         self.txt_descripcion_1.textChanged.connect(self.buscar_descripcion)
@@ -309,7 +322,7 @@ class Vendedor(QMainWindow):
         self.r_carp_1.toggled.connect(lambda: self.cargar_clientes('carpinteria','manual') if(self.r_carp_1.isChecked()) else print('no ckeck carp'))
         self.r_pall_1.toggled.connect(lambda: self.cargar_clientes('pallets','manual') if(self.r_pall_1.isChecked()) else print('no ckeck pall'))
         #  ---- REINGRESO MANUAL ----
-        self.btn_registrar_6.clicked.connect(self.reingreso_manual)
+        self.btn_registrar_6.clicked.connect(lambda: self.reingreso_manual('registrar') )
         self.txt_descripcion_7.textChanged.connect(self.buscar_descripcion_2)
         self.btn_add_6.clicked.connect(self.add_descripcion_2)
 
@@ -317,7 +330,7 @@ class Vendedor(QMainWindow):
         self.btn_eliminar_6.clicked.connect(self.eliminar_6)
 
         self.btn_atras_3.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
-        self.btn_atras_6.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
+        self.btn_atras_6.clicked.connect(self.decidir_atras2)
         #informes
         self.btn_generar_informe.clicked.connect(self.generar_informe)
         self.comboBox.currentIndexChanged['QString'].connect(self.vista_reingreso)
@@ -328,10 +341,13 @@ class Vendedor(QMainWindow):
         self.btn_grafico.clicked.connect(self.crear_grafico)
         self.btn_buscar_manuales.clicked.connect(self.buscar_manuales)
         self.btn_modificar_5.clicked.connect(self.continuar_orden_manual)
+        self.check_incompletas.stateChanged.connect(self.filtrar_solo_incompletas)
+
         #generar clave
         self.btn_generar_clave.clicked.connect(self.generar_clave)
 
-
+        #CONFIGURACION
+        self.btn_configuracion.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
         #SIDE MENU BOTONES
         self.btn_buscar.clicked.connect(self.inicializar_buscar_venta)
         self.btn_modificar.clicked.connect(self.inicializar_buscar_orden)
@@ -340,7 +356,7 @@ class Vendedor(QMainWindow):
         self.btn_atras.clicked.connect(self.cerrar_sesion)
         self.btn_conectar.clicked.connect(self.conectar)
         self.btn_estadisticas.clicked.connect(self.inicializar_estadisticas)
-
+        self.btn_reingreso.clicked.connect(self.inicializar_buscar_reingreso)
         self.btn_menu.clicked.connect(self.mostrar_menu)
 
     def iniciar_session(self):
@@ -372,6 +388,7 @@ class Vendedor(QMainWindow):
         self.btn_informe.setIcon(QIcon('icono_imagen/informes.png'))
         self.btn_estadisticas.setIcon(QIcon('icono_imagen/estadisticas2.png'))
         self.btn_configuracion.setIcon(QIcon('icono_imagen/configuracion.png'))
+        self.btn_reingreso.setIcon(QIcon('icono_imagen/reingreso.png'))
 
         self.btn_generar_clave.show()
         self.btn_orden_manual.show()
@@ -768,6 +785,12 @@ class Vendedor(QMainWindow):
                 self.telefono_2.setText('')
                 self.contacto_2.setText('')
                 self.oce_2.setText('')
+                self.r_enchape.setChecked(False)
+                self.r_despacho.setChecked(False)
+                self.r_dim.setChecked(False)
+                self.r_carp.setChecked(False)
+                self.r_elab.setChecked(False)
+                self.r_pall.setChecked(False)
                 self.tableWidget_2.setColumnWidth(0,80)
                 self.tableWidget_2.setColumnWidth(1,430)
                 self.tableWidget_2.setColumnWidth(2,85)
@@ -999,7 +1022,10 @@ class Vendedor(QMainWindow):
 
                             if self.r_despacho.isChecked():
                                 despacho = 'SI'
-                            
+                                if self.conexion.root.actualizar_despacho(self.tipo_doc, self.inter , despacho):
+                                    print('ORDEN CON DESPACHO -> CONFIRMA NOTA VENTA con DESPACHO.')
+                                else:
+                                    print('ORDEN CON DESPACHO ->Erro al actualizar DESPACHO A NOTA VENTA')
                             if self.r_dim.isChecked():
 
                                 if self.r_enchape.isChecked():
@@ -1013,7 +1039,7 @@ class Vendedor(QMainWindow):
                                 self.crear_vinculo('dimensionado')
                                 datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce,self.vendedor)
                                 self.crear_pdf(datos,'dimensionado',despacho)
-
+                                self.inicializar_buscar_venta()
                                 boton = QMessageBox.question(self, 'Orden de dimensionado registrada correctamente', 'Desea abrir la Orden?')
                                 if boton == QMessageBox.Yes:
                                     self.ver_pdf('dimensionado')
@@ -1024,6 +1050,7 @@ class Vendedor(QMainWindow):
                                 self.crear_vinculo('elaboracion')
                                 datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
                                 self.crear_pdf(datos , 'elaboracion',despacho)
+                                self.inicializar_buscar_venta()
                                 boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
                                 if boton == QMessageBox.Yes:
                                     self.ver_pdf('elaboracion')
@@ -1034,6 +1061,7 @@ class Vendedor(QMainWindow):
                                 self.crear_vinculo('carpinteria')
                                 datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
                                 self.crear_pdf(datos , 'carpinteria',despacho)
+                                self.inicializar_buscar_venta()
                                 boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
                                 if boton == QMessageBox.Yes:
                                     self.ver_pdf('carpinteria')
@@ -1044,6 +1072,7 @@ class Vendedor(QMainWindow):
                                 self.crear_vinculo('pallets')
                                 datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
                                 self.crear_pdf( datos , 'pallets',despacho)
+                                self.inicializar_buscar_venta()
                                 boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
                                 if boton == QMessageBox.Yes:
                                     self.ver_pdf('pallets')
@@ -1071,6 +1100,7 @@ class Vendedor(QMainWindow):
 # ------ Funciones de buscar orden de trabajo -------------
     def inicializar_buscar_orden(self):
         self.anterior = None #SABER SI VUELVE A ESTADISTICAS O AQUI
+        self.anterior2 = None #SABER SI VUELVE A GESTION REINGRESOS O AKI
         self.r_facturar_1.setChecked(False) # ASI NO MUESTRA EL "POR FACTURAR" 
         self.txt_orden.setText('')
         self.txt_cliente.setText('')
@@ -1435,17 +1465,28 @@ class Vendedor(QMainWindow):
                         if resultado[6]:
                             if resultado[6] == 'BOLETA':
                                 self.comboBox_5.addItem( resultado[6] )                 #TIPO DOCUMENTO
-                                #self.comboBox_5.addItem('FACTURA')
+                                self.comboBox_5.addItem('FACTURA')
+                                self.comboBox_5.addItem('GUIA')
                                 self.tipo_doc = resultado[6]
+
                             elif resultado[6] == 'FACTURA':
                                 self.comboBox_5.addItem( resultado[6] )                 #TIPO DOCUMENTO
-                                #self.comboBox_5.addItem('BOLETA')
+                                self.comboBox_5.addItem('BOLETA')
+                                self.comboBox_5.addItem('GUIA')
                                 self.tipo_doc = resultado[6]
                             elif resultado[6] == 'GUIA':
                                 self.comboBox_5.addItem(resultado[6])
+                                self.comboBox_5.addItem('FACTURA')  
+                                self.comboBox_5.addItem('BOLETA')
                                 self.tipo_doc = resultado[6]
+                            elif resultado[6] == 'NO ASIGNADO':
+                                self.comboBox_5.addItem('NO ASIGNADO') 
+                                self.comboBox_5.addItem('FACTURA')  
+                                self.comboBox_5.addItem('BOLETA')
+                                self.comboBox_5.addItem('GUIA')
                         else:
-                            self.comboBox_5.addItem('NO ASIGNADO')  
+                            print('no existe su tipo doc') # else compatible con la version antgua donde tipo doc era null, actualmente tipo doc es 'no asignado'
+                            self.comboBox_5.addItem('NO ASIGNADO') 
                             self.comboBox_5.addItem('FACTURA')  
                             self.comboBox_5.addItem('BOLETA')
                             self.comboBox_5.addItem('GUIA')
@@ -1542,7 +1583,7 @@ class Vendedor(QMainWindow):
             abrir = self.carpeta + '/ordenes/'  + 'pallets_' +str(self.nro_orden) + '.pdf'
             tipo = 'pallets'
         print('verificando existencia del PDF ....')
-        print(self.vendedor)
+        #print(self.vendedor)
         print(self.tipo_doc)
         if not os.path.isfile(abrir):
             
@@ -1693,7 +1734,9 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self, 'Sugerencia', 'Ingrese un telefono antes de continuar')           
         else:
             QMessageBox.about(self, 'Sugerencia', 'Ingrese un nombre antes de continuar')
- # Funcion para generar REINGRESO -------------
+ 
+
+ #  Funcion para generar REINGRESO -------------
     def inicializar_reingreso(self):
         seleccion = self.tb_buscar_orden.currentRow()
         if seleccion != -1:
@@ -1708,6 +1751,29 @@ class Vendedor(QMainWindow):
                 self.tb_reingreso_2.setColumnWidth(1,80)
                 self.tb_reingreso_2.setColumnWidth(0,430)
                 self.tb_reingreso_2.setColumnWidth(2,85)
+                self.combo_motivos.clear()
+                self.combo_soluciones.clear()
+                self.txt_descripcion_2.clear()
+                self.grupo_motivos.hide() #V5.8 
+                self.txt_solucion_2.hide()#v5.8
+                parametros_reingreso = self.conexion.root.obtener_parametros_reingreso()
+                if parametros_reingreso:
+                    if parametros_reingreso[1] != None:
+                        detalle = json.loads(parametros_reingreso[1])
+                        try:
+                            lista_motivos = detalle["lista_motivos"]
+                            for item in lista_motivos:
+                                self.combo_motivos.addItem(item)
+                        except:
+                            pass
+                        
+                        try:
+                            lista_soluciones = detalle['lista_soluciones']
+                            for item in lista_soluciones:
+                                self.combo_soluciones.addItem(item)
+                        except:
+                            pass
+                
                 self.rellenar_datos_reingreso()
                 self.stackedWidget.setCurrentWidget(self.reingreso)
         else:
@@ -1722,17 +1788,18 @@ class Vendedor(QMainWindow):
             nro_doc = None
             
         fecha = datetime.now().date()
-        motivo = ''
+        motivo = self.combo_motivos.currentText() #v5.8
+        '''
         if self.r_cambio_2.isChecked():
             motivo = 'CAMBIO'
         elif self.r_devolucion_2.isChecked():
             motivo = 'DEVOLUCION'
         elif self.r_otro_2.isChecked():
-            motivo = self.txt_otro_2.text()
+            motivo = self.txt_otro_2.text()'''
         
         proceso = self.lb_proceso_2.text()
         descr = self.txt_descripcion_2.toPlainText()
-        solucion = self.txt_solucion_2.toPlainText()
+        solucion = self.combo_soluciones.currentText()  #v5.8
         lineas = 0
 
         if motivo != '' and descr != '' and solucion != '' :
@@ -1779,7 +1846,9 @@ class Vendedor(QMainWindow):
                 formato = {
                         "cantidades" : cantidades,
                         "descripciones" : descripciones,
-                        "valores_neto": valores_neto
+                        "valores_neto": valores_neto,
+                        "creado_por" : self.datos_usuario[8],
+                        "compatibilidad": "version-5.8"
                     }
                 detalle = json.dumps(formato)
                 '''print(fecha)
@@ -1804,6 +1873,7 @@ class Vendedor(QMainWindow):
 
                     boton = QMessageBox.question(self, 'Reingreso registrado correctamente', 'Desea ver el reingreso?')
                     if boton == QMessageBox.Yes:
+                        self.stackedWidget.setCurrentWidget(self.inicio)
                         self.ver_pdf_reingreso()
                 else:
                     QMessageBox.about(self,'ERROR','404 NOT FOUND. Contacte con Don Huber ...problemas al registrar')
@@ -1910,11 +1980,338 @@ class Vendedor(QMainWindow):
             self.tb_reingreso_2.removeRow(fila)
         else: 
             QMessageBox.about(self,'Consejo', 'Seleccione una fila para eliminar')
- 
+ # FUNCIONES PARA GESTION DEL REINGRESO 
+    def inicializar_buscar_reingreso(self):
+        self.anterior2 = True
+        self.r_reingreso_2.setChecked(True)
+        self.dateEdit_2.setCalendarPopup(True)
+        self.dateEdit_2.setDate(datetime.now())
+        self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
+    
+    def buscar_reingreso_1(self):
+        print('buscando reingreso')
+        self.tb_buscar_reingreso.setRowCount(0)
+        if self.r_reingreso_2.isChecked():
+            print('uscando x numero reingreso')
+            numero = self.txt_reingreso_2.text()
+            if numero != '':
+                numero = int(numero)
+                print('buscando ', numero)
+                consulta = self.conexion.root.obtener_reingreso_x_numero(numero)
+                print(consulta)
+                if consulta:
+                    fila = self.tb_buscar_reingreso.rowCount()
+                    self.tb_buscar_reingreso.insertRow(fila)
+                    self.tb_buscar_reingreso.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #FECHA
+                    self.tb_buscar_reingreso.setItem(fila , 1 , QTableWidgetItem(str(consulta[0]) )) #NRO REINGRESO
+                    self.tb_buscar_reingreso.setItem(fila , 2 , QTableWidgetItem(str(consulta[2])))      #TIPO DOCUMENTO
+                    self.tb_buscar_reingreso.setItem(fila , 3 , QTableWidgetItem(str(consulta[3]  ))) #NRO DOCUMENTO
+
+                    self.tb_buscar_reingreso.setItem(fila , 4 , QTableWidgetItem(str(consulta[7] )   ))      #PROCESO
+                    detalle = json.loads(consulta[8])
+                    try:
+                        creador = detalle["creado_por"]
+                    except KeyError:
+                        creador = 'No registrado'
+
+                    self.tb_buscar_reingreso.setItem(fila , 5 , QTableWidgetItem( str(consulta[4] ) ))             # nro orden
+
+                    try:
+                        version = detalle["compatibilidad"]
+                    except KeyError:
+                        version = 'version-5.7'
+
+                    self.tb_buscar_reingreso.setItem(fila , 6 , QTableWidgetItem( creador ))             #Vendedor
+                    try:
+                        estado = detalle["estado"]
+                    except KeyError:
+                        estado = 'VALIDA'
+                    self.tb_buscar_reingreso.setItem(fila , 7 , QTableWidgetItem(  estado  ))  #estado
+
+                    self.tb_buscar_reingreso.setItem(fila , 8 , QTableWidgetItem( version ))  #version de compatibilidad
+
+        elif self.r_fecha_2.isChecked():
+            
+            print('uscando x fecha')
+            fecha = self.dateEdit_2.date()
+            print(fecha)
+            fecha = fecha.toPyDate()
+            print(fecha)
+
+            lista_consulta = self.conexion.root.obtener_reingreso_x_fecha(str(fecha))
+            if lista_consulta:
+                for consulta in lista_consulta:
+                    fila = self.tb_buscar_reingreso.rowCount()
+                    self.tb_buscar_reingreso.insertRow(fila)
+                    self.tb_buscar_reingreso.setItem(fila , 0 , QTableWidgetItem(str(consulta[1]))) #FECHA
+                    self.tb_buscar_reingreso.setItem(fila , 1 , QTableWidgetItem(str(consulta[0]) )) #NRO REINGRESO
+                    self.tb_buscar_reingreso.setItem(fila , 2 , QTableWidgetItem(str(consulta[2])))      #TIPO DOCUMENTO
+                    self.tb_buscar_reingreso.setItem(fila , 3 , QTableWidgetItem(str(consulta[3]  ))) #NRO DOCUMENTO
+
+                    self.tb_buscar_reingreso.setItem(fila , 4 , QTableWidgetItem(str(consulta[7] )   ))      #PROCESO
+                    detalle = json.loads(consulta[8])
+                    try:
+                        creador = detalle["creado_por"]
+                    except KeyError:
+                        creador = 'No registrado'
+
+                    self.tb_buscar_reingreso.setItem(fila , 5 , QTableWidgetItem( str(consulta[4] ) ))             # nro orden
+
+                    try:
+                        version = detalle["compatibilidad"]
+                    except KeyError:
+                        version = 'version-5.7'
+
+                    self.tb_buscar_reingreso.setItem(fila , 6 , QTableWidgetItem( creador ))             #Vendedor
+                    try:
+                        estado = detalle["estado"]
+                    except KeyError:
+                        estado = 'VALIDA'
+                    self.tb_buscar_reingreso.setItem(fila , 7 , QTableWidgetItem(  estado  ))  #estado
+
+                    self.tb_buscar_reingreso.setItem(fila , 8 , QTableWidgetItem( version ))  #version de compatibilidad
+
+
+        elif self.r_tipo_reingreso_2.isChecked():
+            print('buscando x tipo reingreso')
+            tipo = self.comboBox_2.currentText()
+            print('buscando x ', tipo)
+
+    def vista_modificar_reingreso(self):
+        print('REDIRECCIONAR A VISTA MODIFICAR REINGRESO')
+        seleccion = self.tb_buscar_reingreso.currentRow()
+        if seleccion != -1:
+            _item = self.tb_buscar_reingreso.item( seleccion, 0) 
+            if _item:            
+                nro_reingreso = self.tb_buscar_reingreso.item( seleccion, 1).text() 
+                
+                print(self.version)
+                estado = self.tb_buscar_reingreso.item( seleccion, 7).text() 
+                print(estado)
+                print('ventana  reingreso ... para: xd' , nro_reingreso )
+                self.rellenar_datos_reingreso2(nro_reingreso)
+                self.tabWidget_2.setCurrentIndex(1)
+
+                self.btn_registrar_6.hide() 
+
+                self.btn_guardar_6.show()
+                if estado == 'VALIDA':
+                    self.btn_validar_reingreso.hide()
+                    self.btn_anular_reingreso.show()
+                elif estado == 'ANULADA':
+                    self.btn_anular_reingreso.hide()
+                    self.btn_validar_reingreso.show()
+
+                self.label_65.show()
+                self.lb_reingreso_6.show()
+                self.lb_reingreso_6.setText(str(nro_reingreso))
+
+
+                self.stackedWidget.setCurrentWidget(self.ingreso_manual)
+        else:
+            QMessageBox.about(self,'ERROR', 'Seleccione una fila antes de continuar')
+    def rellenar_datos_reingreso2(self, id):
+
+        self.rellenar_datos_manual()
+        print('rellenando datos reingreso para: ', id)
+        try:
+            resultado = self.conexion.root.obtener_reingreso_x_numero(id) 
+            self.nro_reingreso = id #GUARDA EL ID DEL REINGRESO PARA SU POSIBLE USO POSTERIOR (ANULAR, ACTUALIZAR, VER PDF)
+            print('id reingreso copiado')
+            tipo_doc = resultado[2] # 0 no asignado - 1 boleta - 2 factura - 3 guia
+            if tipo_doc:
+                if tipo_doc == 'BOLETA':
+                    self.comboBox_6.setCurrentIndex(1)
+                elif tipo_doc == 'FACTURA':
+                    self.comboBox_6.setCurrentIndex(2)
+                elif tipo_doc == 'GUIA':
+                    self.comboBox_6.setCurrentIndex(3)
+
+            nro_doc = resultado[3]
+            self.txt_nro_doc_6.setText(str(nro_doc))
+            nro_orden =  resultado[4]
+            self.txt_orden_6.setText(str(nro_orden))
+            motivo = resultado[5]
+
+            if motivo == 'CAMBIO':
+                self.r_cambio_6.setChecked(True)
+
+            elif motivo == 'DEVOLUCION':
+                self.r_devolucion_6.setChecked(True)
+            else:
+                self.r_otro_6.setChecked(True)
+                self.txt_otro_6.setText(motivo)
+
+            descripcion = resultado[6]
+            self.txt_descripcion_6.appendPlainText(descripcion)
+            proceso = resultado[7]
+            if proceso == 'DIMENSIONADO':
+                self.r_d_6.setChecked(True)
+            elif proceso == 'ELABORACION':
+                self.r_e_6.setChecked(True)
+            elif proceso == 'CARPINTERIA':
+                self.r_c_6.setChecked(True)
+            elif proceso == 'PALLETS':
+                self.r_p_6.setChecked(True)
+
+            detalle = json.loads(resultado[8])
+            self.aux_detalle = detalle # COPIA DEL DETALLE, PARA LUEGO AÑADIR MAS OPCIONES SIN REALIZAR OTRA CONSULTA.
+
+            cantidades = detalle["cantidades"]
+            descripciones = detalle["descripciones"]
+            netos = detalle["valores_neto"]
+            j = 0
+            while j < len( cantidades ):
+                fila = self.tb_reingreso_manual.rowCount()
+                self.tb_reingreso_manual.insertRow(fila)
+                self.tb_reingreso_manual.setItem(fila , 0 , QTableWidgetItem( descripciones[j] ) ) 
+                self.tb_reingreso_manual.setItem(fila , 1 , QTableWidgetItem( str( cantidades[j] )  ) )
+                self.tb_reingreso_manual.setItem(fila , 2 , QTableWidgetItem( str( netos[j] )  ) )
+                j+=1 
+
+            solucion = resultado[9]
+            self.txt_solucion_6.appendPlainText(solucion)
+            try:
+                compatibilidad = detalle['compatibilidad']
+                self.version = compatibilidad
+            except KeyError:
+                self.version = 'version-5.7'
+
+            print(self.version)   
+            if self.version == 'version-5.8':
+                    print('VERSION 5.8 compatible')
+                    self.grupo_motivos_2.hide()
+                    self.txt_solucion_6.hide()
+                    self.combo_motivos_2.show()
+                    self.combo_soluciones_2.show()
+                    aux = self.combo_motivos_2.findText(motivo)
+                    print(aux)
+                    if aux != -1:
+                        self.combo_motivos_2.setCurrentIndex(aux)
+                    
+                    aux2 = self.combo_soluciones_2.findText(solucion)
+                    print(aux2)
+                    if aux2 != -1:
+                        self.combo_soluciones_2.setCurrentIndex(aux2)
+            else:
+                print('VERSION 5.7 - error de compatibilidad')
+                self.version = 'version-5.7'
+                self.combo_motivos_2.hide()
+                self.combo_soluciones_2.hide()
+                self.grupo_motivos_2.show()
+                self.txt_solucion_6.show()
+
+
+                
+        except EOFError:
+            self.conexion_perdida()   
+    def anular_validar_reingreso(self, nuevo_estado):
+        if nuevo_estado == 'ANULAR':
+            print('anulando reingreso: ',self.nro_reingreso)
+            estado = 'ANULADA'
+        elif nuevo_estado == 'VALIDAR':
+            print('VALIDANDO reingreso: ',self.nro_reingreso)
+            estado = 'VALIDA'
+
+        print(self.aux_detalle)
+        nuevo_detalle = self.aux_detalle
+        nuevo_detalle['estado'] = estado
+        fecha = datetime.now()
+        fecha = fecha.strftime('%d-%m-%Y %H:%M')
+        item = {
+            'vendedor': self.datos_usuario[8],
+            'fecha' : str(fecha) ,
+            'estado': estado
+        }
+        print(item)
+        itemx = json.dumps(item)
+
+        historial = None
+        try:
+            historial = nuevo_detalle['historial']
+            print('Tiene registro de cambios de estado.')
+            historial.append(item)
+            
+        except KeyError:
+            print('no tiene registro de cambios de estado.')
+            historial = []
+            historial.append(item)
+
+        nuevo_detalle['historial'] = historial
+        nuevo_detalle = json.dumps(nuevo_detalle)
+        print(nuevo_detalle)
+        try:
+            if self.conexion.root.actualizar_detalle_reingreso(nuevo_detalle, self.nro_reingreso):
+                self.tb_buscar_reingreso.setRowCount(0)
+                self.aux_detalle = None
+                self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
+                QMessageBox.about(self,'EXITO',f'Reingreso N° {self.nro_reingreso} {nuevo_estado} correctamente')
+            else:
+                QMessageBox.about(self,'ERROR','Problemas al {nuevo_estado} reingreso.\nPosiblemente no se hayan detectado cambios.\nContacte al Soporte.')
+        except EOFError:
+            self.conexion_perdida()
+
+
+    def verificar_pdf_reingreso(self):
+        seleccion = self.tb_buscar_reingreso.currentRow()
+        if seleccion != -1:
+            _item = self.tb_buscar_reingreso.item( seleccion, 0) 
+            if _item:            
+                nro_reingreso = self.tb_buscar_reingreso.item( seleccion, 1).text()
+                print('verificando existencia del pdff  reingreso ... para: xd' , nro_reingreso )
+                self.nro_reingreso = nro_reingreso
+            
+                print('Obteniendo datos reales, creando PDF ...')
+                try:
+                    resultado = self.conexion.root.obtener_reingreso_x_numero(self.nro_reingreso)
+                    fecha = resultado[1]
+                    tipo_doc = resultado[2]
+                    nro_doc = resultado[3]
+                    motivo = resultado[5]
+                    descr = resultado[6]
+                    proceso = resultado[7]
+                    solucion = resultado[9]
+                    detalle = json.loads(resultado[8])
+                    cantidades = detalle['cantidades']
+                    descripciones = detalle['descripciones']
+                    valores_neto = detalle['valores_neto']
+
+                    datos = (self.nro_reingreso, str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
+                    self.crear_pdf_reingreso(datos)
+                    sleep(1)
+                    self.ver_pdf_reingreso()
+                except EOFError:
+                    self.conexion_perdida()
+                except PermissionError:
+                    QMessageBox.about(self,'ERROR', 'Otro programa tiene abierto el documento PDF. Intente cerrar el documento para poder volver a visualizarlo')
+                
+
+        else:
+            QMessageBox.about(self,'ERROR', 'Seleccione una fila antes de continuar')
+
+    def decidir_atras2(self):
+        if self.anterior2: 
+            self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
+        else:
+            self.stackedWidget.setCurrentWidget(self.inicio)
 # --------- Funciones de INGRESO MANUAL -----------------
     def inicializar_ingreso_manual(self):
         self.txt_obs_1.clear()
-        
+        self.anterior2 = False #para hacer que vuelva al inicio enves de gestion de reingresos
+        self.version = 'version-5.8'
+        self.btn_guardar_6.hide() #v.5.8
+        self.btn_registrar_6.show() #v.5.8
+        self.label_65.hide() #v.5.8 
+        self.lb_reingreso_6.hide()#v.5.8
+
+        self.grupo_motivos_2.hide() #v.5.8
+        self.txt_solucion_6.hide() #v.5.8
+        self.btn_anular_reingreso.hide()
+        self.btn_validar_reingreso.hide()
+
+        self.combo_motivos_2.show()
+        self.combo_soluciones_2.show()
+
         if self.datos_usuario[4] == 'SI' :
             self.rellenar_datos_manual()
             self.stackedWidget.setCurrentWidget(self.ingreso_manual)
@@ -1926,7 +2323,7 @@ class Vendedor(QMainWindow):
                     resultado = self.conexion.root.obtener_clave('dinamica') #v
                     end = 0
                     for item in resultado:
-                        if clave == item[0]:
+                        if clave == item[0]:    
                             self.clave = clave
                             self.rellenar_datos_manual()
                             self.stackedWidget.setCurrentWidget(self.ingreso_manual)
@@ -1971,6 +2368,30 @@ class Vendedor(QMainWindow):
         self.tb_reingreso_manual.setColumnWidth(1,80)
         self.tb_reingreso_manual.setColumnWidth(0,430)
         self.tb_reingreso_manual.setColumnWidth(2,85)
+        self.combo_motivos_2.clear()
+        self.combo_soluciones_2.clear()
+        try:
+            parametros_reingreso = self.conexion.root.obtener_parametros_reingreso()
+            if parametros_reingreso:
+                if parametros_reingreso[1] != None:
+                    detalle = json.loads(parametros_reingreso[1])
+                    print(detalle)
+                    try:
+                        lista_motivos = detalle["lista_motivos"]
+                        for item in lista_motivos:
+                            self.combo_motivos_2.addItem(item)
+                    except KeyError:
+                        print('error key motivos')
+                        lista_motivos = []
+        
+                    try:
+                        lista_soluciones = detalle['lista_soluciones']
+                        for item in lista_soluciones:
+                            self.combo_soluciones_2.addItem(item)
+                    except KeyError:
+                        lista_soluciones = []
+        except:
+            pass
 
     def registrar_orden_manual(self):
         nombre = self.nombre_1.text()     #NOMBRE CLIENTE
@@ -2205,18 +2626,25 @@ class Vendedor(QMainWindow):
         print('------- QCOMPLETE MANUAL FIN --------------')
 
  #------ funciones reingreso manual
-    def reingreso_manual(self):
+    def reingreso_manual(self, modo):
         nro_orden = self.txt_orden_6.text()           #NUMERO DE ORDEN
         tipo_doc = self.comboBox_6.currentText() #TIPO DE DOCUMENTO
         nro_doc = self.txt_nro_doc_6.text()        #NUMERO DE DOCUMENTO
         fecha = datetime.now().date()              #FECHA DE REINGRESO
-        motivo = ''                                 #MOTIVO
-        if self.r_cambio_6.isChecked():
-            motivo = 'CAMBIO'
-        elif self.r_devolucion_6.isChecked():
-            motivo = 'DEVOLUCION'
-        elif self.r_otro_6.isChecked():
-            motivo = self.txt_otro_6.text()
+        
+        if self.version == 'version-5.8':
+            motivo = self.combo_motivos_2.currentText()    #MOTIVO v5.8
+            solucion = self.combo_soluciones_2.currentText()  #solucion v5.8
+        else:
+            motivo = ''
+            if self.r_cambio_6.isChecked():
+                motivo = 'CAMBIO'
+            elif self.r_devolucion_6.isChecked():
+                motivo = 'DEVOLUCION'
+            elif self.r_otro_6.isChecked():
+                motivo = self.txt_otro_6.text()
+            
+            solucion = self.txt_solucion_6.toPlainText()   #solucion
         
         proceso = None
         if self.r_d_6.isChecked():
@@ -2227,8 +2655,9 @@ class Vendedor(QMainWindow):
             proceso = 'CARPINTERIA'
         elif self.r_p_6.isChecked():
             proceso = 'PALLETS'
+
         descr = self.txt_descripcion_6.toPlainText()   #descripcion
-        solucion = self.txt_solucion_6.toPlainText()   #solucion
+
         lineas = 0
         if motivo != '' and descr != '' and solucion != '' :
             cant = self.tb_reingreso_manual.rowCount()
@@ -2280,27 +2709,46 @@ class Vendedor(QMainWindow):
                         "valores_neto": valores_neto,
                         "creado_por" : self.datos_usuario[8]
                     }
+                if modo == 'registrar':
+                    formato["compatibilidad"] = "version-5.8"
+                elif modo == 'actualizar':
+                    formato["compatibilidad"] = self.version
+                    
                 detalle = json.dumps(formato)
                 try:
                     nro_orden = int(nro_orden)
                     nro_doc = int(nro_doc)
+                    #MODO PARA REGISTRAR LOS REINGRESOS
+                    if modo == 'registrar':
+                        if self.conexion.root.registrar_reingreso( str(fecha), tipo_doc, nro_doc, nro_orden, motivo, descr, proceso, detalle,solucion):
+                            resultado = self.conexion.root.obtener_max_reingreso()
+                            self.nro_reingreso = resultado[0]
+                            print('max nro reingreso: ' + str(resultado[0]) + ' de tipo: ' + str(type(resultado[0])))
+                            datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
+                            self.crear_pdf_reingreso(datos)
+                            if self.clave:
+                                    self.conexion.root.eliminar_clave(self.clave,'dinamica')
+                                    self.clave = None
 
-                    if self.conexion.root.registrar_reingreso( str(fecha), tipo_doc, nro_doc, nro_orden, motivo, descr, proceso, detalle,solucion):
-                        resultado = self.conexion.root.obtener_max_reingreso()
-                        self.nro_reingreso = resultado[0]
-                        print('max nro reingreso: ' + str(resultado[0]) + ' de tipo: ' + str(type(resultado[0])))
-                        datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
-                        self.crear_pdf_reingreso(datos)
-                        if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
-                                self.clave = None
+                            boton = QMessageBox.question(self, 'Reingreso registrado correctamente', 'Desea ver el reingreso?')
+                            if boton == QMessageBox.Yes:
+                                self.ver_pdf_reingreso()
+                            self.stackedWidget.setCurrentWidget(self.inicio)
+                        else:
+                            QMessageBox.about(self,'ERROR','404 NOT FOUND. Contacte con Don Huber ...problemas al registrar reingreso')
+                    #MODO PARA ACTUALIZAR LOS REINGRERSOS
+                    elif modo == 'actualizar':
+                        print('actualizando xdxd')
+                        id = self.lb_reingreso_6.text()
+                        
+                        if self.conexion.root.actualizar_reingreso( id , tipo_doc, nro_doc, nro_orden, motivo, descr, proceso, detalle,solucion):
+                            print('actualizado correct')
+                            self.tb_buscar_reingreso.setRowCount(0)
+                            self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
+                            QMessageBox.about(self,'EXITO',f'Reingreso N° {id} actualizado')
+                        else:
+                            QMessageBox.about(self,'ERROR','Problemas al actualizar reingreso.\nPosiblemente no se hayan detectado cambios.\nIntente realizar un cambio y luego proceda a actualizar')
 
-                        boton = QMessageBox.question(self, 'Reingreso registrado correctamente', 'Desea ver el reingreso?')
-                        if boton == QMessageBox.Yes:
-                            self.ver_pdf_reingreso()
-                        self.stackedWidget.setCurrentWidget(self.inicio)
-                    else:
-                        QMessageBox.about(self,'ERROR','404 NOT FOUND. Contacte con Don Huber ...problemas al registrar')
                 except ValueError:
                     QMessageBox.about(self,'ERROR','Ingresar solo numeros en los campos: "NUMERO DE ORDEN" y "NUMERO DE DOCUMENTO" ')
                 
@@ -2581,7 +3029,7 @@ class Vendedor(QMainWindow):
             wb = Workbook()
             ws = wb.active
             ws.title = 'REINGRESO_1'
-            encabezado = ['NUMERO REINGRESO','FECHA REINGRESO','NUMERO DE ORDEN', 'TIPO DOCUMENTO', 'NUMERO DOCUMENTO', 'PROCESO','MERCADERIA','CANTIDAD','VALOR NETO','MOTIVO','DESCRIPCIÓN' ,'SOLUCIÓN','CREADO POR']
+            encabezado = ['NUMERO REINGRESO','FECHA REINGRESO','NUMERO DE ORDEN', 'TIPO DOCUMENTO', 'NUMERO DOCUMENTO', 'PROCESO','MERCADERIA','CANTIDAD','VALOR NETO','MOTIVO','DESCRIPCIÓN' ,'SOLUCIÓN','CREADO POR','ESTADO','HISTORIAL']
             ws.append(encabezado)
             for item in datos:
                 nro_re =  str( item[0] ) #NRO REINGRESO INT
@@ -2603,15 +3051,25 @@ class Vendedor(QMainWindow):
                     except KeyError:
                         creador = 'No registrado'
 
+                    try:
+                        estado = detalle["estado"]
+                    except KeyError:
+                        estado = 'VALIDA'
+                    
+                    try:
+                        historial = json.dumps( detalle["historial"] )
+                    except KeyError:
+                        historial = 'SIN REGISTRO'
+
                     sol =  item[9] #SOLUCION  STR
                     j = 0
                     while j < len(cant):
-                        fila = [ nro_re, fr, no, td, nd, proc, merc[j], cant[j], net[j], mot, descripcion ,sol, creador]
+                        fila = [ nro_re, fr, no, td, nd, proc, merc[j], cant[j], net[j], mot, descripcion ,sol, creador,estado,historial]
                         ws.append(fila)
                         j +=1
 
             filas_total = ws.max_row
-            tab = Table(displayName="tabla1" , ref="A1:M"+ str(filas_total) )
+            tab = Table(displayName="tabla1" , ref="A1:O"+ str(filas_total) )
             style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
                                 showLastColumn=False, showRowStripes=True, showColumnStripes=True)
             tab.tableStyleInfo = style
@@ -2674,7 +3132,7 @@ class Vendedor(QMainWindow):
         try:
             datos = self.conexion.root.obtener_vendedores_activos()
             print(self.datos_usuario[8])
-
+            self.box_vendedores.addItem('todos')
             self.box_vendedores.addItem(self.datos_usuario[8])
             if datos:
                 for item in datos:
@@ -2689,30 +3147,107 @@ class Vendedor(QMainWindow):
 
     def buscar_manuales(self):
         self.tb_orden_manual_2.setRowCount(0)
+        
 
         tipo_orden = self.box_tipo_orden.currentText()
         vendedor = self.box_vendedores.currentText()
         self.lb_tipo_orden_2.setText(tipo_orden)
         print(tipo_orden)
         print(vendedor)
-        datos = None
+        self.manuales = None
         try:
             estado = True # DETERMINA SI SE BUSCAN TODAS LAS MANUALES O SOLO INCOMPLETAS
-            datos = self.conexion.root.ordenes_manuales(tipo_orden,vendedor,estado)
-            if datos:
+            self.manuales = self.conexion.root.ordenes_manuales(tipo_orden,vendedor,estado)
+            if self.manuales:
                 print('RELLENANDO TABLA CON ORDENES MANUALES')
-                for item in datos:
+                for item in self.manuales:
                     fila = self.tb_orden_manual_2.rowCount()
                     self.tb_orden_manual_2.insertRow(fila)
-                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(item[0]) ) )
+                    date_string = str(item[0])
+                    date_object = datetime.strptime(date_string, "%Y-%m-%d")
+                    aux = date_object.strftime('%d-%m-%Y')
+                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(aux) ) )
                     self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(item[1]) ) ) 
-                    self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) 
-                    self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) 
-                    self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) 
-                    self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) 
-                    self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) 
+                    if item[2] != None:
+                        self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #NRO INTERNO
+                    if item[3] != None:
+                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) # TIPO DOCUMENTO
+                    if item[4] != None:
+                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) #NRO DOCUMENTO
+
+                    self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) # CLIENTE
+
+                    if item[6] == None:
+                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( 'NO CREADO' ) )
+                    else:
+                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) #VINCULO
+
+                    self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VENDEDOR
+
+            self.aux_tabla = self.tb_orden_manual_2
+
         except EOFError:
             self.conexion_perdida()
+
+    def rellenar_tb_manuales(self):
+        self.tb_orden_manual_2.setRowCount(0)
+        if self.manuales:
+                print('RELLENANDO TABLA CON ORDENES MANUALES')
+                for item in self.manuales:
+                    fila = self.tb_orden_manual_2.rowCount()
+                    self.tb_orden_manual_2.insertRow(fila)
+                    date_string = str(item[0])
+                    date_object = datetime.strptime(date_string, "%Y-%m-%d")
+                    aux = date_object.strftime('%d-%m-%Y')
+                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(aux) ) )
+                    self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(item[1]) ) ) 
+                    if item[2] != None:
+                        self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #NRO INTERNO
+                    if item[3] != None:
+                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) # TIPO DOCUMENTO
+                    if item[4] != None:
+                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) #NRO DOCUMENTO
+
+                    self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) # CLIENTE
+
+                    if item[6] == None:
+                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( 'NO CREADO' ) )
+                    else:
+                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) #VINCULO
+
+                    self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VENDEDOR
+        
+
+    def filtrar_solo_incompletas(self):
+        
+        if self.check_incompletas.isChecked():
+            self.rellenar_tb_manuales()
+            print('mostrando solo incompletas')
+            if self.aux_tabla != None:
+                self.tb_orden_manual_2 = self.aux_tabla
+                remover = []
+                column = 3 #COLUMNA DEL tipo documento
+                # rowCount() This property holds the number of rows in the table
+                for row in range(self.tb_orden_manual_2.rowCount()): 
+                    # item(row, 0) Returns the item for the given row and column if one has been set; otherwise returns nullptr.
+                    tipo_doc = self.tb_orden_manual_2.item(row, column) 
+                    if tipo_doc:            
+                        val_tipo_doc = self.tb_orden_manual_2.item(row, column).text()
+                        val_nro_doc = self.tb_orden_manual_2.item(row, column + 1).text()
+                        
+                        vinculo = self.tb_orden_manual_2.item(row, 6 ).text() # VINCULO 
+                        #print(vinculo)
+                        if vinculo == 'CREADO' :
+                            remover.append(row)
+                print(remover)
+                k = 0
+                for i in remover:
+                    self.tb_orden_manual_2.removeRow(i - k)
+                    k += 1
+
+        else:
+            self.rellenar_tb_manuales()
+            print('mostrando todas')
     
     def continuar_orden_manual(self):
         self.anterior = "ESTADISTICAS"
@@ -2739,6 +3274,7 @@ class Vendedor(QMainWindow):
                 self.tb_modificar_orden.setColumnWidth(0,80)
                 self.tb_modificar_orden.setColumnWidth(1,430)
                 self.tb_modificar_orden.setColumnWidth(2,85)
+
                 self.rellenar_datos_orden(tipo)
                 self.stackedWidget.setCurrentWidget(self.modificar_orden)
         
@@ -2900,7 +3436,7 @@ class Vendedor(QMainWindow):
         agua = self.carpeta + "/formatos/despacho.png"
         uso_interno = self.carpeta + "/formatos/uso interno.png"
         hojas = 2
-        if tipo == 'carpinteria' or tipo == 'pallets':
+        if tipo == 'carpinteria' or tipo == 'pallets' or tipo == 'elaboracion':
             hojas = 1
         try:
             documento = canvas.Canvas(ruta)
@@ -3021,7 +3557,7 @@ class Vendedor(QMainWindow):
             QMessageBox.about(self,'ERROR', 'Otro programa esta modificando este archivo por lo cual no se puede modificar actualmente.')
     
     def crear_pdf_reingreso(self, datos): #pdf de reingreso de mercaderias
-            print('creando pd reingreso...')
+            print('creando pdf reingreso...')
             documento = canvas.Canvas(self.carpeta +'/reingresos/reingreso_' + str(datos[0]) + '.pdf')
             imagen =  self.carpeta + "/formatos/reingreso_solo.jpg" 
 
@@ -3044,7 +3580,7 @@ class Vendedor(QMainWindow):
             
                 lista = self.separar2(datos[5],94) #DESCRIPCION
                 
-                print(len( datos[5] ))
+                #print(len( datos[5] ))
                 k = 0 
                 j = 0 
                 for item in lista:
@@ -3054,7 +3590,7 @@ class Vendedor(QMainWindow):
                     j += 1
                 
                 lista = self.separar2( datos[7] , 85) #SOLUCION
-                print(len(datos[7]))
+                #print(len(datos[7]))
                 k = 0 
                 j = 0
                 for item in lista:
@@ -3208,18 +3744,18 @@ class Vendedor(QMainWindow):
         lista = []
         iter = len(cadena)/long
         iter = int(iter) + 1 #cantidad de items a escribir
-        print('----------------------------------------------------')
-        print(cadena)
-        print('espacios necesarios: ' + str(iter))
+        #print('----------------------------------------------------')
+        #print(cadena)
+        #print('espacios necesarios: ' + str(iter))
         i = 0
         while len(cadena)> long:
         
-            print('long > '+ str(long) +':')
+            #print('long > '+ str(long) +':')
             aux = cadena[0:long]
             index = aux[::-1].find(' ')
         
             aux = aux[:(long-index)]
-            print('Iteracion: '+str(i)+ ': '+ aux)
+            #print('Iteracion: '+str(i)+ ': '+ aux)
             lista.append(aux)
             cadena = cadena[long - index :]
             i += 1
@@ -3227,12 +3763,13 @@ class Vendedor(QMainWindow):
         if len(cadena) > 0 :
             vacias = cadena.count(' ')
             if vacias == len(cadena):
-                print('item vacio')
-                print('----------------------------------------------------')
+                z  = 0 
+                #print('item vacio')
+                #print('----------------------------------------------------')
             else:
-                print('fin long < '+ str(long) +':' + cadena)
+                #print('fin long < '+ str(long) +':' + cadena)
                 lista.append(cadena)
-                print('----------------------------------------------------')
+                #print('----------------------------------------------------')
 
         return lista
 
@@ -3286,6 +3823,7 @@ class Vendedor(QMainWindow):
                 self.btn_atras.setText('Cerrar sesión')
                 self.btn_estadisticas.setText('Estadisticas')
                 self.btn_configuracion.setText('Configuración')
+                self.btn_reingreso.setText(' Reingreso')
             else:
                 self.logo.hide()
                 self.btn_buscar.setText('')
@@ -3296,6 +3834,7 @@ class Vendedor(QMainWindow):
                 self.btn_atras.setText('')
                 self.btn_estadisticas.setText('')
                 self.btn_configuracion.setText('')
+                self.btn_reingreso.setText('')
                 
                 extender = normal
             
