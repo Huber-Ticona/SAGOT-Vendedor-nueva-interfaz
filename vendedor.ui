@@ -161,7 +161,7 @@ QPushButton:hover{
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>300</height>
+           <height>0</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -179,6 +179,9 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="topMargin">
            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>1</number>
           </property>
           <item>
            <widget class="QPushButton" name="btn_buscar">
@@ -262,16 +265,89 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
             </property>
            </widget>
           </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_26">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_34">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QPushButton" name="btn_estadisticas">
+            <property name="maximumSize">
+             <size>
+              <width>110</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>Estadisticas</string>
             </property>
             <property name="iconSize">
              <size>
-              <width>40</width>
-              <height>40</height>
+              <width>30</width>
+              <height>30</height>
              </size>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+            <property name="default">
+             <bool>false</bool>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_notificacion1">
+            <property name="minimumSize">
+             <size>
+              <width>30</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">*{
+background-color: red;
+}
+</string>
+            </property>
+            <property name="text">
+             <string>2</string>
             </property>
            </widget>
           </item>
@@ -295,7 +371,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>120</height>
+           <height>180</height>
           </size>
          </property>
          <property name="frameShape">
@@ -319,20 +395,26 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="logo">
-            <property name="maximumSize">
+           <widget class="QPushButton" name="btn_inicio">
+            <property name="minimumSize">
              <size>
-              <width>19999</width>
-              <height>19999</height>
+              <width>0</width>
+              <height>60</height>
              </size>
             </property>
-            <property name="styleSheet">
-             <string notr="true"/>
+            <property name="autoFillBackground">
+             <bool>false</bool>
             </property>
             <property name="text">
              <string/>
             </property>
-            <property name="scaledContents">
+            <property name="iconSize">
+             <size>
+              <width>80</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="flat">
              <bool>true</bool>
             </property>
            </widget>
@@ -342,6 +424,12 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
        </item>
        <item alignment="Qt::AlignBottom">
         <widget class="QFrame" name="abajo">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
          <property name="styleSheet">
           <string notr="true"/>
          </property>
@@ -571,7 +659,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>9</number>
+             <number>11</number>
             </property>
             <widget class="QWidget" name="inicio">
              <widget class="QLabel" name="label_5">
@@ -2971,6 +3059,7 @@ ORDEN DE:</string>
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="page"/>
             <widget class="QWidget" name="buscar_orden">
              <layout class="QVBoxLayout" name="verticalLayout_15">
               <item>
@@ -4144,7 +4233,7 @@ ORDEN DE:</string>
                  </sizepolicy>
                 </property>
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="tab_5">
                  <attribute name="title">
@@ -4324,7 +4413,7 @@ ORDEN DE:</string>
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>100</height>
+                      <height>80</height>
                      </size>
                     </property>
                     <property name="maximumSize">
@@ -4340,11 +4429,23 @@ ORDEN DE:</string>
                      <enum>QFrame::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_9">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
                      <property name="verticalSpacing">
                       <number>5</number>
                      </property>
                      <item row="1" column="3">
                       <widget class="QPushButton" name="btn_buscar_manuales">
+                       <property name="minimumSize">
+                        <size>
+                         <width>200</width>
+                         <height>0</height>
+                        </size>
+                       </property>
                        <property name="maximumSize">
                         <size>
                          <width>16777215</width>
@@ -4358,12 +4459,23 @@ ORDEN DE:</string>
                      </item>
                      <item row="1" column="2">
                       <widget class="QComboBox" name="box_tipo_orden">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>30</height>
+                        </size>
+                       </property>
                        <property name="maximumSize">
                         <size>
-                         <width>16777215</width>
+                         <width>300</width>
                          <height>50</height>
                         </size>
                        </property>
+                       <item>
+                        <property name="text">
+                         <string>todos</string>
+                        </property>
+                       </item>
                        <item>
                         <property name="text">
                          <string>DIMENSIONADO</string>
@@ -4386,35 +4498,6 @@ ORDEN DE:</string>
                        </item>
                       </widget>
                      </item>
-                     <item row="3" column="0">
-                      <widget class="QLabel" name="label_61">
-                       <property name="maximumSize">
-                        <size>
-                         <width>16777215</width>
-                         <height>50</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string>Orden de: </string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="2">
-                      <widget class="QLabel" name="lb_tipo_orden_2">
-                       <property name="maximumSize">
-                        <size>
-                         <width>16777215</width>
-                         <height>50</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string>TextLabel</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="2">
-                      <widget class="QComboBox" name="box_vendedores"/>
-                     </item>
                      <item row="2" column="0">
                       <widget class="QLabel" name="label_60">
                        <property name="maximumSize">
@@ -4425,6 +4508,16 @@ ORDEN DE:</string>
                        </property>
                        <property name="text">
                         <string>VENDEDOR:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QComboBox" name="box_vendedores">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>30</height>
+                        </size>
                        </property>
                       </widget>
                      </item>
@@ -4441,10 +4534,55 @@ ORDEN DE:</string>
                        </property>
                       </widget>
                      </item>
-                     <item row="3" column="3">
+                     <item row="2" column="3" alignment="Qt::AlignRight">
+                      <widget class="QPushButton" name="btn_obtener_sondeo">
+                       <property name="minimumSize">
+                        <size>
+                         <width>50</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>100</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>OBTENER SONDEO</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QFrame" name="frame_33">
+                    <property name="frameShape">
+                     <enum>QFrame::StyledPanel</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Raised</enum>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_38">
+                     <item>
+                      <widget class="QCheckBox" name="ch_omitir_carp">
+                       <property name="text">
+                        <string>Omitir uso carpinteria</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="ch_omitir_exito">
+                       <property name="text">
+                        <string>Omitir vinculos exitosos</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
                       <widget class="QCheckBox" name="check_incompletas">
                        <property name="text">
-                        <string>Filtrar vinculos No creados</string>
+                        <string>filtrar vinculos No creados</string>
                        </property>
                       </widget>
                      </item>
@@ -4476,8 +4614,13 @@ ORDEN DE:</string>
                      </size>
                     </property>
                     <property name="columnCount">
-                     <number>8</number>
+                     <number>9</number>
                     </property>
+                    <column>
+                     <property name="text">
+                      <string>Area</string>
+                     </property>
+                    </column>
                     <column>
                      <property name="text">
                       <string>Fecha_orden</string>
@@ -4485,12 +4628,12 @@ ORDEN DE:</string>
                     </column>
                     <column>
                      <property name="text">
-                      <string>Nro orden</string>
+                      <string>N° orden</string>
                      </property>
                     </column>
                     <column>
                      <property name="text">
-                      <string>Nro interno</string>
+                      <string>N° interno</string>
                      </property>
                     </column>
                     <column>
@@ -4500,7 +4643,7 @@ ORDEN DE:</string>
                     </column>
                     <column>
                      <property name="text">
-                      <string>Nro Documento</string>
+                      <string>N° Documento</string>
                      </property>
                     </column>
                     <column>
@@ -4842,6 +4985,268 @@ ORDEN DE:</string>
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="configuracion">
+             <widget class="QFrame" name="frame_28">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>40</y>
+                <width>438</width>
+                <height>211</height>
+               </rect>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_31">
+               <item>
+                <widget class="QLabel" name="label_68">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>50</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>SONDEO ORDENES MANUALES</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frame_29">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_21">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_70">
+                    <property name="text">
+                     <string>ESTADO SONDEO</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="label_73">
+                    <property name="text">
+                     <string>TextLabel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_72">
+                    <property name="text">
+                     <string>INTERVALO SONDEO (segundos)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_71">
+                    <property name="text">
+                     <string>TextLabel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_61">
+                    <property name="text">
+                     <string>Omitir uso carpinteria del sondeo</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_67">
+                    <property name="text">
+                     <string>Omitir vinculo exitoso del sondeo</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLabel" name="label_75">
+                    <property name="text">
+                     <string>NO</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLabel" name="label_76">
+                    <property name="text">
+                     <string>NO</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frame_30">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_35">
+                  <item>
+                   <widget class="QPushButton" name="btn_iniciar_sondeo_manual">
+                    <property name="minimumSize">
+                     <size>
+                      <width>50</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Iniciar</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_detener_sondeo_manual">
+                    <property name="minimumSize">
+                     <size>
+                      <width>50</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Detener</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QFrame" name="frame_31">
+              <property name="geometry">
+               <rect>
+                <x>280</x>
+                <y>270</y>
+                <width>221</width>
+                <height>241</height>
+               </rect>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_32">
+               <item>
+                <widget class="QLabel" name="label_74">
+                 <property name="text">
+                  <string>Nueva configuracion</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frame_27">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_36">
+                  <item>
+                   <widget class="QLabel" name="label_63">
+                    <property name="text">
+                     <string>Intervalo entre sondeo:</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="txt_intervalo_sondeo_manual">
+                    <property name="maximumSize">
+                     <size>
+                      <width>50</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>60</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_69">
+                    <property name="text">
+                     <string>segundos</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frame_32">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_37">
+                  <item>
+                   <widget class="QLabel" name="label_64">
+                    <property name="text">
+                     <string>Rango de dias: </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="lineEdit">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>1</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="ch_omitir_vinculo">
+                 <property name="text">
+                  <string>Omitir vinculaciones exitosas</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="ch_omitir_uso_carp">
+                 <property name="text">
+                  <string>Omitir uso carpinteiria del sondeo</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btn_actualizar_config_sondeo">
+                 <property name="text">
+                  <string>Guardar configuracion sondeo</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -4925,7 +5330,7 @@ ORDEN DE:</string>
              </size>
             </property>
             <property name="text">
-             <string>App Vendedor - Versión 5.8</string>
+             <string>App Vendedor - Versión 5.8.2</string>
             </property>
            </widget>
           </item>

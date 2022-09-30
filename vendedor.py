@@ -1,4 +1,3 @@
-from doctest import debug_script
 import sys
 import os
 import pandas as pd
@@ -22,7 +21,10 @@ from openpyxl import Workbook
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
 from openpyxl.utils import get_column_letter
-import subprocess
+from subprocess import Popen
+from concurrent.futures import ThreadPoolExecutor
+from random import randint
+
 
 class Login(QDialog):
     ventana_principal = 0
@@ -243,6 +245,13 @@ class Vendedor(QMainWindow):
         self.anterior2 = None #Determina si volver atras vuelve a gestion de reingresos o busqueda de ordenes de trabajo.
         self.aux_detalle = None
         self.version = 'version-5.8'
+        self.executor = ThreadPoolExecutor(max_workers=3) #Hilos para hacer Sondeos a la base de datos
+        self.sondeo_params = {
+            "estado_sondeo_manual" : False, 
+            "intervalo_sondeo_manual" : 300, # 300 segundos x DEFECTO
+            "omitir_uso_carpinteria" : False,
+            "omitir_vinculo_exitoso" : False
+        }
 #--------------- FUNCIONES GLOBALES ---------
         self.iniciar_session()
         self.inicializar()
@@ -342,12 +351,19 @@ class Vendedor(QMainWindow):
         self.btn_buscar_manuales.clicked.connect(self.buscar_manuales)
         self.btn_modificar_5.clicked.connect(self.continuar_orden_manual)
         self.check_incompletas.stateChanged.connect(self.filtrar_solo_incompletas)
+        self.btn_notificacion1.clicked.connect(self.easter_egg )
+        #SONDEOS
 
+        self.btn_iniciar_sondeo_manual.clicked.connect(self.iniciar_sondeo)
+        self.btn_detener_sondeo_manual.clicked.connect(self.finalizar_sondeo)
+        self.btn_actualizar_config_sondeo.clicked.connect(self.actualizar_sondeo_config)
+        self.btn_obtener_sondeo.clicked.connect(lambda: self.obtener_datos_sondeo(True))
         #generar clave
         self.btn_generar_clave.clicked.connect(self.generar_clave)
 
         #CONFIGURACION
-        self.btn_configuracion.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
+        self.btn_configuracion.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.configuracion))
+        self.btn_inicio.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
         #SIDE MENU BOTONES
         self.btn_buscar.clicked.connect(self.inicializar_buscar_venta)
         self.btn_modificar.clicked.connect(self.inicializar_buscar_orden)
@@ -399,8 +415,9 @@ class Vendedor(QMainWindow):
         self.carpeta = actual.replace('\\' , '/')
         self.dir_informes = actual + '/informes/'
         print(self.carpeta)
-        foto = QPixmap(actual + '/icono_imagen/enco_logov3.png')
-        self.logo.setPixmap(foto)
+        
+        self.btn_inicio.setIcon(QIcon('icono_imagen/enco_logov3.png'))
+
         menu = QPixmap(actual + '/icono_imagen/menu_v4.png')
         self.btn_menu.setIcon(QIcon(menu))
         self.lb_conexion.setText('CONECTADO')
@@ -416,6 +433,40 @@ class Vendedor(QMainWindow):
                     self.btn_orden_manual.hide() #no puede generar ordenes manuales
                 if not 'informes' in funciones:
                     self.btn_informe.hide() #no puede generar informes
+        if os.path.isfile(actual + '/manifest.txt'):
+            with open(actual + '/manifest.txt' , 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+                try:
+                    t_sondeo = lines[2].split(':')
+                    t_sondeo = t_sondeo[1]
+                    t_sondeo = t_sondeo[:len(t_sondeo)-1]
+                    print(t_sondeo)
+                    self.sondeo_params['intervalo_sondeo_manual'] = int(t_sondeo)
+
+                    o_uso_carp = lines[3].split(':')
+                    o_uso_carp = o_uso_carp[1]
+                    o_uso_carp = o_uso_carp[:len(o_uso_carp)-1]
+                    if o_uso_carp == 'SI':
+                        self.sondeo_params["omitir_uso_carpinteria"] = True
+                        self.label_75.setText('SI')
+
+                    o_vinc_ex = lines[4].split(':')
+                    o_vinc_ex = o_vinc_ex[1]
+                    o_vinc_ex = o_vinc_ex[:len(o_vinc_ex)-1]
+
+                    if o_vinc_ex == 'SI':
+                        self.sondeo_params["omitir_vinculo_exitoso"] = True
+                        self.label_76.setText('SI')
+
+                    
+                except IndexError:
+                    print('error de indice del manifest - sondeo')
+                    pass #si no encuentra alguna linea
+        else:
+            print('manifest no encontrado')
+
+        self.iniciar_sondeo()
+
         self.stackedWidget.setCurrentWidget(self.inicio)
     
     def conectar(self):
@@ -3101,7 +3152,7 @@ class Vendedor(QMainWindow):
             nombre = seleccion[0].text()
             abrir = self.dir_informes + nombre
             if os.path.isfile(abrir):
-                subprocess.Popen([abrir], shell=True)
+                Popen([abrir], shell=True)
             else:
                 QMessageBox.about(self,'ERROR', 'El archivo no se encontro en la carpeta "informes" ')
         else:
@@ -3126,8 +3177,17 @@ class Vendedor(QMainWindow):
     def inicializar_estadisticas(self):
         self.box_vendedores.clear()
         self.tb_orden_manual_2.setRowCount(0)
-        self.tb_orden_manual_2.setColumnWidth(5,150)
+        self.tb_orden_manual_2.setColumnWidth(0,70)#tipo orden
+        self.tb_orden_manual_2.setColumnWidth(1,70)#fecha orden
+        self.tb_orden_manual_2.setColumnWidth(2,60)#nro orden
+        self.tb_orden_manual_2.setColumnWidth(3,65)#interno
+        self.tb_orden_manual_2.setColumnWidth(4,65)#documento
+        self.tb_orden_manual_2.setColumnWidth(5,65)#nro_doc
+        self.tb_orden_manual_2.setColumnWidth(6,150) #cliente
+
         self.stackedWidget.setCurrentWidget(self.estadisticas)
+        if self.manuales:
+            self.rellenar_tb_manuales()
         #cargar vendedores
         try:
             datos = self.conexion.root.obtener_vendedores_activos()
@@ -3144,45 +3204,51 @@ class Vendedor(QMainWindow):
         except EOFError:
             self.conexion_perdida()
         
-
     def buscar_manuales(self):
         self.tb_orden_manual_2.setRowCount(0)
         
 
         tipo_orden = self.box_tipo_orden.currentText()
         vendedor = self.box_vendedores.currentText()
-        self.lb_tipo_orden_2.setText(tipo_orden)
         print(tipo_orden)
         print(vendedor)
         self.manuales = None
         try:
-            estado = True # DETERMINA SI SE BUSCAN TODAS LAS MANUALES O SOLO INCOMPLETAS
-            self.manuales = self.conexion.root.ordenes_manuales(tipo_orden,vendedor,estado)
+            otro = {} # DETERMINA SI SE BUSCAN TODAS LAS MANUALES O SOLO INCOMPLETAS
+            if self.ch_omitir_carp.isChecked():
+                otro['omitir_uso_carpinteria'] = True
+            if self.ch_omitir_exito.isChecked():
+                otro['omitir_vinculo_exitoso'] = True
+                
+            self.manuales = self.conexion.root.ordenes_manuales(tipo_orden,vendedor, otro) 
             if self.manuales:
-                print('RELLENANDO TABLA CON ORDENES MANUALES')
+                print('RELLENANDO TABLA CON ORDENES MANUALES PRICIPAL')
                 for item in self.manuales:
                     fila = self.tb_orden_manual_2.rowCount()
                     self.tb_orden_manual_2.insertRow(fila)
-                    date_string = str(item[0])
+
+                    date_string = str(item[1]) #fecha orden
                     date_object = datetime.strptime(date_string, "%Y-%m-%d")
                     aux = date_object.strftime('%d-%m-%Y')
-                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(aux) ) )
-                    self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(item[1]) ) ) 
-                    if item[2] != None:
-                        self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #NRO INTERNO
+
+                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(item[0]) ) ) #fecha orden
+                    self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(aux) ) ) #fecha orden
+                    self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #nro orden
                     if item[3] != None:
-                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) # TIPO DOCUMENTO
+                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) #NRO INTERNO
                     if item[4] != None:
-                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) #NRO DOCUMENTO
+                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) # TIPO DOCUMENTO
+                    if item[5] != None:
+                        self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) #NRO DOCUMENTO
 
-                    self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) # CLIENTE
+                    self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) # CLIENTE
 
-                    if item[6] == None:
-                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( 'NO CREADO' ) )
+                    if item[7] == None:
+                        self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( 'NO CREADO' ) )
                     else:
-                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) #VINCULO
+                        self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VINCULO
 
-                    self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VENDEDOR
+                    self.tb_orden_manual_2.setItem(fila , 8, QTableWidgetItem( str(item[8]) ) ) #VENDEDOR
 
             self.aux_tabla = self.tb_orden_manual_2
 
@@ -3192,30 +3258,33 @@ class Vendedor(QMainWindow):
     def rellenar_tb_manuales(self):
         self.tb_orden_manual_2.setRowCount(0)
         if self.manuales:
-                print('RELLENANDO TABLA CON ORDENES MANUALES')
+                print('RELLENANDO TABLA CON ORDENES MANUALES PROCESO INTERNO')
                 for item in self.manuales:
                     fila = self.tb_orden_manual_2.rowCount()
                     self.tb_orden_manual_2.insertRow(fila)
-                    date_string = str(item[0])
+
+                    date_string = str(item[1]) #fecha orden
                     date_object = datetime.strptime(date_string, "%Y-%m-%d")
                     aux = date_object.strftime('%d-%m-%Y')
-                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(aux) ) )
-                    self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(item[1]) ) ) 
-                    if item[2] != None:
-                        self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #NRO INTERNO
+
+                    self.tb_orden_manual_2.setItem(fila , 0, QTableWidgetItem( str(item[0]) ) ) #fecha orden
+                    self.tb_orden_manual_2.setItem(fila , 1, QTableWidgetItem( str(aux) ) ) #fecha orden
+                    self.tb_orden_manual_2.setItem(fila , 2, QTableWidgetItem( str(item[2]) ) ) #nro orden
                     if item[3] != None:
-                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) # TIPO DOCUMENTO
+                        self.tb_orden_manual_2.setItem(fila , 3, QTableWidgetItem( str(item[3]) ) ) #NRO INTERNO
                     if item[4] != None:
-                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) #NRO DOCUMENTO
+                        self.tb_orden_manual_2.setItem(fila , 4, QTableWidgetItem( str(item[4]) ) ) # TIPO DOCUMENTO
+                    if item[5] != None:
+                        self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) #NRO DOCUMENTO
 
-                    self.tb_orden_manual_2.setItem(fila , 5, QTableWidgetItem( str(item[5]) ) ) # CLIENTE
+                    self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) # CLIENTE
 
-                    if item[6] == None:
-                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( 'NO CREADO' ) )
+                    if item[7] == None:
+                        self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( 'NO CREADO' ) )
                     else:
-                        self.tb_orden_manual_2.setItem(fila , 6, QTableWidgetItem( str(item[6]) ) ) #VINCULO
+                        self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VINCULO
 
-                    self.tb_orden_manual_2.setItem(fila , 7, QTableWidgetItem( str(item[7]) ) ) #VENDEDOR
+                    self.tb_orden_manual_2.setItem(fila , 8, QTableWidgetItem( str(item[8]) ) ) #VENDEDOR
         
 
     def filtrar_solo_incompletas(self):
@@ -3226,7 +3295,7 @@ class Vendedor(QMainWindow):
             if self.aux_tabla != None:
                 self.tb_orden_manual_2 = self.aux_tabla
                 remover = []
-                column = 3 #COLUMNA DEL tipo documento
+                column = 4 #COLUMNA DEL tipo documento
                 # rowCount() This property holds the number of rows in the table
                 for row in range(self.tb_orden_manual_2.rowCount()): 
                     # item(row, 0) Returns the item for the given row and column if one has been set; otherwise returns nullptr.
@@ -3235,7 +3304,7 @@ class Vendedor(QMainWindow):
                         val_tipo_doc = self.tb_orden_manual_2.item(row, column).text()
                         val_nro_doc = self.tb_orden_manual_2.item(row, column + 1).text()
                         
-                        vinculo = self.tb_orden_manual_2.item(row, 6 ).text() # VINCULO 
+                        vinculo = self.tb_orden_manual_2.item(row, 7 ).text() # VINCULO 
                         #print(vinculo)
                         if vinculo == 'CREADO' :
                             remover.append(row)
@@ -3267,9 +3336,9 @@ class Vendedor(QMainWindow):
         if seleccion != -1:
             _item = self.tb_orden_manual_2.item( seleccion, 0) 
             if _item:            
-                orden = self.tb_orden_manual_2.item(seleccion, 1 ).text()
+                orden = self.tb_orden_manual_2.item(seleccion, 2 ).text() #nro orden
                 self.nro_orden = int(orden)
-                tipo = self.lb_tipo_orden_2.text()
+                tipo = self.tb_orden_manual_2.item(seleccion, 0 ).text() #nro orden
                 print('----------- MODIFICAR ORDEN MANUAL de estadisticas... para: '+ tipo + ' -->' + str(self.nro_orden) + ' -------------')
                 self.tb_modificar_orden.setColumnWidth(0,80)
                 self.tb_modificar_orden.setColumnWidth(1,430)
@@ -3280,7 +3349,6 @@ class Vendedor(QMainWindow):
         
         else:
             QMessageBox.about(self,'ERROR', 'Seleccione una FILA antes de continuar')
-
 
     def crear_grafico(self):
         for i in reversed(range(self.box_grafico.count())): 
@@ -3314,6 +3382,90 @@ class Vendedor(QMainWindow):
 
             grafico = Grafico(y_list,x_list,tipo_grafico,titulo)
             self.box_grafico.addWidget(grafico)
+
+# Sondeos
+    def iniciar_sondeo(self):
+        
+        if self.sondeo_params['estado_sondeo_manual'] == False:
+            print('iniciando sondeo manual')
+            self.label_71.setText('ACTIVO')
+            self.label_73.setText( str( self.sondeo_params['intervalo_sondeo_manual'] ))
+            self.sondeo_params['estado_sondeo_manual'] = True
+            self.executor.submit(self.sondeo_manuales)
+        else:
+            print('El sondeo ya fue iniciado')
+
+    def sondeo_manuales(self):
+        sleep(1)
+        self.obtener_datos_sondeo(False)
+        tiempo = 1
+        while self.sondeo_params['estado_sondeo_manual']:
+            if tiempo % self.sondeo_params['intervalo_sondeo_manual'] == 0 :
+                fecha = datetime.now()
+                print('sondeo realizado: ' + str(fecha))
+                self.obtener_datos_sondeo(False)
+
+                tiempo = 1
+            else:
+                tiempo += 1
+            sleep(1)
+        print('Sondeo ordenes manuales Finalizado')
+    def obtener_datos_sondeo(self,actualizar_tabla):
+        fecha_1 = datetime.now()
+        fecha_1 =  fecha_1.strftime('%Y-%m-%d')
+        otros_parametros = {
+            "omitir_uso_carpinteria" :  self.sondeo_params['omitir_uso_carpinteria'] ,
+            "omitir_vinculo_exitoso" : self.sondeo_params['omitir_vinculo_exitoso'] ,
+            "fecha_unica": True,
+            "fecha_1": str(fecha_1) 
+        }
+        
+        self.manuales = self.conexion.root.ordenes_manuales('todos','todos',otros_parametros)
+        cantidad = str(len(self.manuales))
+        self.btn_notificacion1.setText(cantidad)
+
+        if actualizar_tabla:
+            self.rellenar_tb_manuales()
+
+
+    def actualizar_sondeo_config(self):
+        intervalo = self.txt_intervalo_sondeo_manual.text()
+        print(intervalo)
+        try:
+            val = int(intervalo)
+            if val > 30:
+                self.sondeo_params['intervalo_sondeo_manual'] = val
+                self.label_73.setText(intervalo)
+            else:
+                QMessageBox.about(self,'ERROR' ,'Intervalo minimo de 30 segundos')
+
+        except:
+            QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros sobre el intervalo')
+
+        if self.ch_omitir_uso_carp.isChecked():
+            self.sondeo_params['omitir_uso_carpinteria'] = True
+            self.label_75.setText('SI')
+        else:
+            self.sondeo_params['omitir_uso_carpinteria'] = False
+            self.label_75.setText('NO')
+
+        if self.ch_omitir_vinculo.isChecked():
+            self.sondeo_params['omitir_vinculo_exitoso'] = True
+            self.label_76.setText('SI')
+        else:
+            self.sondeo_params['omitir_vinculo_exitoso'] = False
+            self.label_76.setText('NO')
+
+    def finalizar_sondeo(self): 
+        print('Finalizar sondeo')
+        self.label_71.setText('INACTIVO')
+        self.sondeo_params['estado_sondeo_manual'] = False
+
+    def easter_egg(self):
+        r = lambda: randint(0,255)
+        print('#%02X%02X%02X' % (r(),r(),r()))
+        color = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
+        self.btn_notificacion1.setStyleSheet("background-color: " + color  +"")
 
  # -------- funcion para generar clave ------------
     def generar_clave(self):
@@ -3702,11 +3854,11 @@ class Vendedor(QMainWindow):
         return mayor
     def ver_pdf_reingreso(self):
         ruta = self.carpeta + '/reingresos/reingreso_' + str(self.nro_reingreso) + '.pdf'
-        subprocess.Popen([ruta], shell=True)
+        Popen([ruta], shell=True)
 
     def ver_pdf(self, tipo):
         abrir = self.carpeta+ '/ordenes/' + tipo.lower() +'_' +str(self.nro_orden) + '.pdf'
-        subprocess.Popen([abrir], shell=True)
+        Popen([abrir], shell=True)
 
     def separar(self,cadena):
         lista = []
@@ -3814,7 +3966,7 @@ class Vendedor(QMainWindow):
             normal = 70
             if ancho == 70:
                 extender = 150
-                self.logo.show()
+                self.btn_inicio.show()
                 self.btn_buscar.setText('Notas de venta')
                 self.btn_modificar.setText('Ordenes de trabajo')
                 self.btn_orden_manual.setText('Ingreso manual')
@@ -3825,7 +3977,7 @@ class Vendedor(QMainWindow):
                 self.btn_configuracion.setText('Configuración')
                 self.btn_reingreso.setText(' Reingreso')
             else:
-                self.logo.hide()
+                self.btn_inicio.hide()
                 self.btn_buscar.setText('')
                 self.btn_modificar.setText('')
                 self.btn_orden_manual.setText('')
@@ -3880,6 +4032,10 @@ class Vendedor(QMainWindow):
                 #estadisticas
                 self.tb_orden_manual_2.setColumnWidth(5,320)
 
+    def closeEvent(self, event):
+        self.finalizar_sondeo()
+        print('Cerrando aplicacion')
+        event.accept()
 
 class InputDialog(QDialog):
     def __init__(self,label1,label2,title ,parent=None):
@@ -3988,7 +4144,6 @@ class Grafico(QWidget):
     def __init__(self, x, y, tipo_grafico,title):
         super().__init__()
         chart = Canvas(self, x , y,tipo_grafico,title)
-
 
 
     

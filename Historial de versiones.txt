@@ -1,8 +1,12 @@
+[Version 5.8.2 (30-9-2022)]
+- Se implemento el sondeo de ordenes manuales.
+
 [Version 5.8 (5-8-2022)]
 - Gestion de los reingresos habilitada(busqueda,modificar,anular,validar)
-- Pestaña de estadisticas enfocada a la busqueda de ordenes manuales, para su relleno.
 - Informes de reingreso actualizados.
 - Se habilito activar despacho a domicilio al documento asociado a una orden, cuando esta se genera.
+- orden de elaboracion ahora solo imprime 1 hoja
+- Pestaña de estadisticas enfocada a la busqueda de ordenes manuales, para su relleno.
 
 [Version 5.7 (26-3-2022)]
 - Prediccion de clientes implementada.

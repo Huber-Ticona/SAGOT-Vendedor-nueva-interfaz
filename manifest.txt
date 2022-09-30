@@ -1,2 +1,6 @@
 host:127.0.0.1
 port:5000
+intervalo_sondeo:60
+omitir_uso_carpinteria:SI
+omitir_vinculo_exitoso:SI
+
