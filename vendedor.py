@@ -171,7 +171,7 @@ class Login(QDialog):
             usuario = self.txt_usuario.text()
             contra = self.txt_contra.text()
             try:
-                resultado = self.conexion.root.obtener_usuario_activo()
+                resultado = self.conexion.root.obtener_usuario_activo() #18-10-2022 SE ANALIZO LA SEGURIDAD ANTE SQL INYECTION --> Aprobada, no se puede inyectar sqli.
                 encontrado = False
                 for item in resultado:
                     if item[0] == usuario and item[1] == contra and item[6] == 'vendedor':
@@ -1295,7 +1295,7 @@ class Vendedor(QMainWindow):
             elif self.r_cliente.isChecked():
                 nombre_cliente = self.txt_cliente.text()
                 try:
-                    datos = self.conexion.root.buscar_orden_nombre( tipo.lower() , nombre_cliente)
+                    datos = self.conexion.root.buscar_orden_nombre( tipo.lower() , nombre_cliente) # SQLI detectada, ejemplo --> nombre = hola%' or 1=1 -- 
                     items = []
                     estado = 'Ninguno'
                     if datos != ():
