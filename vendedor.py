@@ -276,11 +276,11 @@ class Vendedor(QMainWindow):
         self.telefonos = []
         self.contactos = []
 
-        self.r_dim.toggled.connect(lambda: self.cargar_clientes('dimensionado','normal') if(self.r_dim.isChecked()) else print('no ckeck dim') )
+        """self.r_dim.toggled.connect(lambda: self.cargar_clientes('dimensionado','normal') if(self.r_dim.isChecked()) else print('no ckeck dim') )
         self.r_elab.toggled.connect(lambda: self.cargar_clientes('elaboracion','normal') if(self.r_elab.isChecked()) else print('no ckeck elab'))
         self.r_carp.toggled.connect(lambda: self.cargar_clientes('carpinteria','normal') if(self.r_carp.isChecked()) else print('no ckeck carp'))
         self.r_pall.toggled.connect(lambda: self.cargar_clientes('pallets','normal') if(self.r_pall.isChecked()) else print('no ckeck pall'))
-
+"""
         self.tableWidget_2.setColumnWidth(0,80)
         self.tableWidget_2.setColumnWidth(1,430)
         self.tableWidget_2.setColumnWidth(2,85)
@@ -326,10 +326,10 @@ class Vendedor(QMainWindow):
         self.completer_manual = QCompleter()
         self.completer_manual.activated.connect(self.rellenar_datos_cliente_manual)
 
-        self.r_dim_1.toggled.connect(lambda: self.cargar_clientes('dimensionado','manual') if(self.r_dim_1.isChecked()) else print('no ckeck dim') )
+        """self.r_dim_1.toggled.connect(lambda: self.cargar_clientes('dimensionado','manual') if(self.r_dim_1.isChecked()) else print('no ckeck dim') )
         self.r_elab_1.toggled.connect(lambda: self.cargar_clientes('elaboracion','manual') if(self.r_elab_1.isChecked()) else print('no ckeck elab'))
         self.r_carp_1.toggled.connect(lambda: self.cargar_clientes('carpinteria','manual') if(self.r_carp_1.isChecked()) else print('no ckeck carp'))
-        self.r_pall_1.toggled.connect(lambda: self.cargar_clientes('pallets','manual') if(self.r_pall_1.isChecked()) else print('no ckeck pall'))
+        self.r_pall_1.toggled.connect(lambda: self.cargar_clientes('pallets','manual') if(self.r_pall_1.isChecked()) else print('no ckeck pall'))"""
         #  ---- REINGRESO MANUAL ----
         self.btn_registrar_6.clicked.connect(lambda: self.reingreso_manual('registrar') )
         self.txt_descripcion_7.textChanged.connect(self.buscar_descripcion_2)
@@ -485,6 +485,7 @@ class Vendedor(QMainWindow):
                 self.lb_conexion.setText('SERVIDOR FUERA DE RED')
 # ------------   FUNCIONES BUSCAR VENTA  -----------------
     def inicializar_buscar_venta(self):
+        self.cargar_clientes('normal')
         self.txt_interno_1.setText('')
         self.txt_cliente_1.setText('')
         self.tableWidget_1.setRowCount(0)
@@ -1009,9 +1010,9 @@ class Vendedor(QMainWindow):
 
 
     def registrar_orden(self):
-        nombre = self.nombre_2.text()
+        nombre = self.nombre_2.text().upper() #v5.9
         telefono = self.telefono_2.text()
-        cont = self.contacto_2.text()
+        cont = self.contacto_2.text().upper() #5.9
         oce = self.oce_2.text()
         fecha_orden = datetime.now().date() #FECHA DE CREACION DE ORDEN
 
@@ -3484,34 +3485,39 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self,'ERROR' ,'Ingrese una clave antes de continuar')
 
 #----- funciones generales -----------
-    def cargar_clientes(self, tipo_orden, tipo_estado):
+    def cargar_clientes(self,  tipo_estado):
         datos = []
-        print('obteniendo clientes de: ' + tipo_orden)
-        datos = self.conexion.root.obtener_clientes_de_ordenes(tipo_orden)
-        print(str(len(datos)))
-        print(str(type(datos)))
-        print('orden: '+ tipo_orden + ' | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
-        #self.txt_detalle.setText('orden: '+ tipo_orden + ' | len: ' + str(len(self.datos)) + ' | type: '+ str(type(self.datos)))
-        ordenes = pd.DataFrame(datos) #([0]nombre, [1]telefono, [2]contacto)
-        self.nombres = ordenes[0].tolist()
-        self.telefonos = ordenes[1].tolist()
-        self.contactos = ordenes[2].tolist()
-        model = QStringListModel(self.nombres)
-        print(str(type(model)))
-   
-        if tipo_estado == 'normal':
-            self.completer.setModel(model)
-            self.completer.setMaxVisibleItems(7)
-            self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
-            print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
-            self.nombre_2.setCompleter(self.completer)
-        elif tipo_estado == 'manual':
-            self.completer_manual.setModel(model)
-            self.completer_manual.setMaxVisibleItems(7)
-            self.completer_manual.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
-            print(self.completer_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
-            self.nombre_1.setCompleter(self.completer_manual)
+        print('obteniendo nombres de ordenes ' )
+        try:
+            datos = self.conexion.root.obtener_clientes_de_ordenes()
+        
+
+            print(str(len(datos)))
+            print(str(type(datos)))
+            print('ordenes   | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
+            #self.txt_detalle.setText('orden: '+ tipo_orden + ' | len: ' + str(len(self.datos)) + ' | type: '+ str(type(self.datos)))
+            ordenes = pd.DataFrame(datos) #([0]nombre, [1]telefono, [2]contacto)
+            self.nombres = ordenes[0].tolist()
+            self.telefonos = ordenes[1].tolist()
+            self.contactos = ordenes[2].tolist()
+            model = QStringListModel(self.nombres)
+            print(str(type(model)))
     
+            if tipo_estado == 'normal':
+                self.completer.setModel(model)
+                self.completer.setMaxVisibleItems(7)
+                self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+                self.nombre_2.setCompleter(self.completer)
+            elif tipo_estado == 'manual':
+                self.completer_manual.setModel(model)
+                self.completer_manual.setMaxVisibleItems(7)
+                self.completer_manual.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                print(self.completer_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+                self.nombre_1.setCompleter(self.completer_manual)
+        except EOFError:
+            self.conexion_perdida()
+            
     def decidir_atras(self):
         if self.anterior: 
             self.stackedWidget.setCurrentWidget(self.estadisticas)
