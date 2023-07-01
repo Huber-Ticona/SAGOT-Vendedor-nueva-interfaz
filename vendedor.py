@@ -34,8 +34,8 @@ class Vendedor(QMainWindow):
         self.conexion = None
         self.host = None
         self.puerto = None
-        self.url_retiros = None
-        self.url_descarga = None
+        self.url_retiros = None #Para abrir app Retiros.
+        self.url_descarga = None #Para nuevas versiones.
         self.carpeta = None
         self.dir_informes = None
         

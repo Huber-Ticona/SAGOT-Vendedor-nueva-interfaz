@@ -10,3 +10,5 @@ activar_entorno.bat
 /app/informes/
 venv
 *.spec
+Vendedor_setup.iss
+installer

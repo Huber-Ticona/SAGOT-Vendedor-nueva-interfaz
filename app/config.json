@@ -17,6 +17,7 @@
     "intervalo_sondeo_manual":60,
     "omitir_uso_carpinteria":true,
     "omitir_vinculo_exitoso":true,
-    "rango_dias":7
+    "rango_dias":7,
+    "test" : "test"
     
 }
