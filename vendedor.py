@@ -1,19 +1,17 @@
-import sys
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from  matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import uic
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap , QIcon
-from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel
+from PyQt5.QtWidgets import QLineEdit,QDialog,QMessageBox,QMainWindow,QCompleter,QTableWidgetItem,QDialogButtonBox,QFormLayout,QApplication,QWidget
+from PyQt5.QtGui import QPixmap , QIcon,QDesktopServices,QMovie
+from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel,QSize,QUrl,QTimer
 import rpyc
 import socket
 from time import sleep, strftime
 from datetime import datetime, timedelta,date 
 import json
-import ctypes
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch , mm
 from reportlab.lib.colors import white, black
@@ -24,200 +22,20 @@ from openpyxl.utils import get_column_letter
 from subprocess import Popen
 from concurrent.futures import ThreadPoolExecutor
 from random import randint
-
-
-class Login(QDialog):
-    ventana_principal = 0
-    def __init__(self, parent):
-        super(Login,self).__init__(parent)
-        uic.loadUi('login2.ui',self)
-
-        self.setModal(True)
-        self.conexion = None
-        self.host = None
-        self.puerto = None
-        self.exito = False
-        self.actual = None
-        self.datos_usuario = 'USER: NINGUNO BRO'
-        self.txt_contra.setEchoMode(QLineEdit.Password)
-        self.btn_manual.clicked.connect(self.conectar_manual)
-        self.btn_iniciar.clicked.connect(self.iniciar)
-        self.btn_manual.clicked.connect
-        self.inicializar()
-        self.txt_usuario.setFocus()
-        
-
-    def inicializar(self):
-        actual = os.path.abspath(os.getcwd())
-        actual = actual.replace('\\' , '/')
-        self.actual = actual
-        ruta = actual + '/icono_imagen/madenco logo.png'
-        foto = QPixmap(ruta)
-        self.lb_logo.setPixmap(foto)
-
-        if os.path.isfile(actual + '/manifest.txt'):
-            print('encontrado manifest')
-            with open(actual + '/manifest.txt' , 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-                try:
-                    n_host = lines[0].split(':')
-                    n_host = n_host[1]
-                    host = n_host[:len(n_host)-1]
-
-                    n_port = lines[1].split(':')
-                    n_port = n_port[1]
-                    port = n_port[:len(n_port)-1]
-
-                    self.host = host
-                    self.puerto = port
-                except IndexError:
-                    print('error de indice del manifest')
-                    pass #si no encuentra alguna linea
-        else:
-            print('manifest no encontrado')
-        
-        if os.path.isfile(actual+ '/registry.txt'):
-            with open(actual + '/registry.txt' , 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-                try:
-                    user = lines[0].split(':')
-                    user = user[1]
-                    user = user[:len(user)-1]
-
-                    password = lines[1].split(':')
-                    password = password[1]
-                    password = password[:len(password)-1]
-                    self.txt_usuario.setText(user)
-                    self.txt_contra.setText(password)
-
-                except IndexError:
-                    print('error de indice del registry')
-                    pass #si no encuentra alguna linea
-        else:
-            print('Datos de usuario no encontrados')
-
-
-    def conectar(self):
-        try:
-            if self.host and self.puerto:
-                self.conexion = rpyc.connect(self.host , self.puerto)
-                self.lb_conexion.setText('CONECTADO')
-            else:
-                QMessageBox.about(self,'ERROR', 'Host y puerto no encontrados en el manifest' )
-
-        except ConnectionRefusedError:
-            self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
-            
-        except socket.error:
-            self.lb_conexion.setText('SERVIDOR FUERA DE RED')
-
-    def conectar_manual(self):
-        dialog = InputDialog('HOST:','PUERTO:','CONECTAR MANUAL', self)
-        dialog.resize(250,100)   
-        if dialog.exec():
-                hostx , puertox = dialog.getInputs()
-                try:
-                    if hostx != '':
-                        puertox = int(puertox)
-                        self.host = hostx
-                        self.puerto = puertox
-                        self.conexion = rpyc.connect(hostx , puertox)
-                        self.lb_conexion.setText('CONECTADO')
-                    else: 
-                        QMessageBox.about(self,'ERROR' ,'Ingrese un host antes de continuar')
-                except ValueError:
-                    QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros en el PUERTO')
-                except ConnectionRefusedError:
-                    self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
-                    
-                except socket.error:
-                    self.lb_conexion.setText('SERVIDOR FUERA DE LA RED')
-                    #QMessageBox.about(self,'ERROR' ,'No se puede establecer la conexion con el servidor')
-
-    def guardar_datos(self):
-        
-        if self.checkBox.isChecked():
-
-            with open(self.actual + '/registry.txt' , 'w', encoding='utf-8') as file:
-                file.write('usuario:'+ self.txt_usuario.text() + '\n')
-                file.write('contra:' + self.txt_contra.text()+ '\n')
-                file.write('')
-
-    def iniciar(self):
-       
-
-        if self.conexion == None: #no existe la conexion
-            self.conectar()
-            usuario = self.txt_usuario.text()
-            contra = self.txt_contra.text()
-            try:
-                resultado = self.conexion.root.obtener_usuario_activo()
-                encontrado = False
-                for item in resultado:
-                    if item[0] == usuario and item[1] == contra and item[6] == 'vendedor':
-                        encontrado = True
-                        self.datos_usuario = item
-                        self.guardar_datos()
-                        self.accept()
-                if encontrado == False:
-                    QMessageBox.about(self ,'ERROR', 'Usuario o contraseña invalidas')
-
-            except EOFError:
-                QMessageBox.about(self ,'Conexion', 'El servidor no responde')
-            except AttributeError:
-                pass
-
-        else: #existe la conexion
-            usuario = self.txt_usuario.text()
-            contra = self.txt_contra.text()
-            try:
-                resultado = self.conexion.root.obtener_usuario_activo() #18-10-2022 SE ANALIZO LA SEGURIDAD ANTE SQL INYECTION --> Aprobada, no se puede inyectar sqli.
-                encontrado = False
-                for item in resultado:
-                    if item[0] == usuario and item[1] == contra and item[6] == 'vendedor':
-                        encontrado = True
-                        self.datos_usuario = item
-                        print('USUARIO ENCONTRADO')
-                        self.guardar_datos()
-                        self.accept()
-                if encontrado == False:
-                    QMessageBox.about(self ,'ERROR', 'Usuario o contraseña invalidas')
-
-            except EOFError:
-                QMessageBox.about(self ,'Conexion', 'El servidor no responde') 
-            except AttributeError:
-                pass
-    
-    def obt_datos(self):
-        return self.datos_usuario , self.conexion ,self.host , self.puerto
-
-    def closeEvent(self, event):
-        """Generate 'question' dialog on clicking 'X' button in title bar.
-
-        Reimplement the closeEvent() event handler to include a 'Question'
-        dialog with options on how to proceed - Save, Close, Cancel buttons
-        """
-        reply = QMessageBox.question(
-            self, "Salir",
-            "¿Deseas salir de la aplicación?",
-            QMessageBox.Close | QMessageBox.Cancel)
-
-        if reply == QMessageBox.Close:
-            event.accept()
-        else:
-            event.ignore()
+import requests 
 
 class Vendedor(QMainWindow):
     ventana_login = 0
     def __init__(self):
         super( Vendedor,self).__init__()
-        uic.loadUi('vendedor.ui',self)
+        uic.loadUi('app/ui/vendedor.ui',self)
 # ------ VARIABLES GLOBALES -----------
         self.datos_usuario = None
         self.conexion = None
         self.host = None
         self.puerto = None
-
+        self.url_retiros = None
+        self.url_descarga = None
         self.carpeta = None
         self.dir_informes = None
         
@@ -244,19 +62,32 @@ class Vendedor(QMainWindow):
         self.anterior = None #Determina si al volver atras, vuelve a buscar ordenes o estadisticas -> buscar ordenes manuales
         self.anterior2 = None #Determina si volver atras vuelve a gestion de reingresos o busqueda de ordenes de trabajo.
         self.aux_detalle = None
-        self.version = 'version-5.8'
+        self.version = 0.0
+        self.aux_version = 0.0 #v6.0 Usada al actualizar reingreso
         self.executor = ThreadPoolExecutor(max_workers=3) #Hilos para hacer Sondeos a la base de datos
         self.sondeo_params = {
             "estado_sondeo_manual" : False, 
             "intervalo_sondeo_manual" : 300, # 300 segundos x DEFECTO
             "omitir_uso_carpinteria" : False,
-            "omitir_vinculo_exitoso" : False
+            "omitir_vinculo_exitoso" : False,
+            "rango_dias": 7
         }
 #--------------- FUNCIONES GLOBALES ---------
-        self.iniciar_session()
-        self.inicializar()
-        self.stackedWidget.setCurrentWidget(self.inicio)
+
+        self.cargar_config()
+        #LISTA PRODUCTOS
+        self.completer_productos = QCompleter()
+        self.lista_productos = []
+        self.lista_codigos = []
+        self.style_line_edit = ""
+        #Login v6.0
+        self.btn_descargar_actualizacion.hide() #Se oculta, Solo se muestra si ahi descargas.
+        self.inicializar_login()
+        self.btn_iniciar.clicked.connect(self.iniciar_session)
+        self.btn_descargar_actualizacion.clicked.connect(self.abrir_descarga)
+        #self.stackedWidget.setCurrentWidget(self.inicio)
         
+
         #buscar venta
         self.btn_buscar_1.clicked.connect(self.buscar_documento)
         self.comboBox_1.currentIndexChanged['QString'].connect(self.filtrar_vendedor)
@@ -276,11 +107,6 @@ class Vendedor(QMainWindow):
         self.telefonos = []
         self.contactos = []
 
-        """self.r_dim.toggled.connect(lambda: self.cargar_clientes('dimensionado','normal') if(self.r_dim.isChecked()) else print('no ckeck dim') )
-        self.r_elab.toggled.connect(lambda: self.cargar_clientes('elaboracion','normal') if(self.r_elab.isChecked()) else print('no ckeck elab'))
-        self.r_carp.toggled.connect(lambda: self.cargar_clientes('carpinteria','normal') if(self.r_carp.isChecked()) else print('no ckeck carp'))
-        self.r_pall.toggled.connect(lambda: self.cargar_clientes('pallets','normal') if(self.r_pall.isChecked()) else print('no ckeck pall'))
-"""
         self.tableWidget_2.setColumnWidth(0,80)
         self.tableWidget_2.setColumnWidth(1,430)
         self.tableWidget_2.setColumnWidth(2,85)
@@ -290,22 +116,38 @@ class Vendedor(QMainWindow):
         self.btn_elaboracion.clicked.connect(lambda: self.busqueda_general('ELABORACION'))
         self.btn_carpinteria.clicked.connect(lambda: self.busqueda_general('CARPINTERIA'))
         self.btn_pallets.clicked.connect(lambda: self.busqueda_general('PALLETS'))
+        self.btn_sin_transformacion.clicked.connect(lambda: self.busqueda_general('SIN_TRANSFORMACION'))
+
         self.btn_modificar_4.clicked.connect(self.inicializar_modificar_orden)
         self.btn_atras_4.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
 
         #modificar orden
+        self.detalle = None
+        self.aux_obs = '' # respaldo de observacion
+        self.datosTablaOrden = None # Respalda la tabla de la orden.
         self.btn_guardar_5.clicked.connect( self.actualizar_orden )
         self.btn_atras_5.clicked.connect(self.decidir_atras)
         self.btn_ver_5.clicked.connect(lambda: self.ver_pdf(self.tipo) )
         self.btn_agregar_.clicked.connect(self.agregar_2)
         self.btn_eliminar_.clicked.connect(self.eliminar_2)
         self.btn_anular_5.clicked.connect(self.anular)
+        #v6.0 deshabilitados, hide en .ui
+        #self.btn_copiar_detalle.clicked.connect(self.guardarDetalleOrden)
+        #self.btn_pegar_detalle.clicked.connect(self.pegarDetalleOrden)
+
+        self.r_uso_interno_5.stateChanged.connect( lambda: self.cambiar_observacion('modificar') ) #v5.9
+        self.r_separar_material_5.stateChanged.connect(lambda: self.cambiar_observacion('modificar') ) #v5.9
+        self.r_despacho_5.stateChanged.connect( lambda: self.cambiar_observacion('modificar')) #v5.9
+        self.r_facturar_5.stateChanged.connect( lambda: self.cambiar_observacion('modificar')) #v5.9
+        self.r_enchape_5.stateChanged.connect( lambda: self.cambiar_observacion('modificar')) #v5.9
+
         # reingreso
         self.btn_reingreso_4.clicked.connect(self.inicializar_reingreso)
         self.btn_generar_reingreso.clicked.connect(self.registrar_reingreso)
         self.btn_agregar_2.clicked.connect(self.agregar_3)
         self.btn_eliminar_2.clicked.connect(self.eliminar_3)
         self.btn_atras_7.clicked.connect( lambda: self.stackedWidget.setCurrentWidget(self.buscar_orden) )
+
         # GESTION REINGRESO
         self.btn_buscar_reingreso.clicked.connect(self.buscar_reingreso_1)
         self.btn_mod_reingreso_1.clicked.connect(self.vista_modificar_reingreso)
@@ -319,17 +161,25 @@ class Vendedor(QMainWindow):
         self.txt_descripcion_1.textChanged.connect(self.buscar_descripcion)
         self.txt_codigo_1.textChanged.connect(self.buscar_codigo)
         self.btn_add.clicked.connect(self.add_descripcion)
-        self.r_uso_interno_1.stateChanged.connect(self.cambiar_observacion)
+        
+        self.r_uso_interno_1.stateChanged.connect( lambda: self.cambiar_observacion('manual') ) #v5.9
+        self.r_separar_material_1.stateChanged.connect(lambda: self.cambiar_observacion('manual') ) #v5.9
+        self.r_despacho_1.stateChanged.connect( lambda: self.cambiar_observacion('manual')) #v5.9
+        self.r_facturar_1.stateChanged.connect( lambda: self.cambiar_observacion('manual')) #v5.9
+        self.r_enchape_1.stateChanged.connect( lambda: self.cambiar_observacion('manual')) #v5.9
+        
+
         self.btn_registrar_1.clicked.connect(self.registrar_orden_manual)
         self.btn_agregar_1.clicked.connect(self.agregar_4)
         self.btn_eliminar_1.clicked.connect(self.eliminar_4)
+
         self.completer_manual = QCompleter()
         self.completer_manual.activated.connect(self.rellenar_datos_cliente_manual)
+        self.completer_reingreso_manual = QCompleter()
+        self.completer_reingreso_manual.activated.connect(self.rellenar_datos_cliente_reingreso_manual)
 
-        """self.r_dim_1.toggled.connect(lambda: self.cargar_clientes('dimensionado','manual') if(self.r_dim_1.isChecked()) else print('no ckeck dim') )
-        self.r_elab_1.toggled.connect(lambda: self.cargar_clientes('elaboracion','manual') if(self.r_elab_1.isChecked()) else print('no ckeck elab'))
-        self.r_carp_1.toggled.connect(lambda: self.cargar_clientes('carpinteria','manual') if(self.r_carp_1.isChecked()) else print('no ckeck carp'))
-        self.r_pall_1.toggled.connect(lambda: self.cargar_clientes('pallets','manual') if(self.r_pall_1.isChecked()) else print('no ckeck pall'))"""
+        self.r_sin_trans_1.toggled.connect(self.habilitar_separar_material)
+
         #  ---- REINGRESO MANUAL ----
         self.btn_registrar_6.clicked.connect(lambda: self.reingreso_manual('registrar') )
         self.txt_descripcion_7.textChanged.connect(self.buscar_descripcion_2)
@@ -358,12 +208,14 @@ class Vendedor(QMainWindow):
         self.btn_detener_sondeo_manual.clicked.connect(self.finalizar_sondeo)
         self.btn_actualizar_config_sondeo.clicked.connect(self.actualizar_sondeo_config)
         self.btn_obtener_sondeo.clicked.connect(lambda: self.obtener_datos_sondeo(True))
+        
         #generar clave
-        self.btn_generar_clave.clicked.connect(self.generar_clave)
+        #self.btn_generar_clave.clicked.connect(self.generar_clave)
 
         #CONFIGURACION
         self.btn_configuracion.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.configuracion))
         self.btn_inicio.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
+        self.btn_retiros.clicked.connect( lambda: QDesktopServices.openUrl(QUrl( self.url_retiros )))
         #SIDE MENU BOTONES
         self.btn_buscar.clicked.connect(self.inicializar_buscar_venta)
         self.btn_modificar.clicked.connect(self.inicializar_buscar_orden)
@@ -371,104 +223,223 @@ class Vendedor(QMainWindow):
         self.btn_informe.clicked.connect(self.inicializar_informe)
         self.btn_atras.clicked.connect(self.cerrar_sesion)
         self.btn_conectar.clicked.connect(self.conectar)
+        self.btn_manual.clicked.connect(self.conectar_manual)
         self.btn_estadisticas.clicked.connect(self.inicializar_estadisticas)
         self.btn_reingreso.clicked.connect(self.inicializar_buscar_reingreso)
         self.btn_menu.clicked.connect(self.mostrar_menu)
+        
+        
+    def cargar_config(self):
+        print('|-- Cargando Config.json ')
 
-    def iniciar_session(self):
-        self.ventana_login = Login(self)
-        self.ventana_login.show()
-        salir = self.ventana_login.exec()
-        if salir == 0:
-            print('cerrar aplicacion')
-            sys.exit(0)
-        elif salir == 1:
-            datos , conn , host , puerto = self.ventana_login.obt_datos()
-            self.datos_usuario = datos
-            self.conexion = conn
-            self.host = host
-            self.puerto = puerto
+        # Lee el archivo config.json
+        with open('app/config.json', 'r') as f:
+            config = json.load(f)
+
+        try:
+            # Obtén el entorno del archivo JSON
+            environment = config["environment"]
+            # Obtén los valores de host y port según el entorno
+            self.host = config[environment]['host']
+            self.puerto = config[environment]['port']
+            self.url_retiros = config[environment]['url_retiros']
+            self.conectar()
+        except KeyError:
+            print('No host - port in config ')
+            pass
+        #Datos usuario
+        try:
+            user = config['user']
+            password = config['password']
+            print(user , password)
+            if user and password:
+                self.txt_usuario.setText(user)
+                self.txt_contra.setText(password)
+        except KeyError:
+            print('No user - password in config')
+            pass
+        #Datos sondeo params
+        try:
+            print('|_ Intervalo sondeo:',config["intervalo_sondeo_manual"])
+            self.sondeo_params['intervalo_sondeo_manual'] = int(config["intervalo_sondeo_manual"])
+
+            print('|_ Omitir_uso_carpinteria: ',config["omitir_uso_carpinteria"])
+            if config["omitir_uso_carpinteria"]:
+                self.sondeo_params["omitir_uso_carpinteria"] = config["omitir_uso_carpinteria"]
+                self.label_75.setText('SI')
+                self.ch_omitir_uso_carp.setChecked(True)
+
             
-            print(datos)
-            print('mostrar el menu')
-        print('continuando..')
+            print('|_ Omitir vinclo exitoso: ',config["omitir_vinculo_exitoso"])
+            if config["omitir_vinculo_exitoso"]:
+                self.sondeo_params["omitir_vinculo_exitoso"] = config["omitir_vinculo_exitoso"]
+                self.label_76.setText('SI')
+                self.ch_omitir_vinculo.setChecked(True)
+            
+            print('|_ Rango dias sondeo: ',config["rango_dias"])
+            self.sondeo_params["rango_dias"] = int(config["rango_dias"])
+            self.version = float(config["version"])
+            self.aux_version = float(config["version"])
+            self.lb_version.setText(str(self.version))
+
+        except Exception as e:
+            # Captura la excepción y muestra el mensaje de error
+            print("Error:", str(e))
+            
+
+    def inicializar_login(self):
+        print("|-- Mostrando Login ...")
+        self.left_menu_container.hide()
+        self.lb_vendedor.setText('Por Confirmar ...')
+        self.txt_contra.setEchoMode(QLineEdit.Password)
+        #self.txt_usuario.setFocus()
+        
+        
+        logo = QPixmap('app/icono_imagen/madenco logo.png')
+        self.lb_logo.setPixmap(logo)
+        self.stackedWidget.setCurrentWidget(self.login)
+        print('|-- Loading')
+        self.stackedWidgetLogin.setCurrentWidget(self.loading)
+        #Loading
+        movie = QMovie("app/icono_imagen/gif.gif")
+        self.lb_loading.setMovie(movie)
+        movie.start()
+        # Retrasar la transición al input después de 6 segundos
+        QTimer.singleShot(2000, lambda: (
+            print('|-- Input'),
+            self.stackedWidgetLogin.setCurrentWidget(self.input),
+            self.btn_iniciar.setDefault(True)  # Establecer el botón como predeterminado para que se active al presionar Enter
+        ))
+        
+    def iniciar_session(self):
+        print("|-- Iniciando sesion ..." )
+        usuario = self.txt_usuario.text()
+        contra = self.txt_contra.text()
+        if self.conexion:
+            try:
+                resultado = self.conexion.root.obtener_usuario_activo()
+                encontrado = False
+                for item in resultado:
+                    if item[0] == usuario and item[1] == contra and item[6] == 'vendedor':
+                        encontrado = True
+                        self.datos_usuario = item
+                        #self.guardar_datos()
+                        self.inicializar()
+                if encontrado == False:
+                    QMessageBox.about(self ,'ERROR', 'Usuario o contraseña invalidas')
+
+            except EOFError:
+                QMessageBox.about(self ,'Conexion', 'El servidor no responde')
+            except AttributeError:
+                pass
+        else:
+            QMessageBox.about(self ,'Conexion', 'SIN CONEXION\nIntente una nueva conexion.\n(Boton "Conectar" o "Conectar manual")')
+        
+
 
     def inicializar(self):
-        print('inicializando...')
-        self.btn_atras.setIcon(QIcon('icono_imagen/logout.png'))
+        print('#'*55)
+        print('|-- Inicializando SAGOT Vendedor ...')
+        
+        self.btn_atras.setIcon(QIcon('app/icono_imagen/logout.png'))
 
-        self.btn_buscar.setIcon(QIcon('icono_imagen/buscar venta.png'))
-        self.btn_modificar.setIcon(QIcon('icono_imagen/buscar orden.png'))
-        self.btn_orden_manual.setIcon(QIcon('icono_imagen/orden manual.png'))
-        self.btn_generar_clave.setIcon(QIcon('icono_imagen/generar clave.png'))
-        self.btn_informe.setIcon(QIcon('icono_imagen/informes.png'))
-        self.btn_estadisticas.setIcon(QIcon('icono_imagen/estadisticas2.png'))
-        self.btn_configuracion.setIcon(QIcon('icono_imagen/configuracion.png'))
-        self.btn_reingreso.setIcon(QIcon('icono_imagen/reingreso.png'))
+        self.btn_buscar.setIcon(QIcon('app/icono_imagen/buscar venta.png'))
+        self.btn_modificar.setIcon(QIcon('app/icono_imagen/buscar orden.png'))
+        self.btn_orden_manual.setIcon(QIcon('app/icono_imagen/orden manual.png'))
+        #self.btn_generar_clave.setIcon(QIcon('app/icono_imagen/generar clave.png'))
+        self.btn_informe.setIcon(QIcon('app/icono_imagen/informes.png'))
+        self.btn_estadisticas.setIcon(QIcon('app/icono_imagen/estadisticas2.png'))
+        self.btn_configuracion.setIcon(QIcon('app/icono_imagen/configuracion.png'))
+        self.btn_reingreso.setIcon(QIcon('app/icono_imagen/reingreso.png'))
+        self.btn_retiros.setIcon(QIcon('app/icono_imagen/order-delivery.png'))
 
-        self.btn_generar_clave.show()
+        self.btn_generar_clave.hide() #v6.0 Se Oculta generar clave.
+        self.style_line_edit = "QLineEdit { border: none; }" #Estilo para line edit de prediccion de productos en QTablewidget.
         self.btn_orden_manual.show()
         self.btn_informe.show()
-
+        #v6.0
+        self.left_menu_container.show()
         actual = os.path.abspath(os.getcwd())
         actual = actual.replace('\\' , '/')
         self.carpeta = actual.replace('\\' , '/')
-        self.dir_informes = actual + '/informes/'
-        print(self.carpeta)
+        self.dir_informes = os.path.join(self.carpeta, 'app/informes')
+        self.dir_ordenes = os.path.join(self.carpeta, 'app/ordenes')
+        self.dir_reingreso = os.path.join(self.carpeta, 'app/reingresos')
+        self.dir_formatos = os.path.join(self.carpeta, 'app/formatos')
+        '''print('|--Carpeta root:' + self.carpeta)
+        print('|--Carpeta informes: ' + self.dir_informes)
+        print('|--Carpeta ordenes: ', self.dir_ordenes)
+        print('|--Carpeta formatos: ',self.dir_formatos)
+        print('|--Carpeta reingreso: ', self.dir_reingreso)
+        print('|--Carpeta informes: ',self.dir_informes)'''
         
-        self.btn_inicio.setIcon(QIcon('icono_imagen/enco_logov3.png'))
+        self.btn_inicio.setIcon(QIcon('app/icono_imagen/enco_logov3.png'))
 
-        menu = QPixmap(actual + '/icono_imagen/menu_v4.png')
+        menu = QPixmap('app/icono_imagen/menu_v4.png')
         self.btn_menu.setIcon(QIcon(menu))
-        self.lb_conexion.setText('CONECTADO')
+        print(f'|-- Verificando usuario --> {self.datos_usuario}')
         if self.datos_usuario:  #Si existen los datos del usuario, x ende se inicio sesion correctamente...
             self.lb_vendedor.setText(self.datos_usuario[8]) #NOMBRE DEL VENDEDOR
             self.vendedor = self.datos_usuario[8]   #solucion al error cuando se modifica la orden y se crear el pdf interno con vendedor = none. Esto cierra el programa.
 
             if self.datos_usuario[4] == 'NO': #Si no es super usuario
-                self.btn_generar_clave.hide() #no puede generar claves
+                #self.btn_generar_clave.hide() #no puede generar claves
                 detalle = json.loads(self.datos_usuario[7])
                 funciones = detalle['vendedor']
                 if not 'manual' in funciones:
                     self.btn_orden_manual.hide() #no puede generar ordenes manuales
                 if not 'informes' in funciones:
                     self.btn_informe.hide() #no puede generar informes
-        if os.path.isfile(actual + '/manifest.txt'):
-            with open(actual + '/manifest.txt' , 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-                try:
-                    t_sondeo = lines[2].split(':')
-                    t_sondeo = t_sondeo[1]
-                    t_sondeo = t_sondeo[:len(t_sondeo)-1]
-                    print(t_sondeo)
-                    self.sondeo_params['intervalo_sondeo_manual'] = int(t_sondeo)
-
-                    o_uso_carp = lines[3].split(':')
-                    o_uso_carp = o_uso_carp[1]
-                    o_uso_carp = o_uso_carp[:len(o_uso_carp)-1]
-                    if o_uso_carp == 'SI':
-                        self.sondeo_params["omitir_uso_carpinteria"] = True
-                        self.label_75.setText('SI')
-
-                    o_vinc_ex = lines[4].split(':')
-                    o_vinc_ex = o_vinc_ex[1]
-                    o_vinc_ex = o_vinc_ex[:len(o_vinc_ex)-1]
-
-                    if o_vinc_ex == 'SI':
-                        self.sondeo_params["omitir_vinculo_exitoso"] = True
-                        self.label_76.setText('SI')
-
-                    
-                except IndexError:
-                    print('error de indice del manifest - sondeo')
-                    pass #si no encuentra alguna linea
-        else:
-            print('manifest no encontrado')
-
+        
+        
         self.iniciar_sondeo()
+        #se cargan los productos.
+        self.cargar_productos()
+        #Se busca actualizacion
+        self.buscar_actualizacion()
 
         self.stackedWidget.setCurrentWidget(self.inicio)
-    
+        print('#'*55)
+    def buscar_actualizacion(self):
+        if self.url_retiros:
+            print('|-- Buscando nueva version ...')
+            url = f"{self.url_retiros}/releases"
+            try:
+                response = requests.post(url)
+                if response.status_code == 200:
+                    print("La solicitud POST se envió correctamente")
+                    array_strings = response.json()  # La respuesta del servidor se interpreta como JSON y se convierte en un objeto de Python
+                    print('|-- Data: ',array_strings )
+                    # Recorrer el array de strings e imprimir cada elemento
+                    app_name = 'SAGOT_Vendedor'
+                    print(f'|-- Buscando app: {app_name} | version superior a : {self.version} ')
+                    for installer_name in array_strings:
+                        print('|--',installer_name)
+                        aux_app_name = installer_name.split('-')
+                        #print(aux_app_name)
+                        if aux_app_name[0] == app_name:
+                            print(f'|---- App vendedor encontrada -> version: {aux_app_name[1]}')
+                            if float(aux_app_name[1]) > self.version:
+                                print('|----- Version superior encontrada: ',aux_app_name[1])
+                                url_app = self.url_retiros + '/releases/' + installer_name
+                                print(f'|---> URL DESCARGA: {url_app}' )
+                                self.url_descarga = url_app
+                                self.btn_descargar_actualizacion.show() #Se muestra
+                                QMessageBox.about(self,'ACTUALIZACION' ,f'Nueva version: {aux_app_name[1]} Disponible.')
+                else:
+                    print("Error al enviar la solicitud POST:", response.status_code)
+            except:
+                print('|-- Conexion con servidor de Descarga. Fallida')
+                pass
+
+            print('|-- Fin busqueda nueva version ...')
+    def abrir_descarga(self):
+        if self.url_descarga:
+            QDesktopServices.openUrl(QUrl(self.url_descarga))
+            QMessageBox.about(self,'ACTUALIZACION' ,f'La descarga se inicio.\nCierre esta aplicacion e Instale la nueva version antes de continuar.')
+            
+
+
     def conectar(self):
         if self.conexion == None:
             try:
@@ -483,8 +454,31 @@ class Vendedor(QMainWindow):
                 
             except socket.error:
                 self.lb_conexion.setText('SERVIDOR FUERA DE RED')
+    def conectar_manual(self):
+        dialog = InputDialog('HOST:','PUERTO:','CONECTAR MANUAL', self)
+        dialog.resize(250,100)   
+        if dialog.exec():
+                hostx , puertox = dialog.getInputs()
+                try:
+                    if hostx != '':
+                        puertox = int(puertox)
+                        self.host = hostx
+                        self.puerto = puertox
+                        self.conexion = rpyc.connect(hostx , puertox)
+                        self.lb_conexion.setText('CONECTADO')
+                    else: 
+                        QMessageBox.about(self,'ERROR' ,'Ingrese un host antes de continuar')
+                except ValueError:
+                    QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros en el PUERTO')
+                except ConnectionRefusedError:
+                    self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
+                    
+                except socket.error:
+                    self.lb_conexion.setText('SERVIDOR FUERA DE LA RED')
+                    #QMessageBox.about(self,'ERROR' ,'No se puede establecer la conexion con el servidor')
 # ------------   FUNCIONES BUSCAR VENTA  -----------------
     def inicializar_buscar_venta(self):
+        print('------- INICIALIZAR BUSCAR VENTA ---------')
         self.cargar_clientes('normal')
         self.txt_interno_1.setText('')
         self.txt_cliente_1.setText('')
@@ -493,19 +487,20 @@ class Vendedor(QMainWindow):
         self.dateEdit_1.setCalendarPopup(True)
         self.dateEdit_1.setDate(datetime.now().date())
         if self.windowState() != Qt.WindowMaximized:
-            print('Ajustando tamaño de las tablas para ventana NORMAL')
-            self.tableWidget_1.setColumnWidth(0,70) #interno
-            self.tableWidget_1.setColumnWidth(1,70) #documento
-            self.tableWidget_1.setColumnWidth(2,65) #nro doc
+            print('|-- Ajustando tamaño de las tablas para ventana NORMAL')
+            self.tableWidget_1.setColumnWidth(0,100) #interno
+            self.tableWidget_1.setColumnWidth(1,100) #documento
+            self.tableWidget_1.setColumnWidth(2,85) #nro doc
             self.tableWidget_1.setColumnWidth(3,100) #fecha venta
-            self.tableWidget_1.setColumnWidth(4,100) #cliente
+            self.tableWidget_1.setColumnWidth(4,150) #cliente
             self.tableWidget_1.setColumnWidth(5,100) #vendededor
-            self.tableWidget_1.setColumnWidth(6,50) #total
-            self.tableWidget_1.setColumnWidth(7,60) #despacho
+            self.tableWidget_1.setColumnWidth(6,70) #total
+            self.tableWidget_1.setColumnWidth(7,80) #despacho
         else:
-            print('VENTANA MAXIMIZADA, no es necesario ajustar el tamaño de las tablas')
+            print('|-- VENTANA MAXIMIZADA, no es necesario ajustar el tamaño de las tablas')
         
         self.stackedWidget.setCurrentWidget(self.buscar_venta)
+        print('----------------'*2)
     
     def buscar_documento(self):
         self.vendedores = []
@@ -570,7 +565,7 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
 
                     if no_encontrados:
-                        QMessageBox.about(self,'Busqueda' ,'Documentos NO encontrados para la fecha indicada')
+                        QMessageBox.about(self,'Busqueda' ,'Documento NO encontrado mediante el N° Interno.')
                     
                 except ValueError:
                     QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros')
@@ -824,7 +819,8 @@ class Vendedor(QMainWindow):
                 nro_interno = int(interno)
                 self.inter = nro_interno
                 rut = self.tableWidget_1.item(seleccion, 8 ).text()
-                print('ventana crear orden ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno) + ' | rut: ' + rut )
+                nombre_cliente  = self.tableWidget_1.item(seleccion, 4 ).text()
+                print('ventana crear orden ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno) + ' | rut: ' + rut + ' | cliente: ' + nombre_cliente)
 
                 fecha = datetime.now().date()
                 self.fecha.setCalendarPopup(True)
@@ -843,9 +839,10 @@ class Vendedor(QMainWindow):
                 self.r_carp.setChecked(False)
                 self.r_elab.setChecked(False)
                 self.r_pall.setChecked(False)
-                self.tableWidget_2.setColumnWidth(0,80)
-                self.tableWidget_2.setColumnWidth(1,430)
-                self.tableWidget_2.setColumnWidth(2,85)
+
+                self.tableWidget_2.setColumnWidth(0,100)
+                self.tableWidget_2.setColumnWidth(1,650)
+                self.tableWidget_2.setColumnWidth(2,100)
 
                 #------- se rellena la ventana ------------------#
                 try:
@@ -892,21 +889,38 @@ class Vendedor(QMainWindow):
                         cantidades = detalle['cantidades']
                         netos_totales = detalle['totales']
                         while i < len(cantidades) :
-                            item = (cantidades[i] , descripciones[i] ,netos_totales[i])
+                            descr = descripciones[i]
+                            item = (cantidades[i] , descr.strip() ,netos_totales[i]) # v5,9 REMOVIENDO espacios no necesarios.
                             items.append(item)
                             i += 1
                         self.items = items
                     print(items)
                     self.rellenar()
-                    #----- new 
+                    #----- new -----
                     datos_cliente = self.conexion.root.obtener_cliente(rut)
                     print(datos_cliente)
                     if datos_cliente:
                         print('cliente encontrado --> se rellenan sus datos')
+                        index = None
                         self.nombre_2.setText(datos_cliente[1]) #nombre del cliente
                         self.telefono_2.setText(datos_cliente[3]) #telefono  del cliente 
                         self.contacto_2.setText(datos_cliente[4]) #correo (o contacto) del cliente 
-                        
+
+                        if datos_cliente[1] in self.nombres:
+                            index = self.nombres.index(datos_cliente[1])
+                            if datos_cliente[3] == '' and index:
+                                telefono = self.telefonos[index]
+                                print(f'telefono cliente: {datos_cliente[3]} | telefono orden: {telefono}')
+                                self.telefono_2.setText(str(telefono)) #telefono  del cliente 
+                            if datos_cliente[4] == '' and index:
+                                contacto = self.contactos[index]
+                                print(f'contacto cliente: {datos_cliente[4]} | contacto orden: {contacto}')
+                                self.contacto_2.setText(contacto) #correo (o contacto) del cliente 
+                            
+                        else:
+                            print('Cliente no encontrado en ordenes.')
+
+                    
                     self.stackedWidget.setCurrentWidget(self.crear_orden)
                     #------------
                     #self.tabla_ordenes = self.conexion.root.obtener_clientes_de_ordenes('dimensionado')
@@ -978,7 +992,7 @@ class Vendedor(QMainWindow):
                     self.tableWidget_2.setItem(fila , 2 , QTableWidgetItem(str(item[2] )) )  #VALOR NETO FACTURAS VIENEN SIN IVA
 
     def agregar(self):
-        if self.tableWidget_2.rowCount() <=16 :
+        if self.tableWidget_2.rowCount() <=14 :
             fila = self.tableWidget_2.rowCount()
             self.tableWidget_2.insertRow(fila)
         else:
@@ -1042,7 +1056,8 @@ class Vendedor(QMainWindow):
                                     nueva_cant = cantidad.text().replace(',','.',3)
                                     nuevo_neto = neto.text().replace(',','.',3)
                                     cantidades.append( float(nueva_cant) )
-                                    descripciones.append(descripcion.text())
+                                    descripciones.append( (descripcion.text()).upper() ) #v5.9
+                                    
                                     lineas = self.separar(descripcion.text())
                                     lineas_totales = lineas_totales + len(lineas)
                                     valores_neto.append(float(nuevo_neto))
@@ -1054,6 +1069,7 @@ class Vendedor(QMainWindow):
                         else:
                             vacias = True
                         i+=1
+                    print(descripciones)
                     if vacias:
                         QMessageBox.about(self, 'Alerta' ,'Una fila y/o columna esta vacia, rellenela para continuar' )
                     elif lineas_totales > 14:
@@ -1069,85 +1085,65 @@ class Vendedor(QMainWindow):
                         }
                         detalle = json.dumps(formato)
                         try:
-                            enchape = 'NO'
                             despacho = 'NO'
+                            enchape = 'NO'
+                            datos_pdf = { "tipo": "" , "facturar" : "NO" }
+                            watermarks = []
+                            self.nro_orden = 0
 
                             if self.r_despacho.isChecked():
                                 despacho = 'SI'
+                                watermarks.append('despacho') #v5.9
                                 if self.conexion.root.actualizar_despacho(self.tipo_doc, self.inter , despacho):
                                     print('ORDEN CON DESPACHO -> CONFIRMA NOTA VENTA con DESPACHO.')
                                 else:
                                     print('ORDEN CON DESPACHO ->Erro al actualizar DESPACHO A NOTA VENTA')
-                            if self.r_dim.isChecked():
 
+                            # REGISTRO DE ORDEN DE TRABAJO
+                            if self.r_dim.isChecked():
                                 if self.r_enchape.isChecked():
                                     fecha = fecha + timedelta(days=2)
                                     enchape = 'SI'
-
-                                self.conexion.root.registrar_orden_dimensionado( self.inter , str(self.fecha_venta), nombre , telefono, str(fecha) , detalle, self.tipo_doc, self.nro_doc,enchape,despacho,str(fecha_orden),cont,oce,self.vendedor)
-                                resultado = self.conexion.root.buscar_orden_dim_interno(self.inter)
-                                self.nro_orden = self.buscar_nro_orden(resultado)
-                                # crear vinculo a documento de venta
-                                self.crear_vinculo('dimensionado')
-                                datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce,self.vendedor)
-                                self.crear_pdf(datos,'dimensionado',despacho)
-                                self.inicializar_buscar_venta()
-                                boton = QMessageBox.question(self, 'Orden de dimensionado registrada correctamente', 'Desea abrir la Orden?')
-                                if boton == QMessageBox.Yes:
-                                    self.ver_pdf('dimensionado')
+                                self.nro_orden = self.conexion.root.registrar_orden_dimensionado( self.inter , str(self.fecha_venta), nombre , telefono, str(fecha) , detalle, self.tipo_doc, self.nro_doc,enchape,despacho,str(fecha_orden),cont,oce,self.vendedor)
+                                datos_pdf["tipo"] = "dimensionado"
+                                
                             elif self.r_elab.isChecked():
-                                self.conexion.root.registrar_orden_elaboracion( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
-                                resultado = self.conexion.root.buscar_orden_elab_interno(self.inter)
-                                self.nro_orden = self.buscar_nro_orden(resultado)
-                                self.crear_vinculo('elaboracion')
-                                datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
-                                self.crear_pdf(datos , 'elaboracion',despacho)
-                                self.inicializar_buscar_venta()
-                                boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                                if boton == QMessageBox.Yes:
-                                    self.ver_pdf('elaboracion')
+                                self.nro_orden = self.conexion.root.registrar_orden_general("elaboracion", nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)                    
+                                datos_pdf["tipo"] = "elaboracion"
                             elif self.r_carp.isChecked():
-                                self.conexion.root.registrar_orden_carpinteria( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
-                                resultado = self.conexion.root.buscar_orden_carp_interno(self.inter)
-                                self.nro_orden = self.buscar_nro_orden(resultado)
-                                self.crear_vinculo('carpinteria')
-                                datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
-                                self.crear_pdf(datos , 'carpinteria',despacho)
-                                self.inicializar_buscar_venta()
-                                boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                                if boton == QMessageBox.Yes:
-                                    self.ver_pdf('carpinteria')
+                                self.nro_orden =  self.conexion.root.registrar_orden_general("carpinteria",  nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
+                                datos_pdf["tipo"] = "carpinteria"
                             elif self.r_pall.isChecked():
-                                self.conexion.root.registrar_orden_pallets( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
-                                resultado = self.conexion.root.buscar_orden_pall_interno(self.inter)
-                                self.nro_orden = self.buscar_nro_orden(resultado)
-                                self.crear_vinculo('pallets')
-                                datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, self.vendedor)
-                                self.crear_pdf( datos , 'pallets',despacho)
-                                self.inicializar_buscar_venta()
-                                boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                                if boton == QMessageBox.Yes:
-                                    self.ver_pdf('pallets')
+                                self.nro_orden =  self.conexion.root.registrar_orden_general("pallets",  nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
+                                datos_pdf["tipo"] = "pallets"
+                            #v6.0
+                            elif self.r_sin_trans.isChecked():
+                                self.nro_orden =  self.conexion.root.registrar_orden_general("sin_transformacion",  nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, self.inter ,detalle, str(self.fecha_venta), self.vendedor)
+                                datos_pdf["tipo"] = "sin_transformacion"
+                                watermarks.append('material') 
                             else:
                                 QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
 
+                            if self.nro_orden != 0:
+                                self.crear_vinculo(datos_pdf["tipo"])
+                                print(f'Creando PDF {datos_pdf["tipo"]} ...')
+                                datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce,self.vendedor)
+                                self.crear_pdf(datos, datos_pdf ,watermarks)
+                                self.inicializar_buscar_venta()
+                                boton = QMessageBox.question(self, f'Orden de {datos_pdf["tipo"]} registrada correctamente', 'Desea abrir la Orden?')
+                                if boton == QMessageBox.Yes:
+                                    self.ver_pdf(datos_pdf["tipo"])
+                            
                         except EOFError:
                             self.conexion_perdida()
                         except AttributeError:
                             QMessageBox.about(self,'IMPORTANTE', 'Este mensaje se debe a que hubo un error al ingresar los datos a la base de datos. Contacte con el soporte')
-
-
                 except ValueError:
                     QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" ')          
             else:
                 QMessageBox.about(self, 'Sugerencia', 'Ingrese un telefono antes de continuar')           
         else:
             QMessageBox.about(self, 'Sugerencia', 'Ingrese un nombre antes de continuar')
-    
-    
-        
-
-    
         
 # ------ Funciones de buscar orden de trabajo -------------
     def inicializar_buscar_orden(self):
@@ -1160,12 +1156,13 @@ class Vendedor(QMainWindow):
         self.dateEdit.setCalendarPopup(True)
         self.r_fecha.setChecked(True)
         self.tb_buscar_orden.setRowCount(0)
-        self.tb_buscar_orden.setColumnWidth(0,70)
-        self.tb_buscar_orden.setColumnWidth(1,70)
-        self.tb_buscar_orden.setColumnWidth(2,100)
-        self.tb_buscar_orden.setColumnWidth(3,170)
+
+        self.tb_buscar_orden.setColumnWidth(0,100)
+        self.tb_buscar_orden.setColumnWidth(1,100)
+        self.tb_buscar_orden.setColumnWidth(2,120)
+        self.tb_buscar_orden.setColumnWidth(3,200)
         self.tb_buscar_orden.setColumnWidth(4,120)
-        self.tb_buscar_orden.setColumnWidth(5,100)
+        self.tb_buscar_orden.setColumnWidth(5,120)
         self.tb_buscar_orden.setColumnWidth(6,100)
 
         self.stackedWidget.setCurrentWidget(self.buscar_orden)
@@ -1239,12 +1236,9 @@ class Vendedor(QMainWindow):
             if self.r_orden.isChecked(): #Busqueda por numero de orden
                 try:
                     orden = int(self.txt_orden.text())
-                    if tipo == 'PALLETS':
-                        consulta = self.conexion.root.buscar_orden_pall_numero(orden)
-                    elif tipo == 'CARPINTERIA':
-                        consulta = self.conexion.root.buscar_orden_carp_numero(orden)
-                    elif tipo == 'ELABORACION':
-                        consulta = self.conexion.root.buscar_orden_elab_numero(orden)
+                    #BUSCA ORDEN GENERAL (elab,carp,pall,sin_trans)
+                    consulta = self.conexion.root.buscar_orden_general_numero( tipo.lower() ,orden)
+
                     items = []
                     estado = 'Ninguno'
                     if consulta != None :
@@ -1269,12 +1263,9 @@ class Vendedor(QMainWindow):
                 #inicio = str(aux) + ' ' + '00:00:00'
                 #fin = str(aux) + ' ' + '23:59:59'    
                 try:
-                    if tipo == 'PALLETS':
-                        datos = self.conexion.root.buscar_orden_pall_fecha(str(aux))
-                    elif tipo == 'CARPINTERIA':
-                        datos = self.conexion.root.buscar_orden_carp_fecha(str(aux))
-                    elif tipo == 'ELABORACION':
-                        datos = self.conexion.root.buscar_orden_elab_fecha(str(aux))
+                    # Busca ordenes generales(elab,carp,pall,sin_trans)
+                    datos = self.conexion.root.buscar_orden_general_fecha( tipo.lower() , str(aux))
+
                     items = []
                     estado = 'Ninguno'
                     if datos != ():
@@ -1340,8 +1331,8 @@ class Vendedor(QMainWindow):
         self.date_venta_5.setEnabled(True)
         self.comboBox_5.setEnabled(True)
         self.txt_vendedor_5.setEnabled(True)
-        self.r_enchape_5.setChecked(False)
-        self.r_despacho_5.setChecked(False)
+        self.tipo_doc = None 
+        self.txt_obs_2.clear() #v5.9
 
         seleccion = self.tb_buscar_orden.currentRow()
         if seleccion != -1:
@@ -1351,9 +1342,22 @@ class Vendedor(QMainWindow):
                 self.nro_orden = int(orden)
                 tipo = self.lb_tipo_orden.text()
                 print('----------- MODIFICAR ORDEN ... para: '+ tipo + ' -->' + str(self.nro_orden) + ' -------------')
-                self.tb_modificar_orden.setColumnWidth(0,80)
-                self.tb_modificar_orden.setColumnWidth(1,430)
-                self.tb_modificar_orden.setColumnWidth(2,85)
+                self.tb_modificar_orden.setColumnWidth(0,100)
+                self.tb_modificar_orden.setColumnWidth(1,650)
+                self.tb_modificar_orden.setColumnWidth(2,100)
+                #v5.9 se habilitan todos los checkboxes primero.
+                self.r_despacho_5.setEnabled(True)
+                self.r_enchape_5.setEnabled(True)
+                self.r_facturar_5.setEnabled(True)
+                self.r_separar_material_5.setEnabled(True)
+                self.r_uso_interno_5.setEnabled(True)
+                #v5.9 se desmarcan todos los checkboxes.
+                self.r_despacho_5.setChecked(False)
+                self.r_enchape_5.setChecked(False)
+                self.r_facturar_5.setChecked(False)
+                self.r_separar_material_5.setChecked(False)
+                self.r_uso_interno_5.setChecked(False)
+
                 self.rellenar_datos_orden(tipo)
                 self.stackedWidget.setCurrentWidget(self.modificar_orden)
         
@@ -1369,10 +1373,18 @@ class Vendedor(QMainWindow):
         enchapado = 'NO'
         despacho = 'NO'
         self.date_venta_5.setDate( datetime.now())
-        self.tipo = tipo
+        self.tipo = tipo # area de orden de trabajo
         self.tb_modificar_orden.setRowCount(0)
         self.comboBox_5.clear()
-     
+        self.manual = False
+        self.aux_obs = ''
+        self.r_uso_interno_5.show() #v5.9
+        self.r_separar_material_5.show() #v5.9
+        self.r_facturar_5.show() #v5.9
+        self.frame_obs_2.show() # v5.9 Frame: campo de observacion
+        datos_pdf = { "tipo" : tipo.lower() , 'facturar': 'NO'}
+        watermarks = []
+
         if tipo == 'DIMENSIONADO':
             try:
                 resultado = self.conexion.root.buscar_orden_dim_numero(self.nro_orden)
@@ -1380,6 +1392,7 @@ class Vendedor(QMainWindow):
 
                     if resultado[18]: #si es manual
                         print('ORDEN MANUAL DETECTADA')
+                        self.aux_obs = resultado[ 18 ] #v5.9 respalda la observacion
                         self.manual = True
                         if resultado[8]:
                             self.txt_nro_doc_5.setText( str(resultado[8]) )       #NUMERO DOCUMENTO
@@ -1422,6 +1435,19 @@ class Vendedor(QMainWindow):
                         if resultado[15]:
                             self.vendedor = resultado[15]   #VENDEDOR
                             self.txt_vendedor_5.setText( resultado[15] ) 
+
+                        if resultado[18] == 'USO INTERNO':
+                            self.r_uso_interno_5.setChecked(True)
+                            watermarks.append('interno')
+                        elif resultado[18] == 'SEPARAR MATERIAL':
+                            self.r_separar_material_5.setChecked(True)
+                            watermarks.append('material')
+                        elif resultado[18] == 'USO INTERNO Y SEPARAR MATERIAL':
+                            self.r_uso_interno_5.setChecked(True)
+                            self.r_separar_material_5.setChecked(True)
+                            watermarks.append('interno')
+                            watermarks.append('material')
+                        
                               
                     else: #SI NO ES MANUAL
                         print('ORDEN COMÚN DETECTADA')
@@ -1439,6 +1465,14 @@ class Vendedor(QMainWindow):
                         self.nro_doc = resultado[8]
                         self.vendedor = resultado[15]    #vendedor
                         self.txt_vendedor_5.setText( resultado[15] ) #vendedor
+                        # OCULTAR CHECKBOX: USO INTERNO - FACTURAR - SEPARAR MATERIAL
+                        self.r_uso_interno_5.hide()
+                        self.r_separar_material_5.hide()
+                        self.r_facturar_5.hide()
+
+                        self.frame_obs_2.hide()
+                        
+
 
                     self.txt_vendedor_5.setEnabled(False)
                     self.txt_interno_5.setText(str( resultado[1] )) #INTERNO
@@ -1447,8 +1481,9 @@ class Vendedor(QMainWindow):
                     self.nombre_5.setText( resultado[3] )   #nombre
                     self.telefono_5.setText( str(resultado[4]) ) #telefono
                     aux = datetime.fromisoformat(str(resultado[5]) )
-                    self.fecha_5.setDate( aux )  #FECHA ESTIMADA           
-                    detalle = json.loads(resultado[6])
+                    self.fecha_5.setDate( aux )  #FECHA ESTIMADA     
+
+                    self.detalle = json.loads(resultado[6])
                     if resultado[20]:
                         self.lb_vinculo_5.setText(resultado[20])
                     else:
@@ -1457,14 +1492,21 @@ class Vendedor(QMainWindow):
                     vinc = resultado[20]
                     print('Vinculo:')
                     print(vinc)
-                    #self.lb_planchas.setText( str(detalle["total_planchas"]) )
-                    cantidades = detalle["cantidades"]
-                    descripciones = detalle["descripciones"]
-                    valores_neto = detalle["valores_neto"]
+                    cantidades = self.detalle["cantidades"]
+                    descripciones = self.detalle["descripciones"]
+                    valores_neto = self.detalle["valores_neto"]
                     try:
-                        self.aux_vendedor = detalle["creado_por"]
+                        self.aux_vendedor = self.detalle["creado_por"]
                     except:
                         print('orden antigua, sin creador asignado')
+                        pass
+                        
+                    try:
+                        if self.detalle["por_facturar"] == 'SI':
+                            self.r_facturar_5.setChecked(True)      #por facturar
+                            datos_pdf['facturar'] = 'SI' #v5.9
+                    except:
+                        print('version inferior a v5.9, por facturar NO registrado.')
                         pass
 
                     j = 0
@@ -1477,11 +1519,13 @@ class Vendedor(QMainWindow):
                         j+=1      
                     if resultado[9] == 'SI' :
                         self.r_enchape_5.setChecked(True)      #enchape
+                        
                         enchapado = 'SI'
                     if resultado[10] == 'SI' :
                         self.r_despacho_5.setChecked(True)  #despacho
-                        despacho = 'SI'
+                        watermarks.append('despacho')
 
+                    self.r_enchape_5.setVisible(True) #Se visualiza checkbox enchape para dimensionado. 
                     self.lb_fecha_orden_5.setText( str(resultado[11]))
                     self.fecha_orden = datetime.fromisoformat( str(resultado[11]) )  #Fecha orden
                     self.contacto_5.setText( resultado[12] ) #contacto
@@ -1493,20 +1537,13 @@ class Vendedor(QMainWindow):
 
         else: 
             try:
-                if tipo == 'ELABORACION':
-                    print('buscando elaboracion datos...')
-                    resultado = self.conexion.root.buscar_orden_elab_numero(self.nro_orden)
-                elif tipo == 'CARPINTERIA':
-                    print('buscando carpinteria datos...')
-                    resultado = self.conexion.root.buscar_orden_carp_numero(self.nro_orden)
-                elif tipo == 'PALLETS':
-                    print('buscando pallets datos...')
-                    resultado = self.conexion.root.buscar_orden_pall_numero(self.nro_orden)
                 
+                resultado = self.conexion.root.buscar_orden_general_numero( tipo.lower() , self.nro_orden)
                 
                 if resultado != None :
                     if resultado[ 15 ]: #si es manual
                         print('ORDEN MANUAL DETECTADA')
+                        self.aux_obs = resultado[ 15 ] #v5.9 respalda la observacion
                         self.manual = True
                         if resultado[5]:
                             self.txt_nro_doc_5.setText( str(resultado[5]) )       #NUMERO DOCUMENTO
@@ -1550,6 +1587,18 @@ class Vendedor(QMainWindow):
                             self.vendedor = resultado[14]   #VENDEDOR
                             self.txt_vendedor_5.setText( resultado[14] )
 
+                        if resultado[15] == 'USO INTERNO':
+                            self.r_uso_interno_5.setChecked(True)
+                            watermarks.append('interno')
+                        elif resultado[15] == 'SEPARAR MATERIAL':
+                            self.r_separar_material_5.setChecked(True)
+                            watermarks.append('material')
+                        elif resultado[15] == 'USO INTERNO Y SEPARAR MATERIAL':
+                            self.r_uso_interno_5.setChecked(True)
+                            self.r_separar_material_5.setChecked(True)
+                            watermarks.append('interno')
+                            watermarks.append('material')
+
                     else: #si no es manual
                         print('ORDEN COMÚN DETECTADA')
                         self.manual = False
@@ -1568,11 +1617,16 @@ class Vendedor(QMainWindow):
                         
                         self.vendedor = resultado[14]   #VENDEDOR
                         self.txt_vendedor_5.setText( resultado[14] )
+                        # OCULTAR CHECKBOX: USO INTERNO - FACTURAR - SEPARAR MATERIAL
+                        self.r_uso_interno_5.hide()
+                        self.r_separar_material_5.hide()
+                        self.r_facturar_5.hide()
+                        self.frame_obs_2.hide() #ocultar frame observacion
                         
 
                     self.txt_interno_5.setText(str( resultado[10] ))        #NRO INTERNO
                     self.inter = str( resultado[10] )
-                    self.r_enchape_5.setVisible(False)
+                    self.r_enchape_5.setVisible(False)  # Se oculta checkbox enchape para ordenes elab,carp y pall
                     self.nombre_5.setText( resultado[1] )         #NOMBRE CLIENTE
                     self.telefono_5.setText( str(resultado[2]) )  #TELEFONO
 
@@ -1588,7 +1642,7 @@ class Vendedor(QMainWindow):
                               
                     if resultado[9] == 'SI' :
                         self.r_despacho_5.setChecked(True)               #DESPACHO
-                        despacho = 'SI'
+                        watermarks.append('despacho')  #v5.9 
 
                     if resultado[19]:
                         self.lb_vinculo_5.setText(resultado[19])
@@ -1599,14 +1653,22 @@ class Vendedor(QMainWindow):
                     print('Vinculo:')
                     print(vinc)
 
-                    detalle = json.loads(resultado[11])                  #DETALLE
-                    cantidades = detalle["cantidades"]
-                    descripciones = detalle["descripciones"]
-                    valores_neto = detalle["valores_neto"]
+                    self.detalle = json.loads(resultado[11])                  #DETALLE
+                    cantidades = self.detalle["cantidades"]
+                    descripciones = self.detalle["descripciones"]
+                    valores_neto = self.detalle["valores_neto"]
                     try:
-                        self.aux_vendedor = detalle["creado_por"]
+                        self.aux_vendedor = self.detalle["creado_por"]
                     except:
                         print('orden antigua, sin creador asignado')
+                        pass
+                    
+                    try:
+                        if self.detalle["por_facturar"] == 'SI':
+                            self.r_facturar_5.setChecked(True)      #por facturar
+                            datos_pdf['facturar'] = 'SI' #v5.9
+                    except:
+                        print('version inferior a v5.9, por facturar NO registrado.')
                         pass
 
                     j = 0
@@ -1621,36 +1683,35 @@ class Vendedor(QMainWindow):
                 self.conexion_perdida()
 
         # ------ comprobar si existe el PDF en los archivos locales -------------
-        
-        if tipo == "DIMENSIONADO":
-            abrir = self.carpeta + '/ordenes/' + 'dimensionado_' +str(self.nro_orden) + '.pdf'
-            tipo = 'dimensionado'
-        elif tipo == "ELABORACION":
-            abrir = self.carpeta + '/ordenes/'  + 'elaboracion_' +str(self.nro_orden) + '.pdf'
-            tipo = 'elaboracion'
-        elif tipo == "CARPINTERIA":
-            abrir = self.carpeta + '/ordenes/'  + 'carpinteria_' +str(self.nro_orden) + '.pdf'
-            tipo = 'carpinteria'
-        elif tipo == "PALLETS":
-            abrir = self.carpeta + '/ordenes/'  + 'pallets_' +str(self.nro_orden) + '.pdf'
-            tipo = 'pallets'
-        print('verificando existencia del PDF ....')
-        #print(self.vendedor)
-        print(self.tipo_doc)
-        if not os.path.isfile(abrir):
-            
-            datos = ( str(self.nro_orden) ,str(self.fecha_orden.strftime("%d-%m-%Y")),self.nombre_5.text(),self.telefono_5.text(), str((self.fecha_5.date().toPyDate()).strftime("%d-%m-%Y")),cantidades,descripciones,enchapado ,self.contacto_5.text(),self.oce_5.text() ,self.vendedor )
-            self.crear_pdf(datos, tipo ,despacho)
-            print('pdf no encontrado, pero se acaba de crear')
+        if tipo in ["DIMENSIONADO", "ELABORACION", "CARPINTERIA", "PALLETS","SIN_TRANSFORMACION"]:
+            tipo_lower = tipo.lower()
+            #v6.0
+            abrir = os.path.join(self.dir_ordenes , f"{tipo_lower}_{self.nro_orden}.pdf" )
         else:
-            print('El pdf si existe localmente')
+            # Manejo del caso por defecto o de errores
+            abrir = None  # Puedes asignar un valor por defecto o manejar el error de otra manera
+
+        print('|-- Verificando existencia del PDF ....')
+        print(self.tipo_doc)
+        if abrir and (not os.path.isfile(abrir)) :
+            #v6.0 
+            if tipo == 'SIN_TRANSFORMACION':
+                watermarks.append('material')
+
+            datos = ( str(self.nro_orden) ,str(self.fecha_orden.strftime("%d-%m-%Y")),self.nombre_5.text(),self.telefono_5.text(), str((self.fecha_5.date().toPyDate()).strftime("%d-%m-%Y")),cantidades,descripciones,enchapado ,self.contacto_5.text(),self.oce_5.text() ,self.vendedor )
+            self.crear_pdf(datos, datos_pdf ,watermarks)
+            print('|--Pdf no encontrado, pero se acaba de crear')
+        else:
+            print('|-- El pdf si existe localmente')
+
         print('----------------------------------------------------------------------')
     def agregar_2(self):
-        if self.tb_modificar_orden.rowCount() <=16 :
+        if self.tb_modificar_orden.rowCount() < 14 :
             fila = self.tb_modificar_orden.rowCount()
             self.tb_modificar_orden.insertRow(fila)
         else:
             QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas. Intente crear otra Orden para continuar agregando items.')
+
     def eliminar_2(self):
         fila = self.tb_modificar_orden.currentRow()  #FILA SELECCIONADA , retorna -1 si no se selecciona una fila
         if fila != -1:
@@ -1659,9 +1720,9 @@ class Vendedor(QMainWindow):
         else: 
             QMessageBox.about(self,'Consejo', 'Seleccione una fila para eliminar')
     def actualizar_orden(self):
-        nombre = self.nombre_5.text()
+        nombre = self.nombre_5.text().upper() #v5.9
         telefono = self.telefono_5.text()
-        contacto = self.contacto_5.text()
+        contacto = self.contacto_5.text().upper() #v5.9
         oce = self.oce_5.text()
         fecha = self.fecha_5.date()  #fecha estimada
         fecha = fecha.toPyDate()
@@ -1674,119 +1735,150 @@ class Vendedor(QMainWindow):
         self.tipo_doc = self.comboBox_5.currentText()
         self.vendedor = self.txt_vendedor_5.text()
         fecha_venta = str( self.date_venta_5.date().toPyDate() )
+        observacion = self.txt_obs_2.toPlainText() #v5.9
+        if self.manual:
+            print('|-- Actualizando orden manual --> obs no None')
+            if observacion == '':
+                print('|-- Obs Vacia --> No se puede actualizar orden manual')
+                QMessageBox.about(self, 'Alerta' ,'Debe ingresar una observacion. \nDebido a que la orden es manual.' )
+                return 
+        
         lineas_totales = 0 
-        if nombre != '':
-            if telefono != '':
-                try:
-                    telefono = int(telefono)
-                    self.inter = int( self.txt_interno_5.text() )
-                    self.nro_doc = int( self.txt_nro_doc_5.text() )
-                    
-                    cant = self.tb_modificar_orden.rowCount() #cantidad de items de la tabla
-                    vacias = False
-                    correcto = True
-                    cantidades = []
-                    descripciones = []
-                    valores_neto = []
-                    i = 0
-                    while i< cant:
-                        cantidad = self.tb_modificar_orden.item(i,0) #Collumna cantidades
-                        descripcion = self.tb_modificar_orden.item(i,1) #Columna descripcion
-                        neto = self.tb_modificar_orden.item(i,2) #Columna de valor neto
-                        if cantidad != None and descripcion != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
-                            if cantidad.text() != '' and descripcion.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
-                                try: 
-                                    nueva_cant = cantidad.text().replace(',','.',3)
-                                    nuevo_neto = neto.text().replace(',','.',3)
-                                    cantidades.append( float(nueva_cant) )
-                                    descripciones.append(descripcion.text())
-                                    lineas = self.separar(descripcion.text())
-                                    lineas_totales = lineas_totales + len(lineas)
-                                    valores_neto.append(float(nuevo_neto))
+        if nombre != '' and telefono != '':
+            try:
+                telefono = int(telefono)
+                self.inter = int( self.txt_interno_5.text() )
+                self.nro_doc = int( self.txt_nro_doc_5.text() )
+                
+                cant = self.tb_modificar_orden.rowCount() #cantidad de items de la tabla
+                vacias = False
+                correcto = True
+                cantidades = []
+                descripciones = []
+                valores_neto = []
+                i = 0
+                while i< cant:
+                    cantidad = self.tb_modificar_orden.item(i,0) #Collumna cantidades
+                    descripcion = self.tb_modificar_orden.item(i,1) #Columna descripcion
+                    neto = self.tb_modificar_orden.item(i,2) #Columna de valor neto
+                    if cantidad != None and descripcion != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
+                        if cantidad.text() != '' and descripcion.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
+                            try: 
+                                nueva_cant = cantidad.text().replace(',','.',3)
+                                nuevo_neto = neto.text().replace(',','.',3)
+                                cantidades.append( float(nueva_cant) )
+                                descripciones.append((descripcion.text()).upper() ) #v5.9
+                                lineas = self.separar(descripcion.text())
+                                lineas_totales = lineas_totales + len(lineas)
+                                valores_neto.append(float(nuevo_neto))
 
-                                except ValueError:
-                                    correcto = False
-                            else:
-                                vacias=True
+                            except ValueError:
+                                correcto = False
                         else:
-                            vacias = True
-                        i+=1
-                    if vacias:
-                        QMessageBox.about(self, 'Alerta' ,'Una fila y/o columna esta vacia, rellenela para continuar' )
-                    elif lineas_totales > 14:
-                        QMessageBox.about(self, 'Alerta' ,'Filas totales: '+str(lineas_totales) + ' - El maximo soportado por el formato de la orden es de 14 filas.' )
-                    elif correcto == False:
-                        QMessageBox.about(self,'Alerta', 'Se encontro un error en una de las cantidades o Valores neto ingresados. Solo ingrese numeros en dichos campos')
+                            vacias=True
                     else:
-                        formato = {
-                            "cantidades" : cantidades,
-                            "descripciones" : descripciones,
-                            "valores_neto": valores_neto,
-                            "creado_por" : self.aux_vendedor
+                        vacias = True
+                    i+=1
+                if vacias:
+                    QMessageBox.about(self, 'Alerta' ,'Una fila y/o columna esta vacia, rellenela para continuar' )
+                elif lineas_totales > 14:
+                    QMessageBox.about(self, 'Alerta' ,'Filas totales: '+str(lineas_totales) + ' - El maximo soportado por el formato de la orden es de 14 filas.' )
+                elif correcto == False:
+                    QMessageBox.about(self,'Alerta', 'Se encontro un error en una de las cantidades o Valores neto ingresados. Solo ingrese numeros en dichos campos')
+                else:
+                        
+                    #print('---------------------------------------------------')
+                    try:
+                        watermarks = [] #v5.9 nuevas marcas de agua
+                        datos_pdf = {
+                            "tipo" : (self.tipo).lower(),
+                            "facturar" : 'NO'
                         }
-                        detalle = json.dumps(formato)
-                        #print('---------------------------------------------------')
+                        enchapado = 'NO'
+                        despacho = 'NO'
+                        if self.r_despacho_5.isChecked():
+                            despacho = 'SI'
+                            watermarks.append('despacho') #v5.9
+                        if self.r_facturar_5.isChecked():
+                            datos_pdf["facturar"] = 'SI' 
+                        if self.r_uso_interno_5.isChecked():
+                            watermarks.append('interno') #v5.9
+                        if self.r_separar_material_5.isChecked() or (self.tipo == 'SIN_TRANSFORMACION'):
+                            watermarks.append('material') #v5.9
+
+                        self.detalle["cantidades"] = cantidades
+                        self.detalle["descripciones"] = descripciones
+                        self.detalle["valores_neto"] = valores_neto
                         try:
-                           
-                            if self.r_despacho_5.isChecked():
-                                despacho = 'SI'
-                            if self.tipo == 'DIMENSIONADO':
-                                if self.r_enchape_5.isChecked():
-                                    enchapado = 'SI'
-                                
-                                datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
-                                self.crear_pdf(datos,'dimensionado',despacho)
-                                print('pdf actualizado')
-                                if self.conexion.root.actualizar_orden_dim( self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor, self.nro_orden,nombre,telefono,str(fecha),detalle,despacho,enchapado,contacto,oce):
-                                    QMessageBox.about(self,'EXITO','La orden de dimensionado fue ACTUALIZADA correctamente')
-                                else:
-                                    QMessageBox.about(self,'ERROR','La orden de dimensionado NO se actualizo, porque no se modificaron los datos que ya existian.')
-
-                            elif self.tipo == 'ELABORACION':
-                                datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
-                                self.crear_pdf(datos,'elaboracion',despacho)
-
-                                if self.conexion.root.actualizar_orden_elab( self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor,  nombre,telefono, str(fecha), detalle, contacto, oce,despacho, self.nro_orden ):
-                                    QMessageBox.about(self,'EXITO','La orden de elaboracion fue ACTUALIZADA correctamente')
-                                else:
-                                    QMessageBox.about(self,'ERROR','La orden de elaboracion NO se actualizo, porque no se modificaron los datos que ya existian.')
-                            elif self.tipo == 'CARPINTERIA':
-                                datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
-                                self.crear_pdf(datos,'carpinteria',despacho)
-
-                                if self.conexion.root.actualizar_orden_carp(self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor, nombre,telefono, str(fecha), detalle, contacto, oce,despacho, self.nro_orden ):
-                                    QMessageBox.about(self,'EXITO','La orden de carpinteria fue ACTUALIZADA correctamente')
-                                else:
-                                    QMessageBox.about(self,'ERROR','La orden de carpinteria NO se actualizo, porque no se modificaron los datos que ya existian.')
-                            elif self.tipo == 'PALLETS':
-                                datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
-                                self.crear_pdf(datos,'pallets',despacho)
-
-                                if self.conexion.root.actualizar_orden_pall(self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor, nombre,telefono, str(fecha), detalle, contacto, oce,despacho, self.nro_orden ):
-                                    QMessageBox.about(self,'EXITO','La orden de pallets fue ACTUALIZADA correctamente')
-                                else:
-                                    QMessageBox.about(self,'ERROR','La orden de pallets NO se actualizo, porque no se modificaron los datos que ya existian.')
-                            if self.manual:
-                                estado = self.lb_vinculo_5.text()
-                                self.actualizar_vinculo_orden_manual(aux_tipo,aux_nro,self.tipo_doc,self.nro_doc,estado)
-                        except EOFError:
-                            self.conexion_perdida()
-                        except PermissionError:
-                            QMessageBox.about(self,'ERROR' ,'La orden no se actualizo debido a que otro programa esta haciendo uso del archivo. Cierre dicho programa para continuar.')
-                        #except AttributeError:
-                         #   QMessageBox.about(self,'IMPORTANTE', 'Este mensaje se debe a que hubo un error al ingresar los datos a la base de datos. Contacte con el soporte')
+                            self.detalle['por_facturar'] = datos_pdf["facturar"]
+                        except KeyError:
+                            print('Orden normal no tiene "por_facturar" .keyerror')
+                            pass
+                        self.detalle = json.dumps(self.detalle)
 
 
-                except ValueError:
-                    if self.manual:
-                        QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" , "Numero Interno" y "Numero Documento" ') 
-                    else:
-                        QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" ')          
-            else:
-                QMessageBox.about(self, 'Sugerencia', 'Ingrese un telefono antes de continuar')           
+
+
+                        if self.tipo == 'DIMENSIONADO':
+                            if self.r_enchape_5.isChecked():
+                                enchapado = 'SI'
+                            datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
+                            self.crear_pdf(datos,datos_pdf,watermarks)
+                            print('pdf actualizado')
+                            if self.conexion.root.actualizar_orden_dim( self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor, self.nro_orden,nombre,telefono,str(fecha),self.detalle,despacho,enchapado,contacto,oce):
+                                if self.manual:
+                                    self.conexion.root.actualizar_orden_dim_obser(observacion , self.nro_orden)
+                                QMessageBox.about(self,'EXITO','La orden de dimensionado fue ACTUALIZADA correctamente')
+                            else:
+                                QMessageBox.about(self,'ERROR','La orden de dimensionado NO se actualizo, porque no se modificaron los datos que ya existian.')
+
+                        else:
+                            tipo_orden = (self.tipo).lower()
+                            datos = ( str(self.nro_orden) , str(self.fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones,enchapado, contacto,oce, self.vendedor)
+                            self.crear_pdf(datos,datos_pdf,watermarks)
+
+                            if self.conexion.root.actualizar_orden_general( tipo_orden ,self.manual,self.inter,fecha_venta,self.tipo_doc,self.nro_doc,self.vendedor,  nombre,telefono, str(fecha), self.detalle, contacto, oce,despacho, self.nro_orden ):
+                                if self.manual:
+                                    self.conexion.root.actualizar_orden_general_obs(tipo_orden ,observacion , self.nro_orden)
+                                QMessageBox.about(self,'EXITO',f'La orden de {tipo_orden} - Fue ACTUALIZADA correctamente')
+                            else:
+                                QMessageBox.about(self,'ERROR',f'La orden de {tipo_orden} - No se actualizo, porque no se modificaron los datos que ya existian.')
+                        
+                        if self.manual:
+                            estado = self.lb_vinculo_5.text()
+                            self.actualizar_vinculo_orden_manual(aux_tipo,aux_nro,self.tipo_doc,self.nro_doc,estado)
+                        
+                        if self.anterior == "ESTADISTICAS": #v5.9
+                            self.stackedWidget.setCurrentWidget(self.estadisticas)
+                        else:
+                            self.stackedWidget.setCurrentWidget(self.buscar_orden)
+                    except EOFError:
+                        self.conexion_perdida()
+                    except PermissionError:
+                        QMessageBox.about(self,'ERROR' ,'La orden no se actualizo debido a que otro programa esta haciendo uso del archivo. Cierre dicho programa para continuar.')
+                    #except AttributeError:
+                        #   QMessageBox.about(self,'IMPORTANTE', 'Este mensaje se debe a que hubo un error al ingresar los datos a la base de datos. Contacte con el soporte')
+
+
+            except ValueError:
+                if self.manual:
+                    QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" , "Numero Interno" y "Numero Documento" ') 
+                else:
+                    QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" ')                   
         else:
-            QMessageBox.about(self, 'Sugerencia', 'Ingrese un nombre antes de continuar')
+            QMessageBox.about(self, 'Sugerencia', 'Los campos nombre, telefono son obligatorios.')
  
+    def validar_manual_obs(self,obs):
+        if self.manual:
+            if obs != '':
+                print('manual y obs valida')
+                return True
+            else:
+                print('manual y obs no valida , error')
+                return False
+        else:
+            print('no manual , no se cambia la observacion')
+            return False
 
  #  Funcion para generar REINGRESO -------------
     def inicializar_reingreso(self):
@@ -1800,15 +1892,15 @@ class Vendedor(QMainWindow):
                 print('ventana  reingreso ... para: '+ tipo + ' -->' + str(self.nro_orden))
                 self.lb_folio_orden.setText(str(self.nro_orden))
                 self.tb_reingreso_2.setRowCount(0)
-                self.tb_reingreso_2.setColumnWidth(1,80)
-                self.tb_reingreso_2.setColumnWidth(0,430)
-                self.tb_reingreso_2.setColumnWidth(2,85)
+                self.tb_reingreso_2.setColumnWidth(1,100)
+                self.tb_reingreso_2.setColumnWidth(0,600)
+                self.tb_reingreso_2.setColumnWidth(2,100)
                 self.combo_motivos.clear()
                 self.combo_soluciones.clear()
-                self.txt_descripcion_2.clear()
+                #self.txt_descripcion_2.clear()
                 self.grupo_motivos.hide() #V5.8 
                 self.txt_solucion_2.hide()#v5.8
-                parametros_reingreso = self.conexion.root.obtener_parametros_reingreso()
+                parametros_reingreso = self.conexion.root.obtener_parametros('parametros_reingreso')
                 if parametros_reingreso:
                     if parametros_reingreso[1] != None:
                         detalle = json.loads(parametros_reingreso[1])
@@ -1841,16 +1933,11 @@ class Vendedor(QMainWindow):
             
         fecha = datetime.now().date()
         motivo = self.combo_motivos.currentText() #v5.8
-        '''
-        if self.r_cambio_2.isChecked():
-            motivo = 'CAMBIO'
-        elif self.r_devolucion_2.isChecked():
-            motivo = 'DEVOLUCION'
-        elif self.r_otro_2.isChecked():
-            motivo = self.txt_otro_2.text()'''
         
         proceso = self.lb_proceso_2.text()
-        descr = self.txt_descripcion_2.toPlainText()
+        cliente = (self.lb_nombre_cliente.text()).upper() #v5.9
+        descr = "DESHABILITADA" #self.txt_descripcion_2.toPlainText() #v5.9 Descripcion deshabilitada.
+
         solucion = self.combo_soluciones.currentText()  #v5.8
         lineas = 0
 
@@ -1872,7 +1959,7 @@ class Vendedor(QMainWindow):
                             nueva_cant = cantidad.text().replace(',','.',3)
                             nuevo_neto = neto.text().replace(',','.',3)
                             cantidades.append( float(nueva_cant) )
-                            descripciones.append(descripcion.text())
+                            descripciones.append( (descripcion.text()).upper() ) #v5.9
                             print(descripcion.text())
                             linea = self.separar2( descripcion.text() , 60 )
                             lineas += len(linea)
@@ -1900,27 +1987,16 @@ class Vendedor(QMainWindow):
                         "descripciones" : descripciones,
                         "valores_neto": valores_neto,
                         "creado_por" : self.datos_usuario[8],
-                        "compatibilidad": "version-5.8"
+                        "nombre_cliente"  : cliente,
+                        "compatibilidad": f"version-{str(self.version)}"
                     }
                 detalle = json.dumps(formato)
-                '''print(fecha)
-                print(str(type(fecha)))
-                print(str(type(self.nro_orden)))
-                print(fecha)
-                print(tipo_doc)
-                print(nro_doc)
-                print(self.nro_orden)
-                print(motivo)
-                print(descr)
-                print(proceso)       
-                print(solucion)
-                print(str(type(detalle)))'''
                 print('procediendo a registrar reingreso ..')
                 if self.conexion.root.registrar_reingreso( str(fecha), tipo_doc, nro_doc, self.nro_orden, motivo, descr, proceso, detalle,solucion):
                     resultado = self.conexion.root.obtener_max_reingreso()
                     self.nro_reingreso = resultado[0]
                     print('max nro reingreso: ' + str(resultado[0]) + ' de tipo: ' + str(type(resultado[0])))
-                    datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
+                    datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto,cliente)
                     self.crear_pdf_reingreso(datos)
 
                     boton = QMessageBox.question(self, 'Reingreso registrado correctamente', 'Desea ver el reingreso?')
@@ -1940,6 +2016,7 @@ class Vendedor(QMainWindow):
                 try:
                     resultado = self.conexion.root.buscar_orden_dim_numero(self.nro_orden)
                     if resultado != None :
+                        self.lb_nombre_cliente.setText(resultado[3] ) #v 5.9
 
                         if resultado[18]: #si es manual
                             self.manual = True
@@ -1976,15 +2053,14 @@ class Vendedor(QMainWindow):
             else:
                 
                 try:
-                    if self.lb_tipo_orden.text() == 'ELABORACION':
-                        resultado = self.conexion.root.buscar_orden_elab_numero(self.nro_orden)
-                    elif self.lb_tipo_orden.text() == 'CARPINTERIA':
-                        resultado = self.conexion.root.buscar_orden_carp_numero(self.nro_orden)
-                    elif self.lb_tipo_orden.text() == 'PALLETS':
-                        resultado = self.conexion.root.buscar_orden_pall_numero(self.nro_orden)
-
+                    resultado = None
+                    tipo_orden = self.lb_tipo_orden.text()
+                    if tipo_orden in ['ELABORACION','CARPINTERIA','PALLETS','SIN_TRANSFORMACION']:
+                        resultado = self.conexion.root.buscar_orden_general_numero( tipo_orden.lower() , self.nro_orden)
+                  
                     if resultado != None :
-                        
+                        self.lb_nombre_cliente.setText(resultado[1] ) #v 5.9
+
                         if resultado[15]: #si es manual
                             self.manual = True
 
@@ -2019,11 +2095,11 @@ class Vendedor(QMainWindow):
                     self.conexion_perdida()
 
     def agregar_3(self):
-        if self.tb_reingreso_2.rowCount() <=16 :
+        if self.tb_reingreso_2.rowCount() < 4:
             fila = self.tb_reingreso_2.rowCount()
             self.tb_reingreso_2.insertRow(fila)
         else:
-            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas. Intente crear otro REINGRESO para continuar agregando items.')
+            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas (4). Intente crear otro REINGRESO para continuar agregando items.')
 
     def eliminar_3(self):
         fila = self.tb_reingreso_2.currentRow()  #FILA SELECCIONADA , retorna -1 si no se selecciona una fila
@@ -2039,6 +2115,8 @@ class Vendedor(QMainWindow):
         self.dateEdit_2.setCalendarPopup(True)
         self.dateEdit_2.setDate(datetime.now())
         self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
+        self.tb_buscar_reingreso.setRowCount(0)
+
     
     def buscar_reingreso_1(self):
         print('buscando reingreso')
@@ -2130,7 +2208,7 @@ class Vendedor(QMainWindow):
             print('buscando x ', tipo)
 
     def vista_modificar_reingreso(self):
-        print('REDIRECCIONAR A VISTA MODIFICAR REINGRESO')
+        print('|-------- REDIRECCIONAR A VISTA MODIFICAR REINGRESO  ---------|')
         seleccion = self.tb_buscar_reingreso.currentRow()
         if seleccion != -1:
             _item = self.tb_buscar_reingreso.item( seleccion, 0) 
@@ -2140,8 +2218,8 @@ class Vendedor(QMainWindow):
                 print(self.version)
                 estado = self.tb_buscar_reingreso.item( seleccion, 7).text() 
                 print(estado)
-                print('ventana  reingreso ... para: xd' , nro_reingreso )
-                self.rellenar_datos_reingreso2(nro_reingreso)
+                print('|-- Ventana  reingreso ... para:' , nro_reingreso )
+                self.rellenar_datos_reingreso2(nro_reingreso) #ACCESIBLE DESDE EL GESTOR DE REINGRESOS
                 self.tabWidget_2.setCurrentIndex(1)
 
                 self.btn_registrar_6.hide() 
@@ -2195,7 +2273,7 @@ class Vendedor(QMainWindow):
                 self.txt_otro_6.setText(motivo)
 
             descripcion = resultado[6]
-            self.txt_descripcion_6.appendPlainText(descripcion)
+            #self.txt_descripcion_6.appendPlainText(descripcion)
             proceso = resultado[7]
             if proceso == 'DIMENSIONADO':
                 self.r_d_6.setChecked(True)
@@ -2216,22 +2294,39 @@ class Vendedor(QMainWindow):
             while j < len( cantidades ):
                 fila = self.tb_reingreso_manual.rowCount()
                 self.tb_reingreso_manual.insertRow(fila)
-                self.tb_reingreso_manual.setItem(fila , 0 , QTableWidgetItem( descripciones[j] ) ) 
+
+                line_edit = QLineEdit( str(descripciones[j]) )
+                line_edit.setStyleSheet(self.style_line_edit)
+                line_edit.setCompleter(self.completer_productos)
+
+                self.tb_reingreso_manual.setCellWidget(fila, 0, line_edit)
                 self.tb_reingreso_manual.setItem(fila , 1 , QTableWidgetItem( str( cantidades[j] )  ) )
                 self.tb_reingreso_manual.setItem(fila , 2 , QTableWidgetItem( str( netos[j] )  ) )
                 j+=1 
 
+            try:   # V5.9 añadido nombre cliente al reingreso.
+                cliente = detalle['nombre_cliente']
+                self.txt_nombre_cliente.setText(cliente)
+            except KeyError:
+                self.txt_nombre_cliente.setText('(no encontrado)')
+
+            
             solucion = resultado[9]
             self.txt_solucion_6.appendPlainText(solucion)
+
             try:
                 compatibilidad = detalle['compatibilidad']
-                self.version = compatibilidad
+                compatibilidad = compatibilidad.split('-')
+                compatibilidad = float(compatibilidad[1])
+                print('|-- Version reingreso detectada: ',str(compatibilidad))
+                #self.version = compatibilidad
             except KeyError:
-                self.version = 'version-5.7'
-
-            print(self.version)   
-            if self.version == 'version-5.8':
-                    print('VERSION 5.8 compatible')
+                #self.version = 'version-5.7'
+                compatibilidad = 5.7
+            self.aux_version = compatibilidad
+            print(f'|-- App version: {str(self.version)}' )   
+            if compatibilidad >= 5.8 :
+                    print('|----- VERSION >= 5.8 COMPATIBLE')
                     self.grupo_motivos_2.hide()
                     self.txt_solucion_6.hide()
                     self.combo_motivos_2.show()
@@ -2246,8 +2341,8 @@ class Vendedor(QMainWindow):
                     if aux2 != -1:
                         self.combo_soluciones_2.setCurrentIndex(aux2)
             else:
-                print('VERSION 5.7 - error de compatibilidad')
-                self.version = 'version-5.7'
+                print('|---- VERSION < 5.8 error de compatibilidad')
+                #self.version = 'version-5.7'
                 self.combo_motivos_2.hide()
                 self.combo_soluciones_2.hide()
                 self.grupo_motivos_2.show()
@@ -2310,30 +2405,39 @@ class Vendedor(QMainWindow):
             _item = self.tb_buscar_reingreso.item( seleccion, 0) 
             if _item:            
                 nro_reingreso = self.tb_buscar_reingreso.item( seleccion, 1).text()
-                print('verificando existencia del pdff  reingreso ... para: xd' , nro_reingreso )
-                self.nro_reingreso = nro_reingreso
-            
-                print('Obteniendo datos reales, creando PDF ...')
-                try:
-                    resultado = self.conexion.root.obtener_reingreso_x_numero(self.nro_reingreso)
-                    fecha = resultado[1]
-                    tipo_doc = resultado[2]
-                    nro_doc = resultado[3]
-                    motivo = resultado[5]
-                    descr = resultado[6]
-                    proceso = resultado[7]
-                    solucion = resultado[9]
-                    detalle = json.loads(resultado[8])
-                    cantidades = detalle['cantidades']
-                    descripciones = detalle['descripciones']
-                    valores_neto = detalle['valores_neto']
+                self.nro_reingreso = nro_reingreso #Usada al abrir pdf.
+                print(f'|------ Verificando existencia del pdf reingreso {nro_reingreso} ------------' )
+                abrir = os.path.join( self.dir_reingreso , f'reingreso_{str(nro_reingreso)}.pdf')
+                if  (not os.path.isfile(abrir)) :
+                    print('|-- No existe PDF')
 
-                    datos = (self.nro_reingreso, str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
-                    self.crear_pdf_reingreso(datos)
+                    print('Obteniendo datos reales, creando PDF ...')
+                    try:
+                        resultado = self.conexion.root.obtener_reingreso_x_numero(self.nro_reingreso)
+                        fecha = resultado[1]
+                        tipo_doc = resultado[2]
+                        nro_doc = resultado[3]
+                        motivo = resultado[5]
+                        descr = resultado[6]
+                        proceso = resultado[7]
+                        solucion = resultado[9]
+                        detalle = json.loads(resultado[8])
+                        cantidades = detalle['cantidades']
+                        descripciones = detalle['descripciones']
+                        valores_neto = detalle['valores_neto']
+                        try:
+                            cliente = (detalle['nombre_cliente']).upper()
+                        except KeyError:
+                            cliente = 'NO DEFINIDO'
+                        datos = (nro_reingreso, str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto,cliente)
+                        self.crear_pdf_reingreso(datos)
+                    except EOFError:
+                        self.conexion_perdida()
+                else:
+                    print('|-- EXISTE PDF')
+                try:
                     sleep(1)
                     self.ver_pdf_reingreso()
-                except EOFError:
-                    self.conexion_perdida()
                 except PermissionError:
                     QMessageBox.about(self,'ERROR', 'Otro programa tiene abierto el documento PDF. Intente cerrar el documento para poder volver a visualizarlo')
                 
@@ -2348,9 +2452,23 @@ class Vendedor(QMainWindow):
             self.stackedWidget.setCurrentWidget(self.inicio)
 # --------- Funciones de INGRESO MANUAL -----------------
     def inicializar_ingreso_manual(self):
+        self.cargar_clientes('manual') #v5.9 se cargan los clientes antes.
+        #v5.9 se habilitan todos los checkboxes primero.
+        self.r_despacho_1.setEnabled(True)
+        self.r_enchape_1.setEnabled(True)
+        self.r_facturar_1.setEnabled(True)
+        self.r_separar_material_1.setEnabled(True)
+        self.r_uso_interno_1.setEnabled(True)
+        #v5.9 se desmarcan todos los checkboxes.
+        self.r_despacho_1.setChecked(False)
+        self.r_enchape_1.setChecked(False)
+        self.r_facturar_1.setChecked(False)
+        self.r_separar_material_1.setChecked(False)
+        self.r_uso_interno_1.setChecked(False)
+
         self.txt_obs_1.clear()
         self.anterior2 = False #para hacer que vuelva al inicio enves de gestion de reingresos
-        self.version = 'version-5.8'
+        
         self.btn_guardar_6.hide() #v.5.8
         self.btn_registrar_6.show() #v.5.8
         self.label_65.hide() #v.5.8 
@@ -2361,6 +2479,7 @@ class Vendedor(QMainWindow):
         self.btn_anular_reingreso.hide()
         self.btn_validar_reingreso.hide()
 
+        self.txt_nombre_cliente.setText('')
         self.combo_motivos_2.show()
         self.combo_soluciones_2.show()
 
@@ -2400,9 +2519,9 @@ class Vendedor(QMainWindow):
         self.fecha_1.setDate( datetime.now())
         self.fecha_1.setCalendarPopup(True)
         self.tb_orden_manual.setRowCount(0)
-        self.tb_orden_manual.setColumnWidth(0,80)
-        self.tb_orden_manual.setColumnWidth(1,350)
-        self.tb_orden_manual.setColumnWidth(2,85)
+        self.tb_orden_manual.setColumnWidth(0,100)
+        self.tb_orden_manual.setColumnWidth(1,600)
+        self.tb_orden_manual.setColumnWidth(2,100)
        
         #-----datos de reingreso manual  ------
         self.comboBox_6.clear()
@@ -2413,21 +2532,23 @@ class Vendedor(QMainWindow):
         self.txt_orden_6.setText('0')
         self.txt_nro_doc_6.setText('0')
         self.txt_otro_6.setText('')
-        self.txt_descripcion_6.clear()
+        #self.txt_descripcion_6.clear()
         self.txt_solucion_6.clear()
         self.txt_descripcion_7.setText('')
+
         self.tb_reingreso_manual.setRowCount(0)
-        self.tb_reingreso_manual.setColumnWidth(1,80)
-        self.tb_reingreso_manual.setColumnWidth(0,430)
-        self.tb_reingreso_manual.setColumnWidth(2,85)
+        self.tb_reingreso_manual.setColumnWidth(1,100)
+        self.tb_reingreso_manual.setColumnWidth(0,600)
+        self.tb_reingreso_manual.setColumnWidth(2,100)
+
         self.combo_motivos_2.clear()
         self.combo_soluciones_2.clear()
         try:
-            parametros_reingreso = self.conexion.root.obtener_parametros_reingreso()
+            parametros_reingreso = self.conexion.root.obtener_parametros('parametros_reingreso')
             if parametros_reingreso:
                 if parametros_reingreso[1] != None:
                     detalle = json.loads(parametros_reingreso[1])
-                    print(detalle)
+                    #print(detalle)
                     try:
                         lista_motivos = detalle["lista_motivos"]
                         for item in lista_motivos:
@@ -2446,7 +2567,7 @@ class Vendedor(QMainWindow):
             pass
 
     def registrar_orden_manual(self):
-        nombre = self.nombre_1.text()     #NOMBRE CLIENTE
+        nombre = self.nombre_1.text().upper()     #NOMBRE CLIENTE #v5.9 mayuscula
         telefono = self.telefono_1.text() #TELEFONO
         fecha = self.fecha_1.date()  #FECHA ESTIMADA
         fecha = fecha.toPyDate()
@@ -2454,6 +2575,7 @@ class Vendedor(QMainWindow):
         self.tipo_doc = None
         interno = 0 #NRO INTERNO
         self.nro_doc = None #NRO DOCUMENTO
+
         f_venta = None #FECHA DE  VENTA
         #f_venta = self.fecha_venta.dateTime() #FECHA DE  VENTA
         #f_venta = f_venta.toPyDateTime()
@@ -2474,8 +2596,9 @@ class Vendedor(QMainWindow):
                 valores_neto = []
                 i = 0
                 while i< cant:
-                    cantidad = self.tb_orden_manual.item(i,0) #Collumna cantidades
-                    descripcion = self.tb_orden_manual.item(i,1) #Columna descripcion
+                    cantidad = self.tb_orden_manual.item(i,0) #Columna cantidades
+                    #v6.0
+                    descripcion = self.tb_orden_manual.cellWidget(i,1)
                     neto = self.tb_orden_manual.item(i,2) #Columna de valor neto
                     if cantidad != None and descripcion != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
                         if cantidad.text() != '' and descripcion.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
@@ -2483,11 +2606,13 @@ class Vendedor(QMainWindow):
                                 nueva_cant = cantidad.text().replace(',','.',3)
                                 nuevo_neto = neto.text().replace(',','.',3)
                                 cantidades.append( float(nueva_cant) )
-                                descripciones.append(descripcion.text())
+                                descripciones.append( (descripcion.text()).upper() ) #v5.9 mayuscula
 
                                 lineas = self.separar(descripcion.text())
-                                lineas_totales = lineas_totales + len(lineas)
+                                print(lineas)
 
+                                lineas_totales = lineas_totales + len(lineas)
+                                print(lineas_totales)
                                 valores_neto.append(float(nuevo_neto))
 
                             except ValueError:
@@ -2505,96 +2630,82 @@ class Vendedor(QMainWindow):
                 elif correcto == False:
                     QMessageBox.about(self,'Alerta', 'Se encontro un error en una de las cantidades o Valores neto ingresados. Solo ingrese numeros en dichos campos')
                 else:
-                    formato = {
+                    
+                    try:
+                        watermarks = [] #v5.9 nuevas marcas de agua
+                        datos_pdf = {
+                            "tipo" : '',
+                            "facturar" : 'NO'
+                        }
+                        enchape = 'NO'
+                        despacho = 'NO'
+                        self.nro_orden = 0 #v5.9
+                        if self.r_despacho_1.isChecked():
+                            despacho = 'SI'
+                            watermarks.append('despacho') #v5.9
+                        if self.r_facturar_1.isChecked():
+                            datos_pdf['facturar'] = 'SI' 
+                        if self.r_uso_interno_1.isChecked():
+                            watermarks.append('interno') #v5.9
+                        if self.r_separar_material_1.isChecked():
+                            watermarks.append('material') #v5.9
+
+                        
+                        formato = {
                         "cantidades" : cantidades,
                         "descripciones" : descripciones,
                         "valores_neto": valores_neto,
-                        "creado_por" : self.datos_usuario[8]
-                    }
-                    detalle = json.dumps(formato)
-                    try:
-                        enchape = 'NO'
-                        despacho = 'NO'                        
-                        if self.r_despacho_1.isChecked():
-                            despacho = 'SI'
+                        "creado_por" : self.datos_usuario[8],
+                        "por_facturar": datos_pdf["facturar"] #v5.9  (separar material y uso interno se almacenan como OBSERVACION)
+
+                        }
+                        detalle = json.dumps(formato)
                         
                         oce = self.oce_1.text()
                         fecha_orden = datetime.now().date()
-                        cont = self.contacto_1.text()
+                        cont = self.contacto_1.text().upper() #v5.9 mayuscula
+
 
                         if self.r_dim_1.isChecked():
+                            datos_pdf['tipo'] = 'dimensionado'
                             if self.r_enchape_1.isChecked():
                                 fecha = fecha + timedelta(days=2)
                                 enchape = 'SI'
-                            self.conexion.root.registrar_orden_dimensionado( interno , f_venta , nombre , telefono, str(fecha) , detalle, self.tipo_doc, self.nro_doc ,enchape,despacho,str(fecha_orden),cont,oce, vendedor )
-                            
-                            resultado = self.conexion.root.buscar_orden_dim_interno(interno)
-                            if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
-                                self.clave = None
-                            self.nro_orden = self.buscar_nro_orden(resultado)
+                            self.nro_orden =  self.conexion.root.registrar_orden_dimensionado( interno , f_venta , nombre , telefono, str(fecha) , detalle, self.tipo_doc, self.nro_doc ,enchape,despacho,str(fecha_orden),cont,oce, vendedor )
                             self.conexion.root.actualizar_orden_dim_obser(observacion , self.nro_orden)
-
-                            datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce, vendedor)
-                            self.crear_pdf(datos,'dimensionado', despacho )
-                            self.conexion.root.actualizar_vinculo_existente('dimensionado',self.nro_orden,'NO CREADO')
-                            boton = QMessageBox.question(self, 'Orden de dimensionado registrada correctamente', 'Desea abrir la Orden?')
-                            if boton == QMessageBox.Yes:
-                                self.ver_pdf('dimensionado')
-                            self.stackedWidget.setCurrentWidget(self.inicio)
                             
                         elif self.r_elab_1.isChecked():
-                            self.conexion.root.registrar_orden_elaboracion( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle,f_venta,vendedor)
-                            if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
-                                self.clave = None
-                            resultado = self.conexion.root.buscar_orden_elab_interno(interno)
-                            self.nro_orden = self.buscar_nro_orden(resultado)
-                            self.conexion.root.actualizar_orden_elab_obser(observacion , self.nro_orden)
-                            datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce,vendedor)
-                            self.crear_pdf(datos , 'elaboracion', despacho)
-                            self.conexion.root.actualizar_vinculo_existente('elaboracion',self.nro_orden,'NO CREADO')
-                            boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                            if boton == QMessageBox.Yes:
-                                self.ver_pdf('elaboracion')
-                            self.stackedWidget.setCurrentWidget(self.inicio)
-
+                            datos_pdf['tipo'] = 'elaboracion'
+                            self.nro_orden = self.conexion.root.registrar_orden_general('elaboracion',nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle,f_venta,vendedor)
+                            self.conexion.root.actualizar_orden_general_obs('elaboracion',observacion , self.nro_orden)
                         elif self.r_carp_1.isChecked():
-                            self.conexion.root.registrar_orden_carpinteria( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta ,vendedor)
-                            if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
-                                self.clave = None
-                            resultado = self.conexion.root.buscar_orden_carp_interno(interno)
-                            self.nro_orden = self.buscar_nro_orden(resultado)
-                            self.conexion.root.actualizar_orden_carp_obser(observacion , self.nro_orden)
-                            datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce, vendedor)
-                            self.crear_pdf(datos , 'carpinteria', despacho)
-                            self.conexion.root.actualizar_vinculo_existente('carpinteria',self.nro_orden,'NO CREADO')
-                            boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                            if boton == QMessageBox.Yes:
-                                self.ver_pdf('carpinteria')
-                            self.stackedWidget.setCurrentWidget(self.inicio)
-
+                            datos_pdf['tipo'] = 'carpinteria'
+                            self.nro_orden = self.conexion.root.registrar_orden_general('carpinteria',nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta ,vendedor)
+                            self.conexion.root.actualizar_orden_general_obs('carpinteria',observacion , self.nro_orden)
                         elif self.r_pall_1.isChecked():
-                            self.conexion.root.registrar_orden_pallets( nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta,vendedor)
-                            if self.clave:
-                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
-                                self.clave = None
-                            resultado = self.conexion.root.buscar_orden_pall_interno(interno)
-                            self.nro_orden = self.buscar_nro_orden(resultado)
-                            self.conexion.root.actualizar_orden_pall_obser(observacion , self.nro_orden)
-                            datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, 'NO', cont, oce,vendedor)
-                            self.crear_pdf(datos , 'pallets',despacho)
-                            self.conexion.root.actualizar_vinculo_existente('pallets',self.nro_orden,'NO CREADO')
-                            boton = QMessageBox.question(self, 'Orden de elaboracion registrada correctamente', 'Desea abrir la Orden?')
-                            if boton == QMessageBox.Yes:
-                                self.ver_pdf('pallets')
-                            self.stackedWidget.setCurrentWidget(self.inicio)
-
-                            
-
+                            datos_pdf['tipo'] = 'pallets'
+                            self.nro_orden = self.conexion.root.registrar_orden_general('pallets',nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta,vendedor)
+                            self.conexion.root.actualizar_orden_general_obs('pallets',observacion , self.nro_orden)
+                        elif self.r_sin_trans_1.isChecked():
+                            datos_pdf['tipo'] = 'sin_transformacion'
+                            self.nro_orden = self.conexion.root.registrar_orden_general('sin_transformacion',nombre,telefono,str(fecha_orden), str(fecha),self.nro_doc,self.tipo_doc,cont,oce, despacho, interno ,detalle, f_venta,vendedor)
+                            self.conexion.root.actualizar_orden_general_obs('sin_transformacion',observacion , self.nro_orden)
                         else:
                             QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
+                        
+                        if self.nro_orden != 0:
+                            if self.clave:
+                                self.conexion.root.eliminar_clave(self.clave,'dinamica')
+                                self.clave = None
+                            # CREAR PDF
+                            datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce, vendedor)
+                            self.crear_pdf(datos,datos_pdf, watermarks ) #v5.9
+                            # SE ACTUALIZA EL VINCULO A VENTA. (NO_CREADO)
+                            self.conexion.root.actualizar_vinculo_existente(datos_pdf['tipo'],self.nro_orden,'NO CREADO')
+                            boton = QMessageBox.question(self, f'Orden de {datos_pdf["tipo"]} registrada correctamente', 'Desea abrir la Orden?')
+                            if boton == QMessageBox.Yes:
+                                self.ver_pdf(datos_pdf["tipo"])
+                            self.stackedWidget.setCurrentWidget(self.inicio)
                         
 
                     except EOFError:
@@ -2608,13 +2719,25 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self, 'ERROR', 'Solo ingrese Numeros en los campos "Telefono", "Numero de documento" y "Numero interno" ')          
         else:
             QMessageBox.about(self, 'Sugerencia', 'Los campos "Nombre" , "Telefono" y "Observacion" son obligatorios')         
+    def eliminar_clave(self):
+        print('Eliminando clave dinamica...')
 
     def agregar_4(self):
-        if self.tb_orden_manual.rowCount() <=16 :
+        x = self.filas_estimadas_orden(self.tb_orden_manual)
+        if self.tb_orden_manual.rowCount() < 14 and x < 14:
             fila = self.tb_orden_manual.rowCount()
             self.tb_orden_manual.insertRow(fila)
+
+            line_edit = QLineEdit()
+            line_edit.setStyleSheet(self.style_line_edit)
+            line_edit.setCompleter(self.completer_productos)
+            
+            self.tb_orden_manual.setItem(fila, 0 , QTableWidgetItem( '0' ))
+            self.tb_orden_manual.setCellWidget(fila, 1, line_edit)
+            self.tb_orden_manual.setItem(fila, 2 , QTableWidgetItem( '0' ))
+
         else:
-            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas. Intente crear otro REINGRESO para continuar agregando items.')
+            QMessageBox.about(self, 'ERROR', f'Ha alcanzado el limite maximo de filas {14}. \nIntente crear otra Orden Manual para continuar agregando items.')
 
     def eliminar_4(self):
         fila = self.tb_orden_manual.currentRow()  #FILA SELECCIONADA , retorna -1 si no se selecciona una fila
@@ -2643,24 +2766,128 @@ class Vendedor(QMainWindow):
                 self.productos.addItem(item[1])
         except EOFError:
             self.conexion_perdida()
+
     def add_descripcion(self):
         descripcion = self.productos.currentText()
-
-        if self.tb_orden_manual.rowCount() <=16 :
+        x = self.filas_estimadas_orden(self.tb_orden_manual)
+        if self.tb_orden_manual.rowCount() < 14 and x < 14:
             fila = self.tb_orden_manual.rowCount()
             self.tb_orden_manual.insertRow(fila)
+
+            line_edit = QLineEdit(str(descripcion))
+            line_edit.setStyleSheet(self.style_line_edit)
+            line_edit.setCompleter(self.completer_productos)
+            
             self.tb_orden_manual.setItem(fila, 0 , QTableWidgetItem( '0' ))
-            self.tb_orden_manual.setItem(fila, 1 , QTableWidgetItem( descripcion ))
+            self.tb_orden_manual.setCellWidget(fila, 1, line_edit)
             self.tb_orden_manual.setItem(fila, 2 , QTableWidgetItem( '0' ))
         else:
-            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas. Intente crear otra Orden para continuar agregando items.')
-    def cambiar_observacion(self):
-        if self.r_uso_interno_1.isChecked():
-            obs = 'uso carpinteria'
-            self.txt_obs_1.clear() 
-            self.txt_obs_1.appendPlainText(obs)
-        else:
-            self.txt_obs_1.clear() 
+            QMessageBox.about(self, 'ERROR', f'Ha alcanzado el limite maximo de filas {14}. \nIntente crear otra Orden para continuar agregando items.')
+    def cambiar_observacion(self,vista): #v5.9
+
+        '''self.r_despacho_1.setChecked(False)
+        self.r_enchape_1.setChecked(False)
+        self.r_facturar_1.setChecked(False)
+        self.r_separar_material_1.setChecked(False)
+        self.r_uso_interno_1.setChecked(False)'''
+        if vista == 'manual': 
+            # CHECKBOXES REGISTRAR ORDEN MANUAL
+            self.r_despacho_1.setEnabled(True)
+            self.r_enchape_1.setEnabled(True)
+            self.r_facturar_1.setEnabled(True)
+            self.r_separar_material_1.setEnabled(True)
+            self.r_uso_interno_1.setEnabled(True)
+
+            if self.r_enchape_1.isChecked():
+                print('regla: enchape <> despacho,facturar | blockea los demas')
+                self.r_separar_material_1.setEnabled(False)
+                self.r_uso_interno_1.setEnabled(False)
+
+            if self.r_uso_interno_1.isChecked():
+                print('regla: uso innterno <> despacho, separar material | blockea los demas')
+                self.r_enchape_1.setEnabled(False)
+                self.r_facturar_1.setEnabled(False)
+
+            if self.r_facturar_1.isChecked():
+                print('regla: POR FACTURAR <> despacho,enchape,separar material | blockea los demas')
+                self.r_uso_interno_1.setEnabled(False)
+
+            if self.r_separar_material_1.isChecked():
+                print('regla: separar material <> despacho,interno,facturar| blockea  enchape')
+                self.r_enchape_1.setEnabled(False)
+        
+
+
+            if self.r_uso_interno_1.isChecked() and self.r_separar_material_1.isChecked():
+                obs = "USO INTERNO Y SEPARAR MATERIAL"
+                self.txt_obs_1.clear() 
+                self.txt_obs_1.setEnabled(False) 
+                self.txt_obs_1.appendPlainText(obs)
+            elif self.r_uso_interno_1.isChecked():
+                obs = "USO INTERNO"
+                self.txt_obs_1.clear() 
+                self.txt_obs_1.setEnabled(False) 
+                self.txt_obs_1.appendPlainText(obs)
+            elif self.r_separar_material_1.isChecked():
+                obs = "SEPARAR MATERIAL"
+                self.txt_obs_1.clear() 
+                self.txt_obs_1.setEnabled(False) 
+                self.txt_obs_1.appendPlainText(obs)
+            else:
+                self.txt_obs_1.clear() 
+                self.txt_obs_1.setEnabled(True) 
+
+            print('OBS: ',self.txt_obs_1.toPlainText() )
+
+        elif vista == 'modificar':
+            # CHECKBOXES MODIFICAR ORDEN
+            self.r_despacho_5.setEnabled(True)
+            self.r_enchape_5.setEnabled(True)
+            self.r_facturar_5.setEnabled(True)
+            self.r_separar_material_5.setEnabled(True)
+            self.r_uso_interno_5.setEnabled(True)
+
+            if self.r_enchape_5.isChecked():
+                print('regla: enchape <> despacho,facturar | blockea los demas')
+                self.r_separar_material_5.setEnabled(False)
+                self.r_uso_interno_5.setEnabled(False)
+
+            if self.r_uso_interno_5.isChecked():
+                print('regla: uso innterno <> despacho, separar material | blockea los demas')
+                self.r_enchape_5.setEnabled(False)
+                self.r_facturar_5.setEnabled(False)
+
+            if self.r_facturar_5.isChecked():
+                print('regla: POR FACTURAR <> despacho,enchape,separar material | blockea los demas')
+                self.r_uso_interno_5.setEnabled(False)
+
+            if self.r_separar_material_5.isChecked():
+                print('regla: separar material <> despacho,interno,facturar| blockea  enchape')
+                self.r_enchape_5.setEnabled(False)
+
+            if self.r_uso_interno_5.isChecked() and self.r_separar_material_5.isChecked():
+                obs = "USO INTERNO Y SEPARAR MATERIAL"
+                self.txt_obs_2.clear() 
+                self.txt_obs_2.setEnabled(False) 
+                self.txt_obs_2.appendPlainText(obs)
+            elif self.r_uso_interno_5.isChecked():
+                obs = "USO INTERNO"
+                self.txt_obs_2.clear() 
+                self.txt_obs_2.setEnabled(False) 
+                self.txt_obs_2.appendPlainText(obs)
+            elif self.r_separar_material_5.isChecked():
+                obs = "SEPARAR MATERIAL"
+                self.txt_obs_2.clear() 
+                self.txt_obs_2.setEnabled(False) 
+                self.txt_obs_2.appendPlainText(obs)
+            else:
+                self.txt_obs_2.clear() 
+                self.txt_obs_2.setEnabled(True) 
+                self.txt_obs_2.appendPlainText(self.aux_obs)
+            print('OBS: ',self.txt_obs_2.toPlainText() )
+
+        
+
     def rellenar_datos_cliente_manual(self):
         print('------- QCOMPLETE MANUAL ACTIVADO --------------')
         nombre_cliente = self.nombre_1.text()
@@ -2679,15 +2906,18 @@ class Vendedor(QMainWindow):
 
  #------ funciones reingreso manual
     def reingreso_manual(self, modo):
+        print('f|-------- REINGRESO MANUAL: {modo}  --------|')
         nro_orden = self.txt_orden_6.text()           #NUMERO DE ORDEN
         tipo_doc = self.comboBox_6.currentText() #TIPO DE DOCUMENTO
         nro_doc = self.txt_nro_doc_6.text()        #NUMERO DE DOCUMENTO
         fecha = datetime.now().date()              #FECHA DE REINGRESO
         
-        if self.version == 'version-5.8':
-            motivo = self.combo_motivos_2.currentText()    #MOTIVO v5.8
-            solucion = self.combo_soluciones_2.currentText()  #solucion v5.8
+        if self.aux_version >= 5.8:
+            print('|-- Reingreso superior a 5.8: Obteniendo datos de combobox')
+            motivo = self.combo_motivos_2.currentText()    #MOTIVO v5.8 O superior
+            solucion = self.combo_soluciones_2.currentText()  #solucion v5.8 O superior
         else:
+            print('|-- Reingreso inferior a 5.8: Obteniendo datos de qlineEdit')
             motivo = ''
             if self.r_cambio_6.isChecked():
                 motivo = 'CAMBIO'
@@ -2708,10 +2938,11 @@ class Vendedor(QMainWindow):
         elif self.r_p_6.isChecked():
             proceso = 'PALLETS'
 
-        descr = self.txt_descripcion_6.toPlainText()   #descripcion
-
+        descr = "DESHABILITADA" #v5.9 self.txt_descripcion_6.toPlainText()   #descripcion 
+        cliente = (self.txt_nombre_cliente.text()).upper() #v5.9 mayuscula 
+        print('Nombre cliente reingreso: ' ,cliente)
         lineas = 0
-        if motivo != '' and descr != '' and solucion != '' :
+        if motivo != '' and descr != '' and solucion != '' and cliente != '':
             cant = self.tb_reingreso_manual.rowCount()
             vacias = False #Determinna si existen campos vacios
             correcto = True #Determina si los datos estan escritos correctamente. campos cantidad y valor son numeros.
@@ -2720,19 +2951,19 @@ class Vendedor(QMainWindow):
             valores_neto = []
             i = 0
             while i< cant:
-                descripcion = self.tb_reingreso_manual.item(i,0) #Collumna descripcion
+                #v6.0
+                descripcion_widget = self.tb_reingreso_manual.cellWidget(i, 0)  # Obtiene el widget de celda en la columna de descripción
                 cantidad = self.tb_reingreso_manual.item(i,1) #Columna cantidad
                 neto = self.tb_reingreso_manual.item(i,2) #Columna de valor neto
-                if cantidad != None and descripcion != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
-                    if cantidad.text() != '' and descripcion.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
+                if cantidad != None and descripcion_widget != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
+                    if cantidad.text() != '' and descripcion_widget.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
                         try: 
                             nueva_cant = cantidad.text().replace(',','.',3)
                             nuevo_neto = neto.text().replace(',','.',3)
                             cantidades.append( float(nueva_cant) )
-                            descripciones.append(descripcion.text())
-                            linea = self.separar2(descripcion.text(), 60 )
+                            descripciones.append( (descripcion_widget.text()).upper() ) #v5.9 
+                            linea = self.separar2(descripcion_widget.text(), 60 )
                             lineas += len(linea)
-                            print('total de lineas: '+ str(lineas))
                             valores_neto.append(float(nuevo_neto))
 
                         except ValueError:
@@ -2759,25 +2990,28 @@ class Vendedor(QMainWindow):
                         "cantidades" : cantidades,
                         "descripciones" : descripciones,
                         "valores_neto": valores_neto,
+                        "nombre_cliente" : cliente, #v5.9 
                         "creado_por" : self.datos_usuario[8]
                     }
                 if modo == 'registrar':
-                    formato["compatibilidad"] = "version-5.8"
+                    formato["compatibilidad"] = f'version-{ str(self.version) }'
                 elif modo == 'actualizar':
-                    formato["compatibilidad"] = self.version
+                    formato["compatibilidad"] = f'version-{ str(self.aux_version) }'
                     
                 detalle = json.dumps(formato)
                 try:
                     nro_orden = int(nro_orden)
                     nro_doc = int(nro_doc)
+
                     #MODO PARA REGISTRAR LOS REINGRESOS
                     if modo == 'registrar':
+                        print('|-- Registrando reingreso manual ')
                         if self.conexion.root.registrar_reingreso( str(fecha), tipo_doc, nro_doc, nro_orden, motivo, descr, proceso, detalle,solucion):
                             resultado = self.conexion.root.obtener_max_reingreso()
                             self.nro_reingreso = resultado[0]
                             print('max nro reingreso: ' + str(resultado[0]) + ' de tipo: ' + str(type(resultado[0])))
-                            datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto)
-                            self.crear_pdf_reingreso(datos)
+                            datos = (resultado[0], str(fecha) , tipo_doc , nro_doc , motivo , descr , proceso , solucion, cantidades, descripciones, valores_neto,cliente)
+                            self.crear_pdf_reingreso(datos) 
                             if self.clave:
                                     self.conexion.root.eliminar_clave(self.clave,'dinamica')
                                     self.clave = None
@@ -2788,13 +3022,14 @@ class Vendedor(QMainWindow):
                             self.stackedWidget.setCurrentWidget(self.inicio)
                         else:
                             QMessageBox.about(self,'ERROR','404 NOT FOUND. Contacte con Don Huber ...problemas al registrar reingreso')
+                    
                     #MODO PARA ACTUALIZAR LOS REINGRERSOS
                     elif modo == 'actualizar':
-                        print('actualizando xdxd')
+                        print('|-- Actualizando reingreso ')
                         id = self.lb_reingreso_6.text()
                         
                         if self.conexion.root.actualizar_reingreso( id , tipo_doc, nro_doc, nro_orden, motivo, descr, proceso, detalle,solucion):
-                            print('actualizado correct')
+                            print('|-- Actualizado correctamente')
                             self.tb_buscar_reingreso.setRowCount(0)
                             self.stackedWidget.setCurrentWidget(self.buscar_reingreso)
                             QMessageBox.about(self,'EXITO',f'Reingreso N° {id} actualizado')
@@ -2807,13 +3042,21 @@ class Vendedor(QMainWindow):
                 except EOFError:
                     self.conexion_perdida()
         else:
-            QMessageBox.about(self,'Datos incompletos','Los campos "descripcion" , "solucion" son obligatiorios. Como tambien si selecciona "OTROS" debe rellenar su campo')
+            QMessageBox.about(self,'Datos incompletos','Los campos "Nombre CLiente", "Motivo" y "solucion" son obligatiorios.')
     def agregar_6(self):
-        if self.tb_reingreso_manual.rowCount() <=16 :
+        if self.tb_reingreso_manual.rowCount() < 4:
             fila = self.tb_reingreso_manual.rowCount()
             self.tb_reingreso_manual.insertRow(fila)
+
+            line_edit = QLineEdit()
+            line_edit.setStyleSheet(self.style_line_edit)
+            line_edit.setCompleter(self.completer_productos)
+
+            self.tb_reingreso_manual.setCellWidget(fila, 0, line_edit)
+            self.tb_reingreso_manual.setItem(fila, 1 , QTableWidgetItem( '0' ))
+            self.tb_reingreso_manual.setItem(fila, 2 , QTableWidgetItem( '0' ))
         else:
-            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas. Intente crear otro REINGRESO para continuar agregando items.')
+            QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas (4). Intente crear otro REINGRESO para continuar agregando items.')
 
     def eliminar_6(self):
         fila = self.tb_reingreso_manual.currentRow()  #FILA SELECCIONADA , retorna -1 si no se selecciona una fila
@@ -2824,27 +3067,38 @@ class Vendedor(QMainWindow):
             QMessageBox.about(self,'Consejo', 'Seleccione una fila para eliminar')
     def buscar_descripcion_2(self):
         self.productos_6.clear()
-        descr = self.txt_descripcion_7.text()
-        try:
-            resultado = self.conexion.root.buscar_prod_descr(descr)
-            for item in resultado:
-                self.productos_6.addItem(item[1])
-        except EOFError:
-            self.conexion_perdida()
+        if self.conexion: # verificar que exista conexion
+            descr = self.txt_descripcion_7.text()
+            try:
+                resultado = self.conexion.root.buscar_prod_descr(descr)
+                for item in resultado:
+                    self.productos_6.addItem(item[1])
+            except EOFError:
+                self.conexion_perdida()
+        
+        
     def add_descripcion_2(self):
         descripcion = self.productos_6.currentText()
 
         if self.tb_reingreso_manual.rowCount() < 4 :
             fila = self.tb_reingreso_manual.rowCount()
             self.tb_reingreso_manual.insertRow(fila)
-            self.tb_reingreso_manual.setItem(fila, 0 , QTableWidgetItem( descripcion ))
+
+            line_edit = QLineEdit(str(descripcion))
+            line_edit.setStyleSheet(self.style_line_edit)
+            line_edit.setCompleter(self.completer_productos)
+
+            self.tb_reingreso_manual.setCellWidget(fila, 0, line_edit)
             self.tb_reingreso_manual.setItem(fila, 1 , QTableWidgetItem( '0' ))
             self.tb_reingreso_manual.setItem(fila, 2 , QTableWidgetItem( '0' ))
 
 
         else:
             QMessageBox.about(self, 'ERROR', 'Ha alcanzado el limite maximo de filas soportado para la impresión de un reingreso. Intente hacer otro reingreso para los items faltantes ')
-
+        
+    def rellenar_datos_cliente_reingreso_manual(self):
+        x  = 0
+        
 #---------- FUNCIONES DE INFORME ------------
     def inicializar_informe(self):
         self.tableWidget.setColumnWidth(0,371)
@@ -2854,6 +3108,15 @@ class Vendedor(QMainWindow):
         self.d_inicio.setCalendarPopup(True)
         self.d_termino.setDate( datetime.now().date() )
         self.d_termino.setCalendarPopup(True)
+
+        xd = {
+            "tipo":"dimensionado",
+            "facturar":"NO"
+        }
+        print(type(xd))
+        print(xd)
+        print(xd['tipo'])
+
         self.stackedWidget.setCurrentWidget(self.informes)
 
     def generar_informe(self):
@@ -2863,11 +3126,12 @@ class Vendedor(QMainWindow):
         termino = self.d_termino.date()
         termino = termino.toPyDate()
 
-        nombre =self.dir_informes + tipo_orden + '_'+ str( inicio.strftime("%d-%m-%Y")) + '_HASTA_' + str( termino.strftime("%d-%m-%Y")) + '.xlsx' 
+        nombre = os.path.join(self.dir_informes , tipo_orden + '_'+ str( inicio.strftime("%d-%m-%Y")) + '_HASTA_' + str( termino.strftime("%d-%m-%Y")) + '.xlsx' )
         datos = None
         if self.r_orden_2.isChecked():
             try:
                 if tipo_orden == 'DIMENSIONADO':
+                    print('s')
                     datos = self.conexion.root.informe_dimensionado(str(inicio) , str(termino))
                     self.informe_dimensionado(datos,nombre)
                     
@@ -2883,7 +3147,7 @@ class Vendedor(QMainWindow):
                 elif tipo_orden == 'REINGRESO':
                     if self.r_d.isChecked() or self.r_e.isChecked() or self.r_c.isChecked() or self.r_p.isChecked() :
                         acept = []
-                        nombre =self.dir_informes + tipo_orden
+                        nombre = tipo_orden #v6.0
                         entremedio = ''
                         if self.r_d.isChecked():
                             acept.append('DIMENSIONADO')
@@ -2898,7 +3162,7 @@ class Vendedor(QMainWindow):
                             acept.append('PALLETS')
                             entremedio = entremedio + '_P'
                         fin = '_'+ str( inicio.strftime("%d-%m-%Y")) + '_HASTA_' + str( termino.strftime("%d-%m-%Y")) + '.xlsx' 
-                        nombre = nombre + entremedio + fin
+                        nombre = os.path.join(self.dir_informes , nombre + entremedio + fin )
                         datos = self.conexion.root.informe_reingreso(str(inicio), str(termino))
                         self.informe_reingreso(datos, acept, nombre)
                     else:
@@ -3147,11 +3411,12 @@ class Vendedor(QMainWindow):
             fila = self.tableWidget.rowCount()
             self.tableWidget.insertRow(fila)
             self.tableWidget.setItem(fila , 0 , QTableWidgetItem( item ) )  #nombre informe
+
     def abrir(self):
         seleccion = self.tableWidget.selectedItems()
         if seleccion != [] :
             nombre = seleccion[0].text()
-            abrir = self.dir_informes + nombre
+            abrir = os.path.join(self.dir_informes , nombre)
             if os.path.isfile(abrir):
                 Popen([abrir], shell=True)
             else:
@@ -3163,7 +3428,7 @@ class Vendedor(QMainWindow):
         seleccion = self.tableWidget.selectedItems()
         if seleccion != [] :
             nombre = seleccion[0].text()
-            ruta = self.dir_informes + nombre
+            ruta = os.path.join(self.dir_informes , nombre)
             if os.path.isfile(ruta):
                 try:
                     os.remove(ruta)
@@ -3178,12 +3443,12 @@ class Vendedor(QMainWindow):
     def inicializar_estadisticas(self):
         self.box_vendedores.clear()
         self.tb_orden_manual_2.setRowCount(0)
-        self.tb_orden_manual_2.setColumnWidth(0,70)#tipo orden
-        self.tb_orden_manual_2.setColumnWidth(1,70)#fecha orden
-        self.tb_orden_manual_2.setColumnWidth(2,60)#nro orden
-        self.tb_orden_manual_2.setColumnWidth(3,65)#interno
-        self.tb_orden_manual_2.setColumnWidth(4,65)#documento
-        self.tb_orden_manual_2.setColumnWidth(5,65)#nro_doc
+        self.tb_orden_manual_2.setColumnWidth(0,100)#tipo orden
+        self.tb_orden_manual_2.setColumnWidth(1,100)#fecha orden
+        self.tb_orden_manual_2.setColumnWidth(2,85)#nro orden
+        self.tb_orden_manual_2.setColumnWidth(3,85)#interno
+        self.tb_orden_manual_2.setColumnWidth(4,120)#documento
+        self.tb_orden_manual_2.setColumnWidth(5,110)#nro_doc
         self.tb_orden_manual_2.setColumnWidth(6,150) #cliente
 
         self.stackedWidget.setCurrentWidget(self.estadisticas)
@@ -3192,7 +3457,7 @@ class Vendedor(QMainWindow):
         #cargar vendedores
         try:
             datos = self.conexion.root.obtener_vendedores_activos()
-            print(self.datos_usuario[8])
+            #print(self.datos_usuario[8])
             self.box_vendedores.addItem('todos')
             self.box_vendedores.addItem(self.datos_usuario[8])
             if datos:
@@ -3207,8 +3472,6 @@ class Vendedor(QMainWindow):
         
     def buscar_manuales(self):
         self.tb_orden_manual_2.setRowCount(0)
-        
-
         tipo_orden = self.box_tipo_orden.currentText()
         vendedor = self.box_vendedores.currentText()
         print(tipo_orden)
@@ -3220,6 +3483,8 @@ class Vendedor(QMainWindow):
                 otro['omitir_uso_carpinteria'] = True
             if self.ch_omitir_exito.isChecked():
                 otro['omitir_vinculo_exitoso'] = True
+
+            otro['rango_dias'] = None #v5.9
                 
             self.manuales = self.conexion.root.ordenes_manuales(tipo_orden,vendedor, otro) 
             if self.manuales:
@@ -3330,8 +3595,6 @@ class Vendedor(QMainWindow):
         self.date_venta_5.setEnabled(True)
         self.comboBox_5.setEnabled(True)
         self.txt_vendedor_5.setEnabled(True)
-        self.r_enchape_5.setChecked(False)
-        self.r_despacho_5.setChecked(False)
         # fecha_orden,nro_orden,interno,tipo_doc,nro_doc,nombre,vinc_existente 
         seleccion = self.tb_orden_manual_2.currentRow()
         if seleccion != -1:
@@ -3341,9 +3604,21 @@ class Vendedor(QMainWindow):
                 self.nro_orden = int(orden)
                 tipo = self.tb_orden_manual_2.item(seleccion, 0 ).text() #nro orden
                 print('----------- MODIFICAR ORDEN MANUAL de estadisticas... para: '+ tipo + ' -->' + str(self.nro_orden) + ' -------------')
-                self.tb_modificar_orden.setColumnWidth(0,80)
-                self.tb_modificar_orden.setColumnWidth(1,430)
-                self.tb_modificar_orden.setColumnWidth(2,85)
+                self.tb_modificar_orden.setColumnWidth(0,100)
+                self.tb_modificar_orden.setColumnWidth(1,650)
+                self.tb_modificar_orden.setColumnWidth(2,100)
+                #v5.9 se habilitan todos los checkboxes primero.
+                self.r_despacho_5.setEnabled(True)
+                self.r_enchape_5.setEnabled(True)
+                self.r_facturar_5.setEnabled(True)
+                self.r_separar_material_5.setEnabled(True)
+                self.r_uso_interno_5.setEnabled(True)
+                #v5.9 se desmarcan todos los checkboxes.
+                self.r_despacho_5.setChecked(False)
+                self.r_enchape_5.setChecked(False)
+                self.r_facturar_5.setChecked(False)
+                self.r_separar_material_5.setChecked(False)
+                self.r_uso_interno_5.setChecked(False)
 
                 self.rellenar_datos_orden(tipo)
                 self.stackedWidget.setCurrentWidget(self.modificar_orden)
@@ -3386,15 +3661,20 @@ class Vendedor(QMainWindow):
 
 # Sondeos
     def iniciar_sondeo(self):
-        
+        print('|-- Iniciando Sondeo ...')
         if self.sondeo_params['estado_sondeo_manual'] == False:
-            print('iniciando sondeo manual')
+            
             self.label_71.setText('ACTIVO')
             self.label_73.setText( str( self.sondeo_params['intervalo_sondeo_manual'] ))
+            self.lb_rango_dias.setText(str(self.sondeo_params['rango_dias'] ))
+            self.txt_rango_dias.setText(str(self.sondeo_params['rango_dias'] ))
             self.sondeo_params['estado_sondeo_manual'] = True
+            self.btn_iniciar_sondeo_manual.setEnabled(False)
+            self.btn_detener_sondeo_manual.setEnabled(True)
+            self.btn_actualizar_config_sondeo.setEnabled(False)
             self.executor.submit(self.sondeo_manuales)
         else:
-            print('El sondeo ya fue iniciado')
+            print('|-- El sondeo ya fue iniciado')
 
     def sondeo_manuales(self):
         sleep(1)
@@ -3403,22 +3683,23 @@ class Vendedor(QMainWindow):
         while self.sondeo_params['estado_sondeo_manual']:
             if tiempo % self.sondeo_params['intervalo_sondeo_manual'] == 0 :
                 fecha = datetime.now()
-                print('sondeo realizado: ' + str(fecha))
+                print('|------ Sondeo realizado: ' + str(fecha) + '-------|') 
                 self.obtener_datos_sondeo(False)
 
                 tiempo = 1
             else:
                 tiempo += 1
             sleep(1)
-        print('Sondeo ordenes manuales Finalizado')
+        print('|-- Sondeo ordenes manuales Finalizado')
+
     def obtener_datos_sondeo(self,actualizar_tabla):
         fecha_1 = datetime.now()
         fecha_1 =  fecha_1.strftime('%Y-%m-%d')
         otros_parametros = {
             "omitir_uso_carpinteria" :  self.sondeo_params['omitir_uso_carpinteria'] ,
             "omitir_vinculo_exitoso" : self.sondeo_params['omitir_vinculo_exitoso'] ,
-            "fecha_unica": True,
-            "fecha_1": str(fecha_1) 
+            "rango_dias" : self.sondeo_params['rango_dias']
+
         }
         
         self.manuales = self.conexion.root.ordenes_manuales('todos','todos',otros_parametros)
@@ -3431,6 +3712,7 @@ class Vendedor(QMainWindow):
 
     def actualizar_sondeo_config(self):
         intervalo = self.txt_intervalo_sondeo_manual.text()
+        rango_dias = self.txt_rango_dias.text()
         print(intervalo)
         try:
             val = int(intervalo)
@@ -3439,6 +3721,12 @@ class Vendedor(QMainWindow):
                 self.label_73.setText(intervalo)
             else:
                 QMessageBox.about(self,'ERROR' ,'Intervalo minimo de 30 segundos')
+            rango_dias = int(rango_dias)
+            if rango_dias > 0:
+                self.sondeo_params['rango_dias'] = rango_dias
+                self.lb_rango_dias.setText(str(rango_dias))
+            else:
+                QMessageBox.about(self,'ERROR' ,'Rango dias minimo de 1 DIA')
 
         except:
             QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros sobre el intervalo')
@@ -3460,13 +3748,42 @@ class Vendedor(QMainWindow):
     def finalizar_sondeo(self): 
         print('Finalizar sondeo')
         self.label_71.setText('INACTIVO')
+        self.btn_iniciar_sondeo_manual.setEnabled(True)
+        self.btn_detener_sondeo_manual.setEnabled(False)
+        self.btn_actualizar_config_sondeo.setEnabled(True)
         self.sondeo_params['estado_sondeo_manual'] = False
+
 
     def easter_egg(self):
         r = lambda: randint(0,255)
         print('#%02X%02X%02X' % (r(),r(),r()))
         color = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
         self.btn_notificacion1.setStyleSheet("background-color: " + color  +"")
+
+    def guardarDetalleOrden(self): #v5.9 
+        print('GUARDANDO DETALLE ORDEN')
+        datos = []
+        for row in range(self.tb_modificar_orden.rowCount()):
+            fila = []
+            for col in range(self.tb_modificar_orden.columnCount()):
+                fila.append(str(self.tb_modificar_orden.item(row, col).text()))
+            datos.append(fila)
+        self.datosTablaOrden = datos
+        QMessageBox.about(self,'Exito' ,'Items copiados.')
+
+    def pegarDetalleOrden(self):
+        print('pegando detalle orden')
+        if self.datosTablaOrden:
+            self.tb_orden_manual.setRowCount(len(self.datosTablaOrden))
+            self.tb_orden_manual.setColumnCount(len(self.datosTablaOrden[0]))
+            for row, fila in enumerate(self.datosTablaOrden):
+                for col, valor in enumerate(fila):
+                    self.tb_orden_manual.setItem(row, col, QTableWidgetItem(valor))
+            QMessageBox.about(self,'Exito' ,'Items pegados exitosamente..')
+        else:
+            QMessageBox.about(self,'Fallo' ,'No se detectaron items en el portapapeles.')
+
+        
 
  # -------- funcion para generar clave ------------
     def generar_clave(self):
@@ -3485,38 +3802,77 @@ class Vendedor(QMainWindow):
                 QMessageBox.about(self,'ERROR' ,'Ingrese una clave antes de continuar')
 
 #----- funciones generales -----------
+#v6.0
+    def habilitar_separar_material(self,checked ):
+        print('habilitando separar material.')
+        if checked:
+            print("¡Se ha detectado un cambio en el QRadioButton!")
+            self.r_separar_material_1.setChecked(True)
+        else:
+            print("no checkedado, quitando separar check-")
+            self.r_separar_material_1.setChecked(False)
+
     def cargar_clientes(self,  tipo_estado):
         datos = []
-        print('obteniendo nombres de ordenes ' )
+        print('|-- Obteniendo Clientes de ordenes ' )
         try:
             datos = self.conexion.root.obtener_clientes_de_ordenes()
-        
-
-            print(str(len(datos)))
-            print(str(type(datos)))
-            print('ordenes   | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
+            #print(str(len(datos)))
+            #print(str(type(datos)))
+            #print('ordenes   | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
             #self.txt_detalle.setText('orden: '+ tipo_orden + ' | len: ' + str(len(self.datos)) + ' | type: '+ str(type(self.datos)))
             ordenes = pd.DataFrame(datos) #([0]nombre, [1]telefono, [2]contacto)
             self.nombres = ordenes[0].tolist()
             self.telefonos = ordenes[1].tolist()
             self.contactos = ordenes[2].tolist()
             model = QStringListModel(self.nombres)
-            print(str(type(model)))
+            #print(str(type(model)))
     
             if tipo_estado == 'normal':
                 self.completer.setModel(model)
                 self.completer.setMaxVisibleItems(7)
                 self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
-                print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+                #print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
                 self.nombre_2.setCompleter(self.completer)
             elif tipo_estado == 'manual':
+                # Completer cliente orden manual
                 self.completer_manual.setModel(model)
                 self.completer_manual.setMaxVisibleItems(7)
                 self.completer_manual.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
-                print(self.completer_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+                #print(self.completer_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
                 self.nombre_1.setCompleter(self.completer_manual)
+                # Completer cliente Reingreso manual
+                self.completer_reingreso_manual.setModel(model)
+                self.completer_reingreso_manual.setMaxVisibleItems(7)
+                self.completer_reingreso_manual.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                #print(self.completer_reingreso_manual.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+                self.txt_nombre_cliente.setCompleter(self.completer_manual)
         except EOFError:
             self.conexion_perdida()
+    def cargar_productos(self):
+        datos = []
+        print('|-- Extrayendo productos ... ---' )
+        try:
+            datos = self.conexion.root.obtener_todos_los_productos()
+            #print(str(len(datos)))
+            #print(str(type(datos)))
+            #print('PRODUCTOS   | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
+            #self.txt_detalle.setText('orden: '+ tipo_orden + ' | len: ' + str(len(self.datos)) + ' | type: '+ str(type(self.datos)))
+            productos = pd.DataFrame(datos) #([0]nombre, [1]telefono, [2]contacto)
+            self.lista_codigos = productos[0].tolist() #codigo
+            self.lista_productos = productos[1].tolist() #descripcion
+            model = QStringListModel(self.lista_productos)
+            #print(str(type(model)))
+            self.completer_productos.setModel(model)
+            self.completer_productos.setMaxVisibleItems(7)
+            self.completer_productos.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+            #print(self.completer_productos.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+            print('|--- completer productos GENERADO ---')
+        except EOFError:
+            self.conexion_perdida()
+        except:
+            print('error cargar productos')
+            pass
             
     def decidir_atras(self):
         if self.anterior: 
@@ -3542,19 +3898,19 @@ class Vendedor(QMainWindow):
         vinculo = json.dumps(vinc)
         # BUSCA SI EXISTEN VINCULOS.
         if self.conexion.root.añadir_vinculo_orden_a_venta(self.tipo_doc, vinculo,self.nro_doc):
-            print('vinculo V2 de orden de trabajo '+tipo +' a venta creado exitosamente')
+            print('|-- Vinculo V2 de orden de trabajo '+tipo +' a venta creado exitosamente')
             self.lb_vinculo_5.setText('CREADO')
         else:
-            print('no se encontro el documento o sucedio un error')
+            print('|------ No se encontro el documento o sucedio un error')
+
     def actualizar_vinculo_orden_manual(self,aux_tipo,aux_nro,tipo_doc,nro_doc,estado):
-        x = 0
         print('------------ ACTUALIZANDO VINCULO A ORDEN MANUAL -----------')
-        print('Estado vinculo: ' + estado +' - tipo orden: ' + self.tipo +' - nro_orden: '+ str(self.nro_orden))
-        print(f'ANTIGUOS: - tipo: {aux_tipo} , nro_doc : {str(aux_nro)} | NUEVOS: - tipo: {tipo_doc} , nro_doc: {str(nro_doc)}')
+        print('|-- Estado vinculo: ' + estado +' - tipo orden: ' + self.tipo +' - nro_orden: '+ str(self.nro_orden))
+        print(f'|-- ANTIGUOS: - tipo: {aux_tipo} , nro_doc : {str(aux_nro)} | NUEVOS: - tipo: {tipo_doc} , nro_doc: {str(nro_doc)}')
         if nro_doc != 0:
-            print('NRO ACEPTABLE...')
+            print('|-- NRO ACEPTABLE...')
             if estado == 'NO CREADO':
-                print('creando vinculo ......')
+                print('|-- Creando vinculo ......')
                 new_tipo = self.tipo.lower()
                 print(new_tipo)
                 if tipo_doc != None or tipo_doc != 'NO ASIGNADO':
@@ -3568,7 +3924,7 @@ class Vendedor(QMainWindow):
                     print('TIPO DE DOCUMENTO NO VALIDO, VINCULO NO CREADO.')
 
             elif estado == 'CREADO':
-                print('creando vinculo ......')
+                print('|-- creando vinculo ......')
                 if tipo_doc != None or tipo_doc != 'NO ASIGNADO':
                     print('DOCUMENTO VALIDO: '+ tipo_doc)
                     if (aux_tipo == tipo_doc) and (aux_nro == nro_doc):
@@ -3588,49 +3944,49 @@ class Vendedor(QMainWindow):
         print('-------------------------------------------------------------')
 
 
-    def crear_pdf(self, lista, tipo, despacho): #PDF DE ORDEN DE TRABAJO
-        ruta = ( self.carpeta +'/ordenes/' + tipo +'_' + lista[0] + '.pdf' )  #NRO DE ORDEN  
-        formato = self.carpeta +"/formatos/" + tipo +".jpg"
-        agua = self.carpeta + "/formatos/despacho.png"
-        uso_interno = self.carpeta + "/formatos/uso interno.png"
-        hojas = 2
-        if tipo == 'carpinteria' or tipo == 'pallets' or tipo == 'elaboracion':
+    def crear_pdf(self, lista, datos, watermarks): #PDF DE ORDEN DE TRABAJO | watermarks v5.9 | datos: es un dicc| watermarks es array.
+        print('------- CREANDO PDF -------')
+        print('Datos: ',datos)
+        print('Watermarks: ',watermarks)
+        #6.0
+        #ruta = ( self.carpeta +'app/ordenes/' + datos['tipo'] +'_' + lista[0] + '.pdf' )  #NRO DE ORDEN 
+        ruta = os.path.join( self.dir_ordenes , datos['tipo'] +'_' + lista[0] + '.pdf' ) 
+        print('1--PDF: ',ruta)
+        #Formatos
+        formato = os.path.join( self.dir_formatos , datos['tipo'] +".jpg")
+        print('|-- Dir formato pdf: ',formato )
+        agua = os.path.join( self.dir_formatos , 'new_despacho.png')
+        uso_interno = os.path.join(self.dir_formatos , 'new_uso_interno.png')
+        separar_material = os.path.join( self.dir_formatos ,"new_separar_material.png")
+
+        hojas = 2  # Defecto -> especialmente para orden dimensionado.
+        if 'interno' in watermarks or datos['tipo'] == 'sin_transformacion' or datos['tipo'] == 'carpinteria' or datos['tipo'] == 'pallets' or datos['tipo'] == 'elaboracion': # o uso interno
             hojas = 1
         try:
             documento = canvas.Canvas(ruta)
 
             for pagina in range(hojas):
+                
                 documento.setPageSize(( 216 * mm , 279 * mm))
                 documento.drawImage( formato, 0* mm , 2 * mm , 216 *mm ,279 *mm )
-
-
-                if despacho == 'SI':
-                    documento.setFillAlpha(0.6)
-                    documento.drawImage( agua , 83* mm , 30* mm , 100*mm ,100*mm , mask= 'auto')
-                    documento.drawImage( agua , 83* mm , (30+136)* mm , 100*mm ,100*mm , mask= 'auto')
-
-                if self.r_uso_interno_1.isChecked():
-                    documento.setFillAlpha(0.6)
-                    documento.drawImage( uso_interno , 100* mm , 30* mm , 69*mm ,94.5 *mm , mask= 'auto')
-                    documento.drawImage( uso_interno , 100* mm , (30+136)* mm , 69*mm ,94.5*mm , mask= 'auto')
-
                 documento.setFillAlpha(1)
                 documento.drawString( 0 * mm, 139.5 * mm ,'------------------------------------------------------------------------------------------')
                 documento.drawString( 105 * mm, 139.5 * mm ,'----------------------------------------------------------------------------------------------')
 
-                documento.rotate(90)
+                
 
                 documento.setFont('Helvetica',10)
 
                 k = 2.5 #constante
                 salto = 0
                 for i in range(2):
-
-                    if self.r_facturar_1.isChecked():
+                    documento.rotate(90)        
+                    if datos['facturar'] == 'SI':
                         documento.setFont('Helvetica',11)
                         documento.setFillAlpha(0.6)
                         documento.drawString( (53 + k + salto) *mm , -20.5 * mm , '"POR FACTURAR"' )  #por facturar
-                        documento.setFillAlpha(1)
+                    documento.setFillAlpha(1)
+
 
                     documento.setFont('Helvetica',9)
                     documento.drawString( (28 + k + salto) *mm , -59.5 * mm , lista[2] )  #NOMBRE
@@ -3648,14 +4004,14 @@ class Vendedor(QMainWindow):
                             documento.drawString( (78 + k + salto) *mm , -85 * mm , str(self.nro_doc) )     #NRO GUIA  V5.4 VENDEDOR
                         
 
-                    if tipo == 'dimensionado':
+                    if datos['tipo'] == 'dimensionado':
                         documento.drawString( (88 + k + salto) *mm , -94 * mm ,  lista[7] )   #ENCHAPE
 
                     documento.drawString( (110 + k + salto) *mm , -85 * mm ,   lista[9]  )       #ORDEN DE COMPRA
 
                     documento.drawString( (32 + k + salto) *mm , -66 * mm ,  lista[8] )   #CONTACTO
                     if lista[10] != None:
-                        documento.drawString( (33+ salto) *mm , -205 * mm , lista[10] ) #NOMBRE VENDEDOR
+                        documento.drawString( (33+ salto) *mm , -205 * mm , lista[10].upper() ) #NOMBRE VENDEDOR
                     
                     documento.setFont('Helvetica-Bold',12)
                     documento.drawString( (106 + k + salto) *mm , -44.5 * mm , lista[4]  ) #FECHA ESTIMADA
@@ -3672,16 +4028,38 @@ class Vendedor(QMainWindow):
                         if k == 2.5:
                             documento.drawString( (10+ salto) *mm , -200 * mm , 'ORIGINAL' )
                         else:
-                            documento.drawString( (10+ salto) *mm , -200 * mm , 'COPIA ' + tipo.upper() )
+                            documento.drawString( (10+ salto) *mm , -200 * mm , 'COPIA ' + datos['tipo'].upper() )
                     else:
                         if k == 2.5:
                             documento.drawString( (10+ salto) *mm , -200 * mm , 'COPIA CLIENTE' )
                         else:
                             documento.drawString( (10+ salto) *mm , -200 * mm , 'COPIA BODEGA' )
-                    documento.drawString( (10+ salto) *mm , -205 * mm , 'VENDEDOR:' )        
+                    documento.drawString( (10+ salto) *mm , -205 * mm , 'VENDEDOR:' )   
+
+                    documento.rotate(-90)
+                    # MARCAS DE AGUA 
+                    documento.setFillAlpha(0.7)
+                    margin = 15   # : 1watermark -> 41mm en adelante |2: -> 21mm
+                    if len(watermarks) == 1:
+                        margin += 41
+                    elif len(watermarks) == 2:
+                        margin += 21
+                    x_pos = 0
+                    for item in watermarks:
+                        if item == 'despacho':
+                            documento.drawImage( agua , 155* mm , (margin + x_pos + salto)* mm , 15*mm ,33*mm , mask= 'auto')
+                        if item == 'interno':
+                            documento.drawImage( uso_interno , 155* mm , (margin + x_pos + salto)* mm , 15*mm ,33*mm , mask= 'auto')
+                        if item == 'material':   
+                            documento.drawImage( separar_material , 155* mm ,(margin + x_pos + salto)*mm , 15*mm ,33*mm , mask= 'auto')
+                        x_pos += 40
                     salto += 139.5
                     k = 0 
 
+
+
+                documento.rotate(90)
+                documento.setFillAlpha(1)
                 #items
                 cons = 108
                 documento.setFont('Helvetica',9)
@@ -3706,19 +4084,22 @@ class Vendedor(QMainWindow):
                         documento.drawString(align_descr_2 *mm , -cons* mm , cadena ) #54 LONG MAXIMA
                         cons += 5
                     i +=1
-
+               
                 documento.showPage()
             #documento.drawString( (10+ salto) *mm , -205 * mm , 'VENDEDOR:' )
             documento.save()
+            print('------- CREANDO PDF FINALIZADO -------')
             sleep(1)
         except PermissionError:
             QMessageBox.about(self,'ERROR', 'Otro programa esta modificando este archivo por lo cual no se puede modificar actualmente.')
     
     def crear_pdf_reingreso(self, datos): #pdf de reingreso de mercaderias
-            print('creando pdf reingreso...')
-            documento = canvas.Canvas(self.carpeta +'/reingresos/reingreso_' + str(datos[0]) + '.pdf')
-            imagen =  self.carpeta + "/formatos/reingreso_solo.jpg" 
-
+            print('--------- CREANDO PDF REINGRESO -----------')
+            ruta = os.path.join( self.dir_reingreso ,  f'reingreso_{str(datos[0])}.pdf' )
+            print('|-- PDF: ' ,ruta)
+            documento = canvas.Canvas(ruta)
+            imagen =  os.path.join(self.dir_formatos ,"reingreso_solo.jpg" )
+            print('|-- PDF format: ' ,imagen)
             documento.setPageSize(( 216 * mm , 279 * mm))
             documento.drawImage( imagen, 0* mm , 0 * mm , 216 *mm , 139.5 *mm )
             documento.drawImage( imagen, 0* mm , 139.5 * mm , 216 *mm , 139.5 *mm )
@@ -3728,79 +4109,66 @@ class Vendedor(QMainWindow):
         
             for i in range(2):
                 documento.setFont('Helvetica',9)
-                
                 if datos[2] == 'FACTURA':
-                    documento.drawString(129*mm, (106.5 + salto )*mm , str(datos[3])  )   #NUMERO DOCUMENTO , FACTURA
+                    documento.drawString(131*mm, (99.5 + salto )*mm , str(datos[3])  )   #NUMERO DOCUMENTO , FACTURA
                 elif datos[2] == 'BOLETA':
-                    documento.drawString(52* mm, (106.5+ salto )*mm , str(datos[3])  )   #NUMERO DOCUMENTO , BOLETA
+                    documento.drawString(53* mm, (99.5+ salto )*mm , str(datos[3])  )   #NUMERO DOCUMENTO , BOLETA
                 elif datos[2] == 'GUIA':
-                    documento.drawString(95* mm, (106.5+ salto )*mm , str(datos[3]) )   #NUMERO DOCUMENTO , guia
-            
-                lista = self.separar2(datos[5],94) #DESCRIPCION
-                
-                #print(len( datos[5] ))
-                k = 0 
+                    documento.drawString(95* mm, (99.5+ salto )*mm , str(datos[3]) )   #NUMERO DOCUMENTO , guia
+                '''k = 0 
                 j = 0 
                 for item in lista:
                     documento.drawString(20* mm, (92.5 + salto - k)*mm , lista[j] )  #descripcion del problema
                     #documento.drawString(20* mm, (92.5 + salto - k )*mm , descr )  #descripcion del problema
                     k += 6
-                    j += 1
+                    j += 1'''
                 
-                lista = self.separar2( datos[7] , 85) #SOLUCION
-                #print(len(datos[7]))
-                k = 0 
-                j = 0
-                for item in lista:
-                    documento.drawString(40*mm, (39 + salto - k )*mm , lista[j] )  #solucion del problema
-                    k += 6
-                    j += 1
+                documento.drawString(53*mm, (106 + salto )*mm , datos[11] ) #v5.9 NOMBRE CLIENTE
+                documento.drawString(40*mm, (35 + salto )*mm , datos[7] )  #SOLUCION
+                    
+
                 
+
                 cants = datos[8]
                 descrs = datos[9]
                 netos = datos[10]
                 p = 0
                 q = 0
                 for item in cants:
-                    documento.drawString(150*mm, (65 + salto - q )*mm , str(cants[p]) )  #cantidad
-                    documento.drawString(170*mm, (65 + salto - q )*mm , str(netos[p]) )  #neto
+                    documento.drawString(150*mm, (65 + salto - q )*mm , str(cants[p]) )  # PRODUCTO cantidad
+                    documento.drawString(170*mm, (65 + salto - q )*mm , str(netos[p]) )  # PRODUCTO neto
                     cadenas = self.separar2(descrs[p] , 60 ) 
                     for cadena in cadenas:
-                        documento.drawString(20*mm, (65 + salto -q )*mm , cadena)  #descripcion
+                        documento.drawString(20*mm, (65 + salto -q )*mm , cadena)  # PRODUCTO descripcion
                         q += 5
                     p +=1
 
                 documento.setFillAlpha(0.6)
-                documento.drawString(18*mm, (12 + salto - k )*mm , 'Vendedor:' )  #nombre vendedor
+                documento.drawString(18*mm, (6+ salto)*mm , 'Vendedor:' )  # VENDEDOR
                 if self.vendedor: #si no existe es orden manual antigua. ordenes manuales acutales tienen vendedor asociado al usuario sagot.
-                    documento.drawString(38*mm, (12 + salto - k )*mm , self.datos_usuario[8] )  #nombre vendedor
+                    documento.drawString(38*mm, (6 + salto  )*mm , (self.datos_usuario[8]).upper()  )  #nombre vendedor
+                
                 documento.setFillAlpha(1)
+                
+                documento.drawString(43*mm, (92.8 + salto )*mm , datos[4] )  # Motivo
 
                 documento.setFont('Helvetica-Bold', 9 )
 
-                documento.drawString(177*mm, (124.5 + salto )*mm ,  str(datos[0]) )  #NRO DE REINGRESO
-                documento.drawString(177*mm, (115.5 + salto ) *mm , datos[1] )    #FECHA DEL REINGRESO
+                documento.drawString(177*mm, (120 + salto )*mm ,  str(datos[0]) )  #NRO DE REINGRESO
+                documento.drawString(177*mm, (106 + salto ) *mm , datos[1] )    #FECHA DEL REINGRESO
 
                 if datos[6] == 'DIMENSIONADO':
-                    documento.drawString(73*mm, (77 + salto )*mm , 'X' )  #PROCESO DIMENSIONADO
+                    documento.drawString(73*mm, (82 + salto )*mm , 'X' )  #PROCESO DIMENSIONADO
                 elif datos[6] == 'ELABORACION':    
-                    documento.drawString(150*mm, (77 + salto )*mm , 'X' )  #PROCESO ELABORACION
+                    documento.drawString(150*mm, (82 + salto )*mm , 'X' )  #PROCESO ELABORACION
                 elif datos[6] == 'CARPINTERIA':
-                    documento.drawString(111*mm, (77 + salto )*mm , 'X' )  #PROCESO CARPINTERIA
+                    documento.drawString(111*mm, (82 + salto )*mm , 'X' )  #PROCESO CARPINTERIA
                 elif datos[6] == 'PALLETS':
-                    documento.drawString(178.5*mm, (77 + salto )*mm , 'X' )  #PROCESO PALLETS
-
-
-                if datos[4] == 'CAMBIO':
-                    documento.drawString(53*mm, (99.5 + salto )*mm , 'X' )  #motivo cambio
-                elif datos[4] == 'DEVOLUCION':
-                    documento.drawString(92*mm, (99.5 + salto )*mm , 'X' )   #motivo devolucion
-                else:
-                    documento.setFont('Helvetica',9)
-                    documento.drawString(128*mm, (99.5 + salto )*mm , datos[4] )  #motivo otro
+                    documento.drawString(178.5*mm, (82 + salto )*mm , 'X' )  #PROCESO PALLETS
 
                 salto += 139.5 
             documento.save()
+            print('---------'*3)
     def anular(self):
         print(self.datos_usuario)
 
@@ -3859,12 +4227,29 @@ class Vendedor(QMainWindow):
                 mayor = item[0]
         return mayor
     def ver_pdf_reingreso(self):
-        ruta = self.carpeta + '/reingresos/reingreso_' + str(self.nro_reingreso) + '.pdf'
+        #ruta = self.carpeta + '/reingresos/reingreso_' + str(self.nro_reingreso) + '.pdf'
+        ruta = os.path.join(self.dir_reingreso , f"reingreso_{ str(self.nro_reingreso) }.pdf")
         Popen([ruta], shell=True)
 
     def ver_pdf(self, tipo):
-        abrir = self.carpeta+ '/ordenes/' + tipo.lower() +'_' +str(self.nro_orden) + '.pdf'
+        #v6.0
+        #abrir = self.carpeta+ '/ordenes/' + tipo.lower() +'_' +str(self.nro_orden) + '.pdf'
+        abrir = os.path.join(self.dir_ordenes , f"{ tipo.lower() }_{ str(self.nro_orden) }.pdf" )
         Popen([abrir], shell=True)
+    def filas_estimadas_orden(self,table):
+        descripciones = []
+        filas_estimadas = 0
+        for row in range(table.rowCount()):
+            descripcion_item = table.cellWidget(row, 1)
+            #print(type(descripcion_item))
+            if descripcion_item is not None:
+                descripcion = descripcion_item.text()
+                filas_usadas = self.separar(descripcion)
+                filas_estimadas += len(filas_usadas)
+                descripciones.append(descripcion)
+        #print('Filas estimadas: ',filas_estimadas)
+        return filas_estimadas
+
 
     def separar(self,cadena):
         lista = []
@@ -3963,8 +4348,7 @@ class Vendedor(QMainWindow):
 
 # ------ Funciones del menu -----------
     def cerrar_sesion(self):
-        self.iniciar_session()
-        self.inicializar()
+        self.inicializar_login()
 
     def mostrar_menu(self):   
         if True:
@@ -3973,32 +4357,65 @@ class Vendedor(QMainWindow):
             if ancho == 70:
                 extender = 150
                 self.btn_inicio.show()
-                self.btn_buscar.setText('Notas de venta')
-                self.btn_modificar.setText('Ordenes de trabajo')
-                self.btn_orden_manual.setText('Ingreso manual')
-                self.btn_generar_clave.setText('Generar clave')
-                self.btn_informe.setText('Generar informe')
-                self.btn_atras.setText('Cerrar sesión')
-                self.btn_estadisticas.setText('Estadisticas')
-                self.btn_configuracion.setText('Configuración')
+                self.btn_buscar.setText(' Notas de venta')
+                self.btn_modificar.setText(' Ordenes\nde trabajo')
+                self.btn_orden_manual.setText(' Ingreso manual')
+                #self.btn_generar_clave.setText('Generar clave')
+                self.btn_informe.setText(' Generar informe')
+                self.btn_atras.setText(' Cerrar sesión')
+                self.btn_estadisticas.setText(' Estadisticas')
+                self.btn_configuracion.setText(' Configuración')
                 self.btn_reingreso.setText(' Reingreso')
+                self.btn_retiros.setText(' Retiros')
             else:
                 self.btn_inicio.hide()
+                # Define una hoja de estilo para mostrar solo el icono en los botones
+                icon_only_style = """
+                QPushButton {
+                    text-align: left;
+                }
+
+                QPushButton::text {
+                    color:transparent;
+                }
+                """
+
+                # Establece la hoja de estilo en cada botón
                 self.btn_buscar.setText('')
+                self.btn_buscar.setIconSize(QSize(40, 40)) 
+
                 self.btn_modificar.setText('')
-                self.btn_orden_manual.setText('')
-                self.btn_generar_clave.setText('')
-                self.btn_informe.setText('')
-                self.btn_atras.setText('')
-                self.btn_estadisticas.setText('')
-                self.btn_configuracion.setText('')
-                self.btn_reingreso.setText('')
+                self.btn_modificar.setIconSize(QSize(40, 40)) 
                 
+                self.btn_reingreso.setText('')
+                self.btn_reingreso.setIconSize(QSize(40, 40)) 
+
+                self.btn_orden_manual.setText('')
+                self.btn_orden_manual.setIconSize(QSize(40, 40)) 
+
+                #self.btn_generar_clave.setText('')
+                #self.btn_generar_clave.setIconSize(QSize(40, 40)) 
+                
+                self.btn_informe.setText('')
+                self.btn_informe.setIconSize(QSize(40, 40)) 
+
+                self.btn_estadisticas.setText('')
+                self.btn_estadisticas.setIconSize(QSize(40, 40)) 
+
+                self.btn_configuracion.setIconSize(QSize(40, 40)) 
+                self.btn_configuracion.setStyleSheet(icon_only_style)
+
+                self.btn_atras.setText('')
+                self.btn_atras.setIconSize(QSize(40, 40)) 
+                self.btn_retiros.setText('')
+                
+                
+                                
                 extender = normal
             
             self.animation = QPropertyAnimation(self.left_menu_container, b"maximumWidth" )
             self.animation.setDuration(500)
-            self.animation.setEasingCurve(QEasingCurve.Linear)
+            self.animation.setEasingCurve(QEasingCurve.InOutQuad)
             self.animation.setStartValue(ancho)
             self.animation.setEndValue(extender)
             
@@ -4039,9 +4456,23 @@ class Vendedor(QMainWindow):
                 self.tb_orden_manual_2.setColumnWidth(5,320)
 
     def closeEvent(self, event):
-        self.finalizar_sondeo()
-        print('Cerrando aplicacion')
-        event.accept()
+        """Generate 'question' dialog on clicking 'X' button in title bar.
+
+        Reimplement the closeEvent() event handler to include a 'Question'
+        dialog with options on how to proceed - Save, Close, Cancel buttons
+        """
+        reply = QMessageBox.question(
+            self, "Salir",
+            "¿Deseas salir de la aplicación?",
+            QMessageBox.Close | QMessageBox.Cancel)
+
+        if reply == QMessageBox.Close:
+            self.finalizar_sondeo()
+            print('Cerrando aplicacion')
+            event.accept()
+        else:
+            event.ignore()
+        
 
 class InputDialog(QDialog):
     def __init__(self,label1,label2,title ,parent=None):
@@ -4089,12 +4520,13 @@ class InputDialog2(QDialog):
 class InputDialog3(QDialog):
     def __init__(self,tipo_doc, folio, estado , parent=None ):
         super().__init__(parent)
-        uic.loadUi('upd_domicilio.ui',self)
+        uic.loadUi('app/ui/upd_domicilio.ui',self)
         self.btn_guardar.clicked.connect(self.guardar)
         self.btn_cancelar.clicked.connect(self.cancelar)
         self.lb_folio.setText(folio)
         self.lb_doc.setText(tipo_doc)
         self.lb_estado.setText(estado)
+        self.setMinimumHeight(300)  # Establecer una altura mínima
 
 
     def guardar(self):
@@ -4153,11 +4585,3 @@ class Grafico(QWidget):
 
 
     
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('icono_imagen/icono_barv3.png'))
-    myappid = 'madenco.personal.area' # arbitrary string
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid) 
-    vendedor = Vendedor()
-    vendedor.show()
-    sys.exit(app.exec_())

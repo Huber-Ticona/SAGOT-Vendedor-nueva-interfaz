@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>845</width>
-    <height>610</height>
+    <width>1176</width>
+    <height>662</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -168,6 +168,10 @@ QPushButton:hover{
           <string notr="true">QPushButton{
 /*border: transparent;
 background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #003300);*/
+text-align:left;
+}
+QIcon{
+text-align:left;
 }</string>
          </property>
          <property name="frameShape">
@@ -263,6 +267,15 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
               <height>40</height>
              </size>
             </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+            <property name="default">
+             <bool>false</bool>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
          </layout>
@@ -273,7 +286,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>16777215</height>
+           <height>40</height>
           </size>
          </property>
          <property name="frameShape">
@@ -330,7 +343,7 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
            <widget class="QPushButton" name="btn_notificacion1">
             <property name="minimumSize">
              <size>
-              <width>30</width>
+              <width>0</width>
               <height>0</height>
              </size>
             </property>
@@ -341,13 +354,16 @@ background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #00330
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">*{
+             <string notr="true">QPushButton{
 background-color: red;
+border-radius:5px;
+text-align:left;
+padding-left:3px;
 }
 </string>
             </property>
             <property name="text">
-             <string>2</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -374,6 +390,16 @@ background-color: red;
            <height>180</height>
           </size>
          </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+/*border: transparent;
+background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #00cc00, stop:1 #003300);*/
+text-align:left;
+}
+QIcon{
+text-align:left;
+}</string>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -381,15 +407,39 @@ background-color: red;
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_21">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QPushButton" name="btn_configuracion">
+            <property name="styleSheet">
+             <string notr="true">QPushButton::hover{
+color:red;
+}</string>
+            </property>
             <property name="text">
              <string>Configuracion</string>
             </property>
             <property name="iconSize">
              <size>
-              <width>30</width>
-              <height>30</height>
+              <width>40</width>
+              <height>40</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_retiros">
+            <property name="text">
+             <string>Retiros</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>40</width>
+              <height>40</height>
              </size>
             </property>
            </widget>
@@ -440,6 +490,12 @@ background-color: red;
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QPushButton" name="btn_atras">
             <property name="minimumSize">
@@ -459,8 +515,8 @@ background-color: red;
             </property>
             <property name="iconSize">
              <size>
-              <width>30</width>
-              <height>30</height>
+              <width>40</width>
+              <height>40</height>
              </size>
             </property>
            </widget>
@@ -530,7 +586,7 @@ background-color: red;
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0,0">
           <property name="spacing">
            <number>10</number>
           </property>
@@ -580,7 +636,49 @@ background-color: red;
              </size>
             </property>
             <property name="text">
-             <string>TextLabel</string>
+             <string>SIN CONEXION</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_descargar_actualizacion">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>166</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Tahoma</family>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">*{
+border-radius: 33;
+background-color:white;
+border:2px solid qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 0, 0, 255), stop:0.166 rgba(255, 255, 0, 255), stop:0.333 rgba(0, 255, 0, 255), stop:0.5 rgba(0, 255, 255, 255), stop:0.666 rgba(0, 0, 255, 255), stop:0.833 rgba(255, 0, 255, 255), stop:1 rgba(255, 0, 0, 255));
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Descargar Actualización</string>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -594,6 +692,31 @@ background-color: red;
             </property>
             <property name="text">
              <string>Conectar</string>
+            </property>
+            <property name="default">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_manual">
+            <property name="maximumSize">
+             <size>
+              <width>120</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
+            <property name="text">
+             <string>Conectar Manual</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+            <property name="default">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -653,69 +776,379 @@ background-color: red;
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="styleSheet">
+             <string notr="true">#btn_footer QPushButton{
+max-height: 50 px;
+min-height:40px;
+border:1px solid orange;
+}</string>
+            </property>
             <property name="currentIndex">
-             <number>11</number>
+             <number>13</number>
             </property>
             <widget class="QWidget" name="inicio">
-             <widget class="QLabel" name="label_5">
+             <layout class="QHBoxLayout" name="horizontalLayout_47">
+              <item>
+               <widget class="QFrame" name="frame_41">
+                <property name="maximumSize">
+                 <size>
+                  <width>520</width>
+                  <height>230</height>
+                 </size>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_46">
+                 <item>
+                  <widget class="QLabel" name="label_5">
+                   <property name="font">
+                    <font>
+                     <family>Oswald</family>
+                     <pointsize>20</pointsize>
+                     <weight>50</weight>
+                     <italic>false</italic>
+                     <bold>false</bold>
+                    </font>
+                   </property>
+                   <property name="tabletTracking">
+                    <bool>false</bool>
+                   </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::NoContextMenu</enum>
+                   </property>
+                   <property name="acceptDrops">
+                    <bool>false</bool>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::LeftToRight</enum>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font: 20pt &quot;Oswald&quot;;</string>
+                   </property>
+                   <property name="text">
+                    <string>SISTEMA DE ADMINISTRACIÓN Y GESTION DE ORDENES DE TRABAJO (SAGOT)</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="login">
+             <layout class="QHBoxLayout" name="horizontalLayout_45">
+              <item>
+               <widget class="QFrame" name="frame_37">
+                <property name="minimumSize">
+                 <size>
+                  <width>420</width>
+                  <height>500</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>450</width>
+                  <height>530</height>
+                 </size>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_33">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QFrame" name="frame_39">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_42">
+                    <item>
+                     <widget class="QLabel" name="lb_logo">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>200</width>
+                        <height>90</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>300</width>
+                        <height>135</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>TextLabel</string>
+                      </property>
+                      <property name="scaledContents">
+                       <bool>true</bool>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QStackedWidget" name="stackedWidgetLogin">
+                   <property name="minimumSize">
+                    <size>
+                     <width>400</width>
+                     <height>200</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>400</width>
+                     <height>260</height>
+                    </size>
+                   </property>
+                   <property name="currentIndex">
+                    <number>1</number>
+                   </property>
+                   <widget class="QWidget" name="loading">
+                    <layout class="QHBoxLayout" name="horizontalLayout_44">
+                     <item>
+                      <widget class="QFrame" name="frame_40">
+                       <property name="frameShape">
+                        <enum>QFrame::StyledPanel</enum>
+                       </property>
+                       <property name="frameShadow">
+                        <enum>QFrame::Raised</enum>
+                       </property>
+                       <layout class="QHBoxLayout" name="horizontalLayout_43">
+                        <item>
+                         <widget class="QLabel" name="lb_loading">
+                          <property name="maximumSize">
+                           <size>
+                            <width>256</width>
+                            <height>256</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>TextLabel</string>
+                          </property>
+                          <property name="scaledContents">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                   <widget class="QWidget" name="input">
+                    <layout class="QVBoxLayout" name="verticalLayout_35">
+                     <item>
+                      <widget class="QFrame" name="frame_input_login">
+                       <property name="frameShape">
+                        <enum>QFrame::StyledPanel</enum>
+                       </property>
+                       <property name="frameShadow">
+                        <enum>QFrame::Raised</enum>
+                       </property>
+                       <layout class="QVBoxLayout" name="verticalLayout_34">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QFrame" name="frame_34">
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>150</height>
+                           </size>
+                          </property>
+                          <property name="frameShape">
+                           <enum>QFrame::StyledPanel</enum>
+                          </property>
+                          <property name="frameShadow">
+                           <enum>QFrame::Raised</enum>
+                          </property>
+                          <layout class="QGridLayout" name="gridLayout_5">
+                           <property name="topMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="verticalSpacing">
+                            <number>2</number>
+                           </property>
+                           <item row="0" column="0">
+                            <widget class="QLabel" name="label_83">
+                             <property name="styleSheet">
+                              <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                             </property>
+                             <property name="text">
+                              <string>NOMBRE DE USUARIO:</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item row="1" column="0">
+                            <widget class="QLabel" name="label_82">
+                             <property name="styleSheet">
+                              <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                             </property>
+                             <property name="text">
+                              <string>CONTRASEÑA:</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item row="0" column="1">
+                            <widget class="QLineEdit" name="txt_usuario"/>
+                           </item>
+                           <item row="1" column="1">
+                            <widget class="QLineEdit" name="txt_contra">
+                             <property name="focusPolicy">
+                              <enum>Qt::StrongFocus</enum>
+                             </property>
+                            </widget>
+                           </item>
+                           <item row="2" column="1">
+                            <widget class="QCheckBox" name="checkBox">
+                             <property name="focusPolicy">
+                              <enum>Qt::NoFocus</enum>
+                             </property>
+                             <property name="text">
+                              <string>Recordar mi cuenta</string>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QFrame" name="frame_38">
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="frameShape">
+                           <enum>QFrame::StyledPanel</enum>
+                          </property>
+                          <property name="frameShadow">
+                           <enum>QFrame::Raised</enum>
+                          </property>
+                          <layout class="QHBoxLayout" name="horizontalLayout_41">
+                           <property name="spacing">
+                            <number>1</number>
+                           </property>
+                           <property name="topMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>0</number>
+                           </property>
+                           <item>
+                            <widget class="QPushButton" name="btn_iniciar">
+                             <property name="minimumSize">
+                              <size>
+                               <width>0</width>
+                               <height>35</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>130</width>
+                               <height>16777215</height>
+                              </size>
+                             </property>
+                             <property name="focusPolicy">
+                              <enum>Qt::TabFocus</enum>
+                             </property>
+                             <property name="text">
+                              <string notr="true">Iniciar sesión</string>
+                             </property>
+                             <property name="checkable">
+                              <bool>false</bool>
+                             </property>
+                             <property name="autoExclusive">
+                              <bool>false</bool>
+                             </property>
+                             <property name="autoDefault">
+                              <bool>false</bool>
+                             </property>
+                             <property name="default">
+                              <bool>false</bool>
+                             </property>
+                             <property name="flat">
+                              <bool>false</bool>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="separar_material">
+             <widget class="QLabel" name="label_78">
               <property name="geometry">
                <rect>
-                <x>70</x>
-                <y>120</y>
-                <width>521</width>
-                <height>231</height>
+                <x>270</x>
+                <y>70</y>
+                <width>421</width>
+                <height>131</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Oswald</family>
-                <pointsize>20</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="tabletTracking">
-               <bool>false</bool>
-              </property>
-              <property name="contextMenuPolicy">
-               <enum>Qt::NoContextMenu</enum>
-              </property>
-              <property name="acceptDrops">
-               <bool>false</bool>
-              </property>
-              <property name="layoutDirection">
-               <enum>Qt::LeftToRight</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 20pt &quot;Oswald&quot;;</string>
+               <string notr="true">font:  14pt &quot;Times New Roman&quot;;</string>
               </property>
               <property name="text">
-               <string>SISTEMA DE ADMINISTRACIÓN Y GESTION DE ORDENES DE TRABAJO (SAGOT)</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_23">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>480</y>
-                <width>71</width>
-                <height>51</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>:3</string>
+               <string>MODULO PARA PREPARAR MATERIAL</string>
               </property>
              </widget>
             </widget>
@@ -773,7 +1206,7 @@ background-color: red;
                       <widget class="QRadioButton" name="radio3_1">
                        <property name="maximumSize">
                         <size>
-                         <width>150</width>
+                         <width>165</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -819,7 +1252,7 @@ background-color: red;
                       <widget class="QRadioButton" name="radio1_1">
                        <property name="maximumSize">
                         <size>
-                         <width>150</width>
+                         <width>175</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -1410,6 +1843,12 @@ background-color: red;
                  <layout class="QHBoxLayout" name="horizontalLayout_5">
                   <item>
                    <widget class="QLabel" name="label_4">
+                    <property name="maximumSize">
+                     <size>
+                      <width>150</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>Generar orden de:</string>
                     </property>
@@ -1417,6 +1856,12 @@ background-color: red;
                   </item>
                   <item>
                    <widget class="QRadioButton" name="r_dim">
+                    <property name="maximumSize">
+                     <size>
+                      <width>150</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>DIMENSIONADO</string>
                     </property>
@@ -1424,6 +1869,12 @@ background-color: red;
                   </item>
                   <item>
                    <widget class="QRadioButton" name="r_elab">
+                    <property name="maximumSize">
+                     <size>
+                      <width>150</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>ELABORACION</string>
                     </property>
@@ -1431,6 +1882,12 @@ background-color: red;
                   </item>
                   <item>
                    <widget class="QRadioButton" name="r_carp">
+                    <property name="maximumSize">
+                     <size>
+                      <width>150</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>CARPINTERÍA</string>
                     </property>
@@ -1438,8 +1895,21 @@ background-color: red;
                   </item>
                   <item>
                    <widget class="QRadioButton" name="r_pall">
+                    <property name="maximumSize">
+                     <size>
+                      <width>100</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>PALLETS</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QRadioButton" name="r_sin_trans">
+                    <property name="text">
+                     <string>SIN TRANSFORMACION</string>
                     </property>
                    </widget>
                   </item>
@@ -1548,7 +2018,7 @@ background-color: red;
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>280</height>
+                  <height>250</height>
                  </size>
                 </property>
                 <property name="frameShape">
@@ -1558,208 +2028,273 @@ background-color: red;
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_14">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
-                  <layout class="QGridLayout" name="gridLayout_5">
-                   <property name="horizontalSpacing">
-                    <number>6</number>
+                  <widget class="QFrame" name="frame_36">
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
                    </property>
-                   <property name="verticalSpacing">
-                    <number>15</number>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
                    </property>
-                   <item row="3" column="0">
-                    <widget class="QLabel" name="label_24">
-                     <property name="text">
-                      <string>TELEFONO:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0">
-                    <widget class="QLabel" name="label_25">
-                     <property name="text">
-                      <string>NOMBRE:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="3">
-                    <widget class="QLabel" name="label_26">
-                     <property name="text">
-                      <string>O/C :</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="2">
-                    <widget class="QLineEdit" name="telefono_5">
-                     <property name="minimumSize">
-                      <size>
-                       <width>130</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>150</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="3">
-                    <widget class="QLabel" name="label_27">
-                     <property name="text">
-                      <string>NUMERO DOCUMENTO:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="QComboBox" name="comboBox_5"/>
-                   </item>
-                   <item row="2" column="3">
-                    <widget class="QLabel" name="label_29">
-                     <property name="text">
-                      <string>FECHA DE VENTA:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="label_32">
-                     <property name="text">
-                      <string>DOCUMENTO:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="3">
-                    <widget class="QLabel" name="label_30">
-                     <property name="text">
-                      <string>FECHA ESTIMADA DE ENTREGA:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="2">
-                    <widget class="QLineEdit" name="contacto_5">
-                     <property name="minimumSize">
-                      <size>
-                       <width>170</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>170</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="2">
-                    <widget class="QLineEdit" name="nombre_5">
-                     <property name="minimumSize">
-                      <size>
-                       <width>250</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>250</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="4">
-                    <widget class="QLineEdit" name="oce_5"/>
-                   </item>
-                   <item row="4" column="0">
-                    <widget class="QLabel" name="label_33">
-                     <property name="text">
-                      <string>CONTACTO:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="5" column="4">
-                    <widget class="QCheckBox" name="r_despacho_5">
-                     <property name="text">
-                      <string>DESPACHO</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="5" column="3">
-                    <widget class="QCheckBox" name="r_enchape_5">
-                     <property name="text">
-                      <string>ENCHAPADO</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="4">
-                    <widget class="QDateEdit" name="fecha_5"/>
-                   </item>
-                   <item row="0" column="4">
-                    <widget class="QLabel" name="lb_fecha_orden_5">
-                     <property name="text">
-                      <string>TextLabel</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="3">
-                    <widget class="QLabel" name="label_31">
-                     <property name="text">
-                      <string>FECHA DE CREACIÓN:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_28">
-                     <property name="text">
-                      <string>NUMERO INTERNO:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="4">
-                    <widget class="QLineEdit" name="txt_nro_doc_5"/>
-                   </item>
-                   <item row="5" column="2">
-                    <widget class="QLineEdit" name="txt_vendedor_5"/>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLineEdit" name="txt_interno_5"/>
-                   </item>
-                   <item row="2" column="4">
-                    <widget class="QDateEdit" name="date_venta_5"/>
-                   </item>
-                   <item row="5" column="0">
-                    <widget class="QLabel" name="label_57">
-                     <property name="text">
-                      <string>VENDEDOR:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="6" column="0">
-                    <widget class="QLabel" name="label_38">
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Vinculo existente:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="6" column="2">
-                    <widget class="QLabel" name="lb_vinculo_5">
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>TextLabel</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
+                   <layout class="QGridLayout" name="gridLayout_20">
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item row="2" column="2">
+                     <widget class="QLabel" name="label_29">
+                      <property name="text">
+                       <string>FECHA DE VENTA:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QComboBox" name="comboBox_5"/>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="QLabel" name="label_27">
+                      <property name="text">
+                       <string>NUMERO DOCUMENTO:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="3">
+                     <widget class="QLabel" name="lb_fecha_orden_5">
+                      <property name="text">
+                       <string>TextLabel</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_32">
+                      <property name="text">
+                       <string>DOCUMENTO:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="3">
+                     <widget class="QDateEdit" name="date_venta_5"/>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QLineEdit" name="nombre_5">
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>250</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="3">
+                     <widget class="QLineEdit" name="txt_nro_doc_5"/>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QLineEdit" name="txt_interno_5"/>
+                    </item>
+                    <item row="4" column="2">
+                     <widget class="QLabel" name="label_26">
+                      <property name="text">
+                       <string>O/C :</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="0">
+                     <widget class="QLabel" name="label_24">
+                      <property name="text">
+                       <string>TELEFONO:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="1">
+                     <widget class="QLineEdit" name="contacto_5">
+                      <property name="minimumSize">
+                       <size>
+                        <width>170</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>170</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="1">
+                     <widget class="QLineEdit" name="telefono_5">
+                      <property name="minimumSize">
+                       <size>
+                        <width>130</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>150</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="0">
+                     <widget class="QLabel" name="label_33">
+                      <property name="text">
+                       <string>CONTACTO:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="QLabel" name="label_31">
+                      <property name="text">
+                       <string>FECHA DE CREACIÓN:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="QLabel" name="label_25">
+                      <property name="text">
+                       <string>NOMBRE:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="3">
+                     <widget class="QDateEdit" name="fecha_5"/>
+                    </item>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_28">
+                      <property name="text">
+                       <string>NUMERO INTERNO:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="2">
+                     <widget class="QLabel" name="label_30">
+                      <property name="text">
+                       <string>FECHA ESTIMADA DE ENTREGA:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="3">
+                     <widget class="QLineEdit" name="oce_5"/>
+                    </item>
+                    <item row="5" column="0">
+                     <widget class="QLabel" name="label_57">
+                      <property name="text">
+                       <string>VENDEDOR:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="5" column="1">
+                     <widget class="QLineEdit" name="txt_vendedor_5"/>
+                    </item>
+                    <item row="5" column="2">
+                     <widget class="QLabel" name="label_38">
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Vinculo existente:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="5" column="3">
+                     <widget class="QLabel" name="lb_vinculo_5">
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>TextLabel</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="frame_35">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>50</height>
+                 </size>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_40">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QCheckBox" name="r_despacho_5">
+                   <property name="text">
+                    <string>DESPACHO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="r_enchape_5">
+                   <property name="text">
+                    <string>ENCHAPADO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="r_uso_interno_5">
+                   <property name="text">
+                    <string>USO INTERNO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="r_facturar_5">
+                   <property name="text">
+                    <string>POR FACTURAR</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="r_separar_material_5">
+                   <property name="text">
+                    <string>SEPARAR MATERIAL</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -1775,7 +2310,7 @@ background-color: red;
                 <item row="0" column="0">
                  <widget class="QTableWidget" name="tb_modificar_orden">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -1837,12 +2372,69 @@ background-color: red;
                     </property>
                    </widget>
                   </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_copiar_detalle">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>50</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Copy
+Detalle</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
               </item>
               <item>
+               <widget class="QFrame" name="frame_obs_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_39">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_79">
+                   <property name="text">
+                    <string>OBSERVACION:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPlainTextEdit" name="txt_obs_2"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
                <widget class="QFrame" name="abajo_5">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>40</height>
+                 </size>
+                </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -1856,8 +2448,26 @@ background-color: red;
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_14">
+                 <property name="leftMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <widget class="QPushButton" name="btn_atras_5">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>100</width>
@@ -1871,10 +2481,16 @@ background-color: red;
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_ver_5">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>100</width>
-                     <height>40</height>
+                     <height>50</height>
                     </size>
                    </property>
                    <property name="text">
@@ -1884,6 +2500,12 @@ background-color: red;
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_anular_5">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>200</width>
@@ -1897,6 +2519,12 @@ background-color: red;
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_guardar_5">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>40</height>
+                    </size>
+                   </property>
                    <property name="maximumSize">
                     <size>
                      <width>200</width>
@@ -1918,7 +2546,7 @@ background-color: red;
               <item>
                <widget class="QTabWidget" name="tabWidget_2">
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                 <string notr="true">font: 9pt &quot;Times New Roman&quot;;</string>
                 </property>
                 <property name="currentIndex">
                  <number>0</number>
@@ -1933,14 +2561,17 @@ background-color: red;
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>100</height>
+                      <height>80</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
                       <width>16777215</width>
-                      <height>16777215</height>
+                      <height>200</height>
                      </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">font: 9pt &quot;Times New Roman&quot;;</string>
                     </property>
                     <property name="frameShape">
                      <enum>QFrame::StyledPanel</enum>
@@ -1949,6 +2580,12 @@ background-color: red;
                      <enum>QFrame::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_11">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
                      <item row="0" column="1">
                       <widget class="QLineEdit" name="nombre_1">
                        <property name="minimumSize">
@@ -2050,7 +2687,7 @@ background-color: red;
                        </property>
                        <property name="maximumSize">
                         <size>
-                         <width>210</width>
+                         <width>250</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -2121,6 +2758,13 @@ background-color: red;
                        </property>
                       </widget>
                      </item>
+                     <item>
+                      <widget class="QCheckBox" name="r_separar_material_1">
+                       <property name="text">
+                        <string>SEPARAR MATERIAL</string>
+                       </property>
+                      </widget>
+                     </item>
                     </layout>
                    </widget>
                   </item>
@@ -2180,27 +2824,27 @@ background-color: red;
                      <item>
                       <widget class="QGroupBox" name="groupBox_4">
                        <property name="title">
-                        <string>DESCRIPCION</string>
+                        <string>DESCRIPCIÓN</string>
                        </property>
                        <widget class="QLineEdit" name="txt_descripcion_1">
                         <property name="geometry">
                          <rect>
                           <x>10</x>
                           <y>20</y>
-                          <width>431</width>
+                          <width>500</width>
                           <height>20</height>
                          </rect>
                         </property>
                         <property name="minimumSize">
                          <size>
-                          <width>300</width>
-                          <height>0</height>
+                          <width>500</width>
+                          <height>20</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>450</width>
-                          <height>16777215</height>
+                          <width>600</width>
+                          <height>30</height>
                          </size>
                         </property>
                        </widget>
@@ -2249,7 +2893,7 @@ background-color: red;
                        </property>
                        <property name="maximumSize">
                         <size>
-                         <width>560</width>
+                         <width>99999</width>
                          <height>30</height>
                         </size>
                        </property>
@@ -2343,6 +2987,23 @@ background-color: red;
                           </property>
                          </widget>
                         </item>
+                        <item>
+                         <widget class="QPushButton" name="btn_pegar_detalle">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>50</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Pegar
+Detalle</string>
+                          </property>
+                         </widget>
+                        </item>
                        </layout>
                       </widget>
                      </item>
@@ -2354,7 +3015,7 @@ background-color: red;
                     <property name="maximumSize">
                      <size>
                       <width>16777215</width>
-                      <height>100</height>
+                      <height>120</height>
                      </size>
                     </property>
                     <property name="frameShape">
@@ -2364,6 +3025,9 @@ background-color: red;
                      <enum>QFrame::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_13">
+                     <property name="topMargin">
+                      <number>2</number>
+                     </property>
                      <property name="rightMargin">
                       <number>0</number>
                      </property>
@@ -2389,8 +3053,10 @@ background-color: red;
                         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                        </property>
                        <property name="text">
-                        <string>GENERAR 
-ORDEN DE:</string>
+                        <string>AREA:</string>
+                       </property>
+                       <property name="wordWrap">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -2423,6 +3089,12 @@ ORDEN DE:</string>
                         </property>
                         <item>
                          <widget class="QRadioButton" name="r_dim_1">
+                          <property name="maximumSize">
+                           <size>
+                            <width>160</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
                           <property name="styleSheet">
                            <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                           </property>
@@ -2433,6 +3105,12 @@ ORDEN DE:</string>
                         </item>
                         <item>
                          <widget class="QRadioButton" name="r_elab_1">
+                          <property name="maximumSize">
+                           <size>
+                            <width>150</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
                           <property name="styleSheet">
                            <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                           </property>
@@ -2443,6 +3121,12 @@ ORDEN DE:</string>
                         </item>
                         <item>
                          <widget class="QRadioButton" name="r_carp_1">
+                          <property name="maximumSize">
+                           <size>
+                            <width>150</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
                           <property name="styleSheet">
                            <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                           </property>
@@ -2453,6 +3137,12 @@ ORDEN DE:</string>
                         </item>
                         <item>
                          <widget class="QRadioButton" name="r_pall_1">
+                          <property name="maximumSize">
+                           <size>
+                            <width>100</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
                           <property name="styleSheet">
                            <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
                           </property>
@@ -2461,11 +3151,36 @@ ORDEN DE:</string>
                           </property>
                          </widget>
                         </item>
+                        <item>
+                         <widget class="QRadioButton" name="r_sin_trans_1">
+                          <property name="font">
+                           <font>
+                            <family>Times New Roman</family>
+                            <pointsize>10</pointsize>
+                            <weight>50</weight>
+                            <italic>false</italic>
+                            <bold>false</bold>
+                           </font>
+                          </property>
+                          <property name="styleSheet">
+                           <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                          </property>
+                          <property name="text">
+                           <string>SIN TRANSFORMACION</string>
+                          </property>
+                         </widget>
+                        </item>
                        </layout>
                       </widget>
                      </item>
                      <item row="2" column="0">
                       <widget class="QPushButton" name="btn_atras_3">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>35</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>Atrás</string>
                        </property>
@@ -2473,6 +3188,12 @@ ORDEN DE:</string>
                      </item>
                      <item row="2" column="1">
                       <widget class="QPushButton" name="btn_registrar_1">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>35</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>GENERAR ORDEN</string>
                        </property>
@@ -2513,8 +3234,17 @@ ORDEN DE:</string>
                      </item>
                      <item row="0" column="2">
                       <widget class="QLabel" name="label_54">
+                       <property name="font">
+                        <font>
+                         <family>Times New Roman</family>
+                         <pointsize>9</pointsize>
+                         <weight>50</weight>
+                         <italic>false</italic>
+                         <bold>false</bold>
+                        </font>
+                       </property>
                        <property name="styleSheet">
-                        <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                        <string notr="true">font: 9pt &quot;Times New Roman&quot;;</string>
                        </property>
                        <property name="text">
                         <string>NUMERO DE ORDEN:</string>
@@ -2547,7 +3277,7 @@ ORDEN DE:</string>
                      <item row="1" column="2">
                       <widget class="QLabel" name="label_53">
                        <property name="styleSheet">
-                        <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                        <string notr="true">font: 9pt &quot;Times New Roman&quot;;</string>
                        </property>
                        <property name="text">
                         <string>NUMERO DE DOCUMENTO:</string>
@@ -2566,8 +3296,17 @@ ORDEN DE:</string>
                      </item>
                      <item row="1" column="0">
                       <widget class="QLabel" name="label_51">
+                       <property name="font">
+                        <font>
+                         <family>Times New Roman</family>
+                         <pointsize>9</pointsize>
+                         <weight>50</weight>
+                         <italic>false</italic>
+                         <bold>false</bold>
+                        </font>
+                       </property>
                        <property name="styleSheet">
-                        <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                        <string notr="true">font: 9pt &quot;Times New Roman&quot;;</string>
                        </property>
                        <property name="text">
                         <string>DOCUMENTO:</string>
@@ -2607,14 +3346,7 @@ ORDEN DE:</string>
                      <property name="spacing">
                       <number>5</number>
                      </property>
-                     <item row="0" column="0">
-                      <widget class="QLabel" name="label_66">
-                       <property name="text">
-                        <string>MOTIVO:</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="1">
+                     <item row="2" column="2">
                       <widget class="QGroupBox" name="groupBox_5">
                        <property name="title">
                         <string/>
@@ -2666,19 +3398,6 @@ ORDEN DE:</string>
                        </layout>
                       </widget>
                      </item>
-                     <item row="1" column="1">
-                      <widget class="QPlainTextEdit" name="txt_descripcion_6">
-                       <property name="maximumSize">
-                        <size>
-                         <width>16777215</width>
-                         <height>35</height>
-                        </size>
-                       </property>
-                       <property name="plainText">
-                        <string/>
-                       </property>
-                      </widget>
-                     </item>
                      <item row="2" column="0">
                       <widget class="QLabel" name="label_59">
                        <property name="text">
@@ -2686,17 +3405,33 @@ ORDEN DE:</string>
                        </property>
                       </widget>
                      </item>
-                     <item row="1" column="0">
+                     <item row="0" column="0">
                       <widget class="QLabel" name="label_55">
-                       <property name="styleSheet">
-                        <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                       <property name="minimumSize">
+                        <size>
+                         <width>150</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>160</width>
+                         <height>16777215</height>
+                        </size>
                        </property>
                        <property name="text">
-                        <string>DESCRIPCION:</string>
+                        <string>NOMBRE CLIENTE:</string>
                        </property>
                       </widget>
                      </item>
-                     <item row="0" column="1">
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_66">
+                       <property name="text">
+                        <string>MOTIVO:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
                       <widget class="QFrame" name="frame_25">
                        <property name="frameShape">
                         <enum>QFrame::StyledPanel</enum>
@@ -2775,6 +3510,16 @@ ORDEN DE:</string>
                          <widget class="QComboBox" name="combo_motivos_2"/>
                         </item>
                        </layout>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLineEdit" name="txt_nombre_cliente">
+                       <property name="maximumSize">
+                        <size>
+                         <width>400</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
                       </widget>
                      </item>
                     </layout>
@@ -3220,6 +3965,38 @@ ORDEN DE:</string>
                  </item>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_4">
+                   <item row="2" column="2">
+                    <widget class="QPushButton" name="btn_elaboracion">
+                     <property name="minimumSize">
+                      <size>
+                       <width>100</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Elaboración</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_7">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+                     </property>
+                     <property name="text">
+                      <string>BUSCAR ORDEN DE:</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="2" column="0">
                     <widget class="QPushButton" name="btn_dimensionado">
                      <property name="minimumSize">
@@ -3236,19 +4013,6 @@ ORDEN DE:</string>
                      </property>
                      <property name="text">
                       <string>Dimensionado</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="2">
-                    <widget class="QPushButton" name="btn_elaboracion">
-                     <property name="minimumSize">
-                      <size>
-                       <width>100</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Elaboración</string>
                      </property>
                     </widget>
                    </item>
@@ -3284,22 +4048,11 @@ ORDEN DE:</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="label_7">
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
-                     </property>
+                   <item row="2" column="3">
+                    <widget class="QPushButton" name="btn_sin_transformacion">
                      <property name="text">
-                      <string>BUSCAR ORDEN DE:</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <string>Sin
+Transformacion</string>
                      </property>
                     </widget>
                    </item>
@@ -3329,6 +4082,12 @@ ORDEN DE:</string>
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <widget class="QTableWidget" name="tb_buscar_orden">
                    <property name="sizePolicy">
@@ -3387,7 +4146,7 @@ ORDEN DE:</string>
                </widget>
               </item>
               <item>
-               <widget class="QFrame" name="abajo_4">
+               <widget class="QFrame" name="btn_footer">
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -3401,12 +4160,21 @@ ORDEN DE:</string>
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_12">
+                 <property name="spacing">
+                  <number>5</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <widget class="QPushButton" name="btn_atras_4">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>30</height>
+                     <height>42</height>
                     </size>
                    </property>
                    <property name="text">
@@ -3419,7 +4187,7 @@ ORDEN DE:</string>
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>30</height>
+                     <height>42</height>
                     </size>
                    </property>
                    <property name="text">
@@ -3432,7 +4200,7 @@ ORDEN DE:</string>
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>30</height>
+                     <height>42</height>
                     </size>
                    </property>
                    <property name="text">
@@ -3462,13 +4230,6 @@ ORDEN DE:</string>
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_19">
-                 <item row="1" column="5">
-                  <widget class="QLabel" name="lb_documento_2">
-                   <property name="text">
-                    <string>TextLabel</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="1" column="4">
                   <widget class="QLabel" name="label_34">
                    <property name="text">
@@ -3476,42 +4237,10 @@ ORDEN DE:</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="5">
-                  <widget class="QLabel" name="lb_doc_2">
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
+                 <item row="1" column="5">
+                  <widget class="QLabel" name="lb_documento_2">
                    <property name="text">
                     <string>TextLabel</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="4">
-                  <widget class="QLabel" name="label_21">
-                   <property name="maximumSize">
-                    <size>
-                     <width>70</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>DOCUMENTO:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="label_22">
-                   <property name="maximumSize">
-                    <size>
-                     <width>90</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>FOLIO DE ORDEN:</string>
                    </property>
                   </widget>
                  </item>
@@ -3528,38 +4257,60 @@ ORDEN DE:</string>
                    </property>
                   </widget>
                  </item>
+                 <item row="0" column="5">
+                  <widget class="QLabel" name="lb_doc_2">
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_22">
+                   <property name="maximumSize">
+                    <size>
+                     <width>150</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>FOLIO DE ORDEN:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="4">
+                  <widget class="QLabel" name="label_21">
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>DOCUMENTO:</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
               </item>
               <item>
                <layout class="QGridLayout" name="gridLayout_8">
-                <item row="3" column="1">
-                 <widget class="QLabel" name="lb_proceso_2">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_37">
                   <property name="maximumSize">
                    <size>
-                    <width>16777215</width>
+                    <width>120</width>
                     <height>30</height>
                    </size>
                   </property>
                   <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_37">
-                  <property name="text">
-                   <string>DESCRIPCIÓN:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QPlainTextEdit" name="txt_descripcion_2">
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>45</height>
-                   </size>
+                   <string>Nombre Cliente:</string>
                   </property>
                  </widget>
                 </item>
@@ -3570,20 +4321,7 @@ ORDEN DE:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_58">
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>30</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>MOTIVO:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
+                <item row="0" column="2">
                  <widget class="QFrame" name="frame_24">
                   <property name="frameShape">
                    <enum>QFrame::StyledPanel</enum>
@@ -3602,6 +4340,66 @@ ORDEN DE:</string>
                     <number>0</number>
                    </property>
                    <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="lb_nombre_cliente">
+                     <property name="text">
+                      <string>TextLabel</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QLabel" name="lb_proceso_2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_58">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>MOTIVO:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QFrame" name="frame_2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::StyledPanel</enum>
+                  </property>
+                  <property name="frameShadow">
+                   <enum>QFrame::Raised</enum>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
                     <number>0</number>
                    </property>
                    <property name="bottomMargin">
@@ -3687,7 +4485,14 @@ ORDEN DE:</string>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QComboBox" name="combo_motivos"/>
+                    <widget class="QComboBox" name="combo_motivos">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>35</height>
+                      </size>
+                     </property>
+                    </widget>
                    </item>
                   </layout>
                  </widget>
@@ -3696,6 +4501,12 @@ ORDEN DE:</string>
               </item>
               <item>
                <widget class="QFrame" name="medio_6">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -3736,7 +4547,7 @@ ORDEN DE:</string>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>800</width>
+                       <width>99999</width>
                        <height>200</height>
                       </size>
                      </property>
@@ -3857,7 +4668,7 @@ ORDEN DE:</string>
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
-                       <height>0</height>
+                       <height>35</height>
                       </size>
                      </property>
                      <property name="maximumSize">
@@ -3882,7 +4693,7 @@ ORDEN DE:</string>
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
-                       <height>0</height>
+                       <height>35</height>
                       </size>
                      </property>
                      <property name="maximumSize">
@@ -3916,7 +4727,14 @@ ORDEN DE:</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QComboBox" name="combo_soluciones"/>
+                       <widget class="QComboBox" name="combo_soluciones">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>35</height>
+                         </size>
+                        </property>
+                       </widget>
                       </item>
                      </layout>
                     </widget>
@@ -4544,7 +5362,7 @@ ORDEN DE:</string>
                        </property>
                        <property name="maximumSize">
                         <size>
-                         <width>100</width>
+                         <width>200</width>
                          <height>16777215</height>
                         </size>
                        </property>
@@ -4568,7 +5386,7 @@ ORDEN DE:</string>
                      <item>
                       <widget class="QCheckBox" name="ch_omitir_carp">
                        <property name="text">
-                        <string>Omitir uso carpinteria</string>
+                        <string>Omitir uso interno</string>
                        </property>
                       </widget>
                      </item>
@@ -4664,7 +5482,13 @@ ORDEN DE:</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QFrame" name="frame_2">
+                   <widget class="QFrame" name="btn_footer_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>40</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>16777215</width>
@@ -4678,12 +5502,24 @@ ORDEN DE:</string>
                      <enum>QFrame::Raised</enum>
                     </property>
                     <layout class="QHBoxLayout" name="horizontalLayout_19">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
                      <item>
                       <widget class="QPushButton" name="btn_atras_8">
                        <property name="minimumSize">
                         <size>
                          <width>0</width>
-                         <height>30</height>
+                         <height>40</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>50</height>
                         </size>
                        </property>
                        <property name="text">
@@ -4696,7 +5532,13 @@ ORDEN DE:</string>
                        <property name="minimumSize">
                         <size>
                          <width>0</width>
-                         <height>30</height>
+                         <height>40</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>50</height>
                         </size>
                        </property>
                        <property name="text">
@@ -4763,7 +5605,7 @@ ORDEN DE:</string>
                       </size>
                      </property>
                      <property name="text">
-                      <string>Tipo documento</string>
+                      <string>Tipo documento:</string>
                      </property>
                     </widget>
                    </item>
@@ -4781,7 +5623,7 @@ ORDEN DE:</string>
                     <widget class="QRadioButton" name="r_fecha_2">
                      <property name="maximumSize">
                       <size>
-                       <width>150</width>
+                       <width>200</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -4794,7 +5636,7 @@ ORDEN DE:</string>
                     <widget class="QRadioButton" name="r_reingreso_2">
                      <property name="maximumSize">
                       <size>
-                       <width>120</width>
+                       <width>200</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -4992,7 +5834,7 @@ ORDEN DE:</string>
                 <x>20</x>
                 <y>40</y>
                 <width>438</width>
-                <height>211</height>
+                <height>261</height>
                </rect>
               </property>
               <property name="frameShape">
@@ -5024,10 +5866,45 @@ ORDEN DE:</string>
                   <enum>QFrame::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_21">
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_61">
+                    <property name="text">
+                     <string>Omitir uso interno del sondeo</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_71">
+                    <property name="text">
+                     <string>TextLabel</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_70">
                     <property name="text">
                      <string>ESTADO SONDEO</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLabel" name="label_75">
+                    <property name="text">
+                     <string>NO</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_67">
+                    <property name="text">
+                     <string>Omitir vinculo exitoso del sondeo</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLabel" name="label_76">
+                    <property name="text">
+                     <string>NO</string>
                     </property>
                    </widget>
                   </item>
@@ -5045,38 +5922,17 @@ ORDEN DE:</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_71">
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_80">
+                    <property name="text">
+                     <string>Rango dias sondeo:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QLabel" name="lb_rango_dias">
                     <property name="text">
                      <string>TextLabel</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_61">
-                    <property name="text">
-                     <string>Omitir uso carpinteria del sondeo</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_67">
-                    <property name="text">
-                     <string>Omitir vinculo exitoso del sondeo</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QLabel" name="label_75">
-                    <property name="text">
-                     <string>NO</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QLabel" name="label_76">
-                    <property name="text">
-                     <string>NO</string>
                     </property>
                    </widget>
                   </item>
@@ -5132,8 +5988,8 @@ ORDEN DE:</string>
              <widget class="QFrame" name="frame_31">
               <property name="geometry">
                <rect>
-                <x>280</x>
-                <y>270</y>
+                <x>500</x>
+                <y>40</y>
                 <width>221</width>
                 <height>241</height>
                </rect>
@@ -5211,9 +6067,9 @@ ORDEN DE:</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="lineEdit">
+                   <widget class="QLineEdit" name="txt_rango_dias">
                     <property name="enabled">
-                     <bool>false</bool>
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string>1</string>
@@ -5233,7 +6089,7 @@ ORDEN DE:</string>
                <item>
                 <widget class="QCheckBox" name="ch_omitir_uso_carp">
                  <property name="text">
-                  <string>Omitir uso carpinteiria del sondeo</string>
+                  <string>Omitir uso interno del sondeo</string>
                  </property>
                 </widget>
                </item>
@@ -5272,54 +6128,38 @@ ORDEN DE:</string>
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <property name="spacing">
-           <number>20</number>
-          </property>
-          <property name="leftMargin">
-           <number>15</number>
-          </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
           <property name="topMargin">
-           <number>5</number>
-          </property>
-          <property name="rightMargin">
-           <number>15</number>
+           <number>2</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>2</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <property name="spacing">
-             <number>15</number>
+           <widget class="QLabel" name="label_8">
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
             </property>
-            <item>
-             <widget class="QLabel" name="label_8">
-              <property name="maximumSize">
-               <size>
-                <width>70</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Vendedor:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="lb_vendedor">
-              <property name="maximumSize">
-               <size>
-                <width>99999</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>TextLabel</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <property name="text">
+             <string>Vendedor:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_vendedor">
+            <property name="maximumSize">
+             <size>
+              <width>500</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_2">
@@ -5329,8 +6169,25 @@ ORDEN DE:</string>
               <height>16777215</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel{
+}</string>
+            </property>
             <property name="text">
-             <string>App Vendedor - Versión 5.8.2</string>
+             <string>App Vendedor - Versión:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_version">
+            <property name="maximumSize">
+             <size>
+              <width>99999</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0.0</string>
             </property>
            </widget>
           </item>

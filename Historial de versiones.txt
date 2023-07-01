@@ -1,5 +1,29 @@
+[version 6.0 (28-06-2023)]
+- Estructura interna del proyecto mejorada /app.
+- Diseño mejorado. Ventana login eliminada e implementada en la App directamente.
+- Instalador .exe creado.
+- Prediccion de lineas implementado. Al agregar lineas en orden manual. Si exede Suelta alerta.
+- Se deshabilito la opcion para copiar detalle de orden a orden manual.
+- Se añadio nueva funcionalidad -> Boton "retiros": Redirige al usuario al SAGR.
+- Se habilito AUTODETECCION DE ACTUALIZACION cuando se inicia la aplicacion.Si existe -> Suelta alerta.
+- Se habilito un boton "Descargar Actualizacion" -> redirige a descargar la Actualizacion.
+- Se añado nueva orden "sin_transformacion" (Siempre con el timbre 'Separar material') al sistema.
+- Prediccion de clientes mejorada. Si existe cliente mediante rut sin telefono y contacto -> se busca en sus ordenes.
+
+
+[Version 5.9 (5.8.3 en git) (21-04-2023)]
+- Prediccion de clientes mejorada. Ahora la prediccion contiene a todas las areas y se carga sin necesidad de seleccionar area.
+- Se elimino los espacios en blanco sobrantes de los items de cada orden de trabajo.
+- Todo en mayusculas: Al registrar una orden de trabajo los campos NOMBRE, CONTACTO Y TODAS LAS DESCRIPCIONES DE LOS PRODUCTOS.
+- Todo en mayusculas: Al actualizar una orden de trabajo los campos NOMBRE, CONTACTO Y TODAS LAS DESCRIPCIONES DE LOS PRODUCTOS.
+- Todo en mayusculas: Al generar un reingreso de forma normal,actualizar,y al crear reingreso manual.
+- Nombre de cliente añadido al reingreso.
+- Portapapeles añadido para copiar items de una orden a otra manual.
+- Mejora y correccion del sondeo de ordenes manuales.
+- Mas ... ver clickup.com/sagot/version5.9
+
 [Version 5.8.2 (30-9-2022)]
-- Se implemento el sondeo de ordenes manuales.
+- Se implemento el sondeo de ordenes manuales.3
 
 [Version 5.8 (5-8-2022)]
 - Gestion de los reingresos habilitada(busqueda,modificar,anular,validar)

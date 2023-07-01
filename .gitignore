@@ -1,11 +1,12 @@
-vendedor-old.py
-formatos
-ordenes
-reingresos
-informes
 dist
 build
 __pycache__
 registry.txt
 dataframe.py
 test.ui
+activar_entorno.bat
+/app/ordenes/
+/app/reingresos/
+/app/informes/
+venv
+*.spec
