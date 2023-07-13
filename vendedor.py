@@ -293,8 +293,6 @@ class Vendedor(QMainWindow):
         self.lb_vendedor.setText('Por Confirmar ...')
         self.txt_contra.setEchoMode(QLineEdit.Password)
         #self.txt_usuario.setFocus()
-        
-        
         logo = QPixmap('app/icono_imagen/madenco logo.png')
         self.lb_logo.setPixmap(logo)
         self.stackedWidget.setCurrentWidget(self.login)
@@ -323,7 +321,7 @@ class Vendedor(QMainWindow):
                     if item[0] == usuario and item[1] == contra and item[6] == 'vendedor':
                         encontrado = True
                         self.datos_usuario = item
-                        #self.guardar_datos()
+                        self.recordar_cuenta()
                         self.inicializar()
                 if encontrado == False:
                     QMessageBox.about(self ,'ERROR', 'Usuario o contraseña invalidas')
@@ -335,6 +333,29 @@ class Vendedor(QMainWindow):
         else:
             QMessageBox.about(self ,'Conexion', 'SIN CONEXION\nIntente una nueva conexion.\n(Boton "Conectar" o "Conectar manual")')
         
+    def recordar_cuenta(self):
+        
+        with open("app/config.json", "r") as f:
+            config = json.load(f)
+
+        if self.ch_recordar_cuenta.isChecked():
+            print('|-----> recordando cuenta ...')
+            config["user"] = self.txt_usuario.text()
+            config["password"] = self.txt_contra.text()
+            print('|-- Cuenta recordada con exito' )
+        if self.ch_olvidar_cuenta.isChecked():
+            print('|--- Olvidando cuenta ..')
+            config["user"] = ''
+            config["password"] = ''
+            print('|-- Cuenta olvidada con exito' )
+
+        with open("app/config.json", "w") as f:
+            json.dump(config, f, indent=4)
+        
+            
+            
+        
+
 
 
     def inicializar(self):
@@ -402,19 +423,19 @@ class Vendedor(QMainWindow):
         print('#'*55)
     def buscar_actualizacion(self):
         if self.url_retiros:
-            print('|-- Buscando nueva version ...')
+            print('|-- Buscando nueva version ---|')
             url = f"{self.url_retiros}/releases"
             try:
                 response = requests.post(url)
                 if response.status_code == 200:
-                    print("La solicitud POST se envió correctamente")
+                    #print("La solicitud POST se envió correctamente")
                     array_strings = response.json()  # La respuesta del servidor se interpreta como JSON y se convierte en un objeto de Python
-                    print('|-- Data: ',array_strings )
+                    #print('|-- Data: ',array_strings )
                     # Recorrer el array de strings e imprimir cada elemento
                     app_name = 'SAGOT_Vendedor'
                     print(f'|-- Buscando app: {app_name} | version superior a : {self.version} ')
                     for installer_name in array_strings:
-                        print('|--',installer_name)
+                        #print('|--',installer_name)
                         aux_app_name = installer_name.split('-')
                         #print(aux_app_name)
                         if aux_app_name[0] == app_name:
@@ -422,7 +443,7 @@ class Vendedor(QMainWindow):
                             if float(aux_app_name[1]) > self.version:
                                 print('|----- Version superior encontrada: ',aux_app_name[1])
                                 url_app = self.url_retiros + '/releases/' + installer_name
-                                print(f'|---> URL DESCARGA: {url_app}' )
+                                #print(f'|---> URL DESCARGA: {url_app}' )
                                 self.url_descarga = url_app
                                 self.btn_descargar_actualizacion.show() #Se muestra
                                 QMessageBox.about(self,'ACTUALIZACION' ,f'Nueva version: {aux_app_name[1]} Disponible.')

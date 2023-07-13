@@ -1,3 +1,7 @@
+[version 6.02 (28-06-2023)]
+- Corrigio error al recordar cuenta durante el login.
+- Se añadio el poder olvidar cuenta durante el login.
+
 [version 6.0 (28-06-2023)]
 - Estructura interna del proyecto mejorada /app.
 - Diseño mejorado. Ventana login eliminada e implementada en la App directamente.

@@ -789,7 +789,7 @@ border:1px solid orange;
 }</string>
             </property>
             <property name="currentIndex">
-             <number>13</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="inicio">
              <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -1046,12 +1046,19 @@ border:1px solid orange;
                             </widget>
                            </item>
                            <item row="2" column="1">
-                            <widget class="QCheckBox" name="checkBox">
+                            <widget class="QCheckBox" name="ch_recordar_cuenta">
                              <property name="focusPolicy">
                               <enum>Qt::NoFocus</enum>
                              </property>
                              <property name="text">
                               <string>Recordar mi cuenta</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item row="2" column="0">
+                            <widget class="QCheckBox" name="ch_olvidar_cuenta">
+                             <property name="text">
+                              <string>Olvidar mi cuenta</string>
                              </property>
                             </widget>
                            </item>
