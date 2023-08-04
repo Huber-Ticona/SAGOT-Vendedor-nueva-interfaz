@@ -1,6 +1,6 @@
 {
-    "version": 6.03,
-    "environment": "production",
+    "version": 6.04,
+    "environment": "development",
     "development": {
         "host": "127.0.0.1",
         "port": 5000,
