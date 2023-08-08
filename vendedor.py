@@ -1,11 +1,12 @@
 import os
+import typing
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from  matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5 import uic
+from PyQt5 import QtCore, uic
 from PyQt5.QtWidgets import QLineEdit,QDialog,QMessageBox,QMainWindow,QCompleter,QTableWidgetItem,QDialogButtonBox,QFormLayout,QApplication,QWidget
-from PyQt5.QtGui import QPixmap , QIcon,QDesktopServices,QMovie
+from PyQt5.QtGui import QPixmap , QIcon,QDesktopServices,QMovie,QColor
 from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel,QSize,QUrl,QTimer
 import rpyc
 import socket
@@ -353,11 +354,6 @@ class Vendedor(QMainWindow):
             json.dump(config, f, indent=4)
         
             
-            
-        
-
-
-
     def inicializar(self):
         print('#'*55)
         print('|-- Inicializando SAGOT Vendedor ...')
@@ -417,7 +413,7 @@ class Vendedor(QMainWindow):
         #se cargan los productos.
         self.cargar_productos()
         #Se busca actualizacion
-        self.buscar_actualizacion()
+        #self.buscar_actualizacion() v6.05 Se creo un launcher
 
         self.stackedWidget.setCurrentWidget(self.inicio)
         print('#'*55)
@@ -547,12 +543,17 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.insertRow(fila)
 
                         self.tableWidget_1.setItem(fila , 0 , QTableWidgetItem(str(consulta[0]))) #INTERNO
+                        aux_tipo_doc = ""
+                        aux_nro_doc = ""
                         if consulta[3] == 0 : #es boleta
-                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'BOLETA' )) #TIPO DOCUMENTO
-                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str(consulta[4]) ))      #NRO DOCUMENTO
+                            aux_tipo_doc = "BOLETA"
+                            aux_nro_doc = str(consulta[4])
                         elif consulta[4] == 0: #es factura
-                            self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( 'FACTURA' )) #TIPO DOCUMENTO
-                            self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( str( consulta[3])))      #NRO DOCUMENTO
+                            aux_tipo_doc = "FACTURA"
+                            aux_nro_doc = str(consulta[3])
+
+                        self.tableWidget_1.setItem(fila , 1 , QTableWidgetItem( aux_tipo_doc )) #TIPO DOCUMENTO
+                        self.tableWidget_1.setItem(fila , 2 , QTableWidgetItem( aux_nro_doc ))      #NRO DOCUMENTO
 
                         self.tableWidget_1.setItem(fila , 3 , QTableWidgetItem(   str(consulta[1]  ))) #FECHA VENTA
                         self.tableWidget_1.setItem(fila , 4 , QTableWidgetItem( str(consulta[6] )   ))      #CLIENTE
@@ -563,6 +564,10 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                         self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
 
+                        if consulta[9]:
+                            self.resaltar_fila_tabla(self.tableWidget_1,fila,2 , consulta[9] )
+                            
+                        
                     if guia != None:
                         no_encontrados = False
                         
@@ -584,7 +589,10 @@ class Vendedor(QMainWindow):
                         self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                         self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                         self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
-
+                        
+                        if consulta[6]:
+                            self.resaltar_fila_tabla(self.tableWidget_1,fila,2 , consulta[6] )
+                        
                     if no_encontrados:
                         QMessageBox.about(self,'Busqueda' ,'Documento NO encontrado mediante el N° Interno.')
                     
@@ -633,6 +641,9 @@ class Vendedor(QMainWindow):
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                             self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
+
+                            if consulta[9]:
+                                self.resaltar_fila_tabla(self.tableWidget_1,fila,2 , consulta[9] )
                     
                     if guias != ():
                         self.guias = guias
@@ -664,7 +675,8 @@ class Vendedor(QMainWindow):
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                             self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
-                
+                            if consulta[6]:
+                                self.resaltar_fila_tabla(self.tableWidget_1,fila,2 , consulta[6] )
 
                     self.vendedores = lista_vendedores
                     for item in self.vendedores:
@@ -713,7 +725,7 @@ class Vendedor(QMainWindow):
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(consulta[5]))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                             self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(   str(consulta[8]))   )      #rut
-                    
+
                     if guias != ():
                         self.guias = guias
                         no_encontrados = False
@@ -744,7 +756,8 @@ class Vendedor(QMainWindow):
                             self.tableWidget_1.setItem(fila , 6 , QTableWidgetItem(   str(detalle['monto_final']))   )      #TOTAL
                             self.tableWidget_1.setItem(fila , 7 , QTableWidgetItem(   str(consulta[7]))   )      #DESPACHO
                             self.tableWidget_1.setItem(fila , 8 , QTableWidgetItem(    detalle['rut']  ) )      #rut
-                
+                            if consulta[6]:
+                                self.resaltar_fila_tabla(self.tableWidget_1,fila,2 , consulta[6] )
 
                     self.vendedores = lista_vendedores
                     for item in self.vendedores:
@@ -760,6 +773,14 @@ class Vendedor(QMainWindow):
             self.aux_tabla = self.tableWidget_1
         else:
             self.conexion_perdida()
+    def resaltar_fila_tabla(self,tabla,fila,columna, data):
+        vinculaciones = json.loads(data)
+        try:
+            if vinculaciones['ordenes']:
+                tabla.item(fila, columna).setBackground(QColor(85, 247, 45))  # Cambia el color de fondo
+                tabla.item(fila, columna).setForeground(QColor(0, 0, 0))  # Cambia el color del texto
+        except KeyError:
+            pass
 
     def rellenar_tabla(self):
         self.tableWidget_1.setRowCount(0)
@@ -836,12 +857,13 @@ class Vendedor(QMainWindow):
             if _item:            
                 interno = self.tableWidget_1.item(seleccion, 0 ).text()
                 aux_tipo_doc = self.tableWidget_1.item(seleccion, 1 ).text()
+                aux_nro_doc = self.tableWidget_1.item(seleccion, 2 ).text()
                 
                 nro_interno = int(interno)
                 self.inter = nro_interno
                 rut = self.tableWidget_1.item(seleccion, 8 ).text()
                 nombre_cliente  = self.tableWidget_1.item(seleccion, 4 ).text()
-                print('ventana crear orden ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno) + ' | rut: ' + rut + ' | cliente: ' + nombre_cliente)
+                print('|-- Ventana crear orden ... para: '+ aux_tipo_doc+ ' - Folio: ' + aux_nro_doc + ' | Interno: ' + str(nro_interno) + ' | rut: ' + rut + ' | cliente: ' + nombre_cliente)
 
                 fecha = datetime.now().date()
                 self.fecha.setCalendarPopup(True)
@@ -865,11 +887,29 @@ class Vendedor(QMainWindow):
                 self.tableWidget_2.setColumnWidth(1,650)
                 self.tableWidget_2.setColumnWidth(2,100)
 
+                
+                
+                
                 #------- se rellena la ventana ------------------#
                 try:
                     if aux_tipo_doc != 'GUIA' :
                         items = self.conexion.root.obtener_item_interno(nro_interno)
                         venta = self.conexion.root.obtener_venta_interno(nro_interno) #v5 nombre obtenido
+                        if venta[6]: #Se verifica existencia de vinculaciones.
+                            vinculaciones = json.loads(venta[6])
+                            print("vinculaciones: ", vinculaciones)
+                            try:
+                                if vinculaciones['ordenes']:
+                                    extra = Extra(vinculaciones,1 ,self)
+                                    if extra.exec():
+                                        print('|-- Dialog aceptado ... Se continua')
+                                        pass
+                                    else:
+                                        print('|-- Dialog no aceptado ... se anula vista crear orden.')
+                                        return
+                            except KeyError:
+                                print('|-- DOC SIN VINCULO(key) A ORDENES ... Continuando a vista crear orden...')
+                                pass
 
                         aux = datetime.fromisoformat(str(venta[3] ) )
                         self.fecha_venta = aux
@@ -890,9 +930,26 @@ class Vendedor(QMainWindow):
                         self.vendedor = venta[4]  #VENDEDOR
                         if venta[5]:
                             self.nombre_2.setText(venta[5]) #nombre del cliente factura
+                        
 
                     else:
                         guia = self.conexion.root.obtener_guia_interno(nro_interno)
+                        if guia[6]:
+                            vinculaciones = json.loads(guia[6])
+                            print("vinculaciones: ", vinculaciones)
+                            try:
+                                if vinculaciones['ordenes']:
+                                    extra = Extra(vinculaciones,1 ,self)
+                                    if extra.exec():
+                                        print('|-- Dialog aceptado ... Se continua')
+                                        pass
+                                    else:
+                                        print('|-- Dialog no aceptado ... se anula vista crear orden.')
+                                        return
+                            except KeyError:
+                                print('|-- DOC SIN VINCULO(key) A ORDENES ... Continuando a vista crear orden...')
+                                pass
+
                         #print(guia)
                         detalle = json.loads(guia[2])
                         aux = datetime.fromisoformat(str(guia[4] ) ) #fecha de venta
@@ -919,7 +976,7 @@ class Vendedor(QMainWindow):
                     self.rellenar()
                     #----- new -----
                     datos_cliente = self.conexion.root.obtener_cliente(rut)
-                    print(datos_cliente)
+                    print(f"Rut: {rut} -> Datos cliente: {datos_cliente}")
                     if datos_cliente:
                         print('cliente encontrado --> se rellenan sus datos')
                         index = None
@@ -4522,7 +4579,7 @@ class InputDialog2(QDialog):
         self.setWindowTitle(titulo)
         self.txt1 = QLineEdit(self)
         self.inicializar()
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self);
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 
         layout = QFormLayout(self)
         layout.addRow(label1, self.txt1)
@@ -4549,7 +4606,6 @@ class InputDialog3(QDialog):
         self.lb_estado.setText(estado)
         self.setMinimumHeight(300)  # Establecer una altura mínima
 
-
     def guardar(self):
         self.accept()
     def cancelar(self):
@@ -4557,6 +4613,45 @@ class InputDialog3(QDialog):
     def getInputs(self):
         return self.comboBox.currentText()
 
+class Extra(QDialog):
+    def __init__(self, data , opciones, parent = None):
+        super().__init__(parent)
+        uic.loadUi('app/ui/extra.ui', self)
+        self.data = data # Vinculaciones
+        self.btn_continuar.clicked.connect(self.continuar)
+        self.btn_cancelar.clicked.connect(self.cancelar)
+        self.fr_header_info.hide()
+        self.inicializar()
+
+    def inicializar(self):
+        print('|-- INICIALIZANDO QDIALOG EXTRA VINCULACIONES...')
+        try:
+            grouped_data = {}  # Diccionario para agrupar los valores
+            print(f"|----- Ordenes: {self.data['ordenes']}")
+            for item in self.data['ordenes']:
+                item = json.loads(item)
+                tipo = item["tipo"]
+                folio = item["folio"]
+                if tipo not in grouped_data:
+                    grouped_data[tipo] = [folio]
+                else:
+                    grouped_data[tipo].append(folio)
+            print(f"|----- grouped data: {grouped_data}")
+            row = 0
+            for tipo, valores in grouped_data.items():
+                self.tableWidget.insertRow(row)
+                self.tableWidget.setItem(row, 0, QTableWidgetItem(tipo.upper()))
+                self.tableWidget.setItem(row, 1, QTableWidgetItem("Folio: "+str(valores)))
+                row += 1
+        except KeyError:
+            pass
+    def continuar(self):
+        self.accept()
+    def cancelar(self):
+        self.reject()
+
+
+    
 class Canvas(FigureCanvas):
     def __init__(self,parent,x,y, tipo_grafico,titulo):
         self.fig , self.ax = plt.subplots(figsize=(6, 4), constrained_layout=True )

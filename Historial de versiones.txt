@@ -1,3 +1,5 @@
+[version 6.05 (8-8-2023)]
+- Se añade notificacion cuando se quiere crear una orden de trabajo y dicho documento de venta ya tiene una orden asociada.
 [version 6.02 (28-06-2023)]
 - Corrigio error al recordar cuenta durante el login.
 - Se añadio el poder olvidar cuenta durante el login.

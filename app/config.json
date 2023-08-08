@@ -1,5 +1,5 @@
 {
-    "version": 6.04,
+    "version": 6.05,
     "environment": "development",
     "development": {
         "host": "127.0.0.1",
