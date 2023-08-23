@@ -82,10 +82,8 @@ class Vendedor(QMainWindow):
         self.lista_codigos = []
         self.style_line_edit = ""
         #Login v6.0
-        self.btn_descargar_actualizacion.hide() #Se oculta, Solo se muestra si ahi descargas.
         self.inicializar_login()
         self.btn_iniciar.clicked.connect(self.iniciar_session)
-        self.btn_descargar_actualizacion.clicked.connect(self.abrir_descarga)
         #self.stackedWidget.setCurrentWidget(self.inicio)
         
 
@@ -123,6 +121,7 @@ class Vendedor(QMainWindow):
         self.btn_atras_4.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
 
         #modificar orden
+        self.datos_orden = {}  #Datos necesarios para crear,actualizar una orden de trabajo.
         self.detalle = None
         self.aux_obs = '' # respaldo de observacion
         self.datosTablaOrden = None # Respalda la tabla de la orden.
@@ -135,6 +134,8 @@ class Vendedor(QMainWindow):
         #v6.0 deshabilitados, hide en .ui
         #self.btn_copiar_detalle.clicked.connect(self.guardarDetalleOrden)
         #self.btn_pegar_detalle.clicked.connect(self.pegarDetalleOrden)
+        # v6.1 clonar orden
+        self.btn_duplicar_orden.clicked.connect(self.duplicar_orden)
 
         self.r_uso_interno_5.stateChanged.connect( lambda: self.cambiar_observacion('modificar') ) #v5.9
         self.r_separar_material_5.stateChanged.connect(lambda: self.cambiar_observacion('modificar') ) #v5.9
@@ -223,7 +224,7 @@ class Vendedor(QMainWindow):
         self.btn_orden_manual.clicked.connect(self.inicializar_ingreso_manual)
         self.btn_informe.clicked.connect(self.inicializar_informe)
         self.btn_atras.clicked.connect(self.cerrar_sesion)
-        self.btn_conectar.clicked.connect(self.conectar)
+        self.btn_conectar.clicked.connect(lambda: self.executor.submit(self.conectar) )
         self.btn_manual.clicked.connect(self.conectar_manual)
         self.btn_estadisticas.clicked.connect(self.inicializar_estadisticas)
         self.btn_reingreso.clicked.connect(self.inicializar_buscar_reingreso)
@@ -244,7 +245,10 @@ class Vendedor(QMainWindow):
             self.host = config[environment]['host']
             self.puerto = config[environment]['port']
             self.url_retiros = config[environment]['url_retiros']
-            self.conectar()
+            print('|-- Creando Thread para crear conexion. ')
+            self.executor.submit(self.conectar)
+            print('|-- Threada para crear conexion creado. ')
+            #self.conectar()
         except KeyError:
             print('No host - port in config ')
             pass
@@ -297,14 +301,19 @@ class Vendedor(QMainWindow):
         logo = QPixmap('app/icono_imagen/madenco logo.png')
         self.lb_logo.setPixmap(logo)
         self.stackedWidget.setCurrentWidget(self.login)
-        print('|-- Loading')
+        #Loagind de conexion
+        movie = QMovie("app/icono_imagen/conn2.gif")  # Asegúrate de tener el archivo GIF en la misma carpeta
+        self.lb_gif.setMovie(movie)
+        movie.start()
+
+        print('|-- Mostrando Loading')
         self.stackedWidgetLogin.setCurrentWidget(self.loading)
         #Loading
         movie = QMovie("app/icono_imagen/gif.gif")
         self.lb_loading.setMovie(movie)
         movie.start()
-        # Retrasar la transición al input después de 6 segundos
-        QTimer.singleShot(2000, lambda: (
+        # Retrasar la transición al input después de X segundos
+        QTimer.singleShot(1000, lambda: (
             print('|-- Input'),
             self.stackedWidgetLogin.setCurrentWidget(self.input),
             self.btn_iniciar.setDefault(True)  # Establecer el botón como predeterminado para que se active al presionar Enter
@@ -417,47 +426,13 @@ class Vendedor(QMainWindow):
 
         self.stackedWidget.setCurrentWidget(self.inicio)
         print('#'*55)
-    def buscar_actualizacion(self):
-        if self.url_retiros:
-            print('|-- Buscando nueva version ---|')
-            url = f"{self.url_retiros}/releases"
-            try:
-                response = requests.post(url)
-                if response.status_code == 200:
-                    #print("La solicitud POST se envió correctamente")
-                    array_strings = response.json()  # La respuesta del servidor se interpreta como JSON y se convierte en un objeto de Python
-                    #print('|-- Data: ',array_strings )
-                    # Recorrer el array de strings e imprimir cada elemento
-                    app_name = 'SAGOT_Vendedor'
-                    print(f'|-- Buscando app: {app_name} | version superior a : {self.version} ')
-                    for installer_name in array_strings:
-                        #print('|--',installer_name)
-                        aux_app_name = installer_name.split('-')
-                        #print(aux_app_name)
-                        if aux_app_name[0] == app_name:
-                            print(f'|---- App vendedor encontrada -> version: {aux_app_name[1]}')
-                            if float(aux_app_name[1]) > self.version:
-                                print('|----- Version superior encontrada: ',aux_app_name[1])
-                                url_app = self.url_retiros + '/releases/' + installer_name
-                                #print(f'|---> URL DESCARGA: {url_app}' )
-                                self.url_descarga = url_app
-                                self.btn_descargar_actualizacion.show() #Se muestra
-                                QMessageBox.about(self,'ACTUALIZACION' ,f'Nueva version: {aux_app_name[1]} Disponible.')
-                else:
-                    print("Error al enviar la solicitud POST:", response.status_code)
-            except:
-                print('|-- Conexion con servidor de Descarga. Fallida')
-                pass
-
-            print('|-- Fin busqueda nueva version ...')
-    def abrir_descarga(self):
-        if self.url_descarga:
-            QDesktopServices.openUrl(QUrl(self.url_descarga))
-            QMessageBox.about(self,'ACTUALIZACION' ,f'La descarga se inicio.\nCierre esta aplicacion e Instale la nueva version antes de continuar.')
-            
-
-
+    
     def conectar(self):
+        print('|-- Obteniendo conexion ... ')
+        self.btn_conectar.setEnabled(False)
+        self.lb_conexion.hide()
+        self.lb_gif.show()
+
         if self.conexion == None:
             try:
                 if self.host and self.puerto:
@@ -471,6 +446,14 @@ class Vendedor(QMainWindow):
                 
             except socket.error:
                 self.lb_conexion.setText('SERVIDOR FUERA DE RED')
+
+        self.lb_gif.hide()
+        self.btn_conectar.setEnabled(True)
+        self.lb_conexion.show()
+
+        print('|-- Conexion finalizada. ')
+
+
     def conectar_manual(self):
         dialog = InputDialog('HOST:','PUERTO:','CONECTAR MANUAL', self)
         dialog.resize(250,100)   
@@ -1420,6 +1403,9 @@ class Vendedor(QMainWindow):
                 self.nro_orden = int(orden)
                 tipo = self.lb_tipo_orden.text()
                 print('----------- MODIFICAR ORDEN ... para: '+ tipo + ' -->' + str(self.nro_orden) + ' -------------')
+                self.datos_orden["tipo_orden"] = tipo
+                self.datos_orden["nro_orden"] = self.nro_orden
+
                 self.tb_modificar_orden.setColumnWidth(0,100)
                 self.tb_modificar_orden.setColumnWidth(1,650)
                 self.tb_modificar_orden.setColumnWidth(2,100)
@@ -1770,13 +1756,42 @@ class Vendedor(QMainWindow):
             abrir = None  # Puedes asignar un valor por defecto o manejar el error de otra manera
 
         print('|-- Verificando existencia del PDF ....')
-        print(self.tipo_doc)
+        datos = [ str(self.nro_orden) ,str(self.fecha_orden.strftime("%d-%m-%Y")),self.nombre_5.text(),self.telefono_5.text(), str((self.fecha_5.date().toPyDate()).strftime("%d-%m-%Y")),cantidades,descripciones,enchapado ,self.contacto_5.text(),self.oce_5.text() ,self.vendedor ]
+        
+        
+
+        self.datos_orden["interno"] = self.inter
+        self.datos_orden["nro_doc"] = self.nro_doc
+        self.datos_orden["tipo_doc"] = self.tipo_doc
+
+        self.datos_orden["nombre"]= self.nombre_5.text()
+        self.datos_orden["telefono"] = self.telefono_5.text()
+        self.datos_orden["fecha_orden"] = self.lb_fecha_orden_5.text()
+        self.datos_orden["fecha_venta"] = self.date_venta_5.date().toString("yyyy-MM-dd")
+        self.datos_orden["fecha_estimada"] = self.fecha_5.date().toString("yyyy-MM-dd")
+        self.datos_orden["oce"] = self.oce_5.text()
+
+        self.datos_orden["enchape"] = 'NO'
+        if self.r_enchape_5.isChecked(): #enchape
+            self.datos_orden["despacho"] = 'SI'
+
+        self.datos_orden["despacho"] = 'NO'
+        if 'despacho' in watermarks:
+            self.datos_orden["despacho"] = 'SI'
+
+        self.datos_orden["vendedor"] = self.txt_vendedor_5.text()
+        self.datos_orden["cont"] = self.contacto_5.text()#contacto
+        self.datos_orden["detalle"] = json.dumps(self.detalle)
+
+        self.datos_orden["datos"] = datos
+        self.datos_orden["datos_pdf"] = datos_pdf
+        self.datos_orden["watermarks"] = watermarks
+
         if abrir and (not os.path.isfile(abrir)) :
             #v6.0 
             if tipo == 'SIN_TRANSFORMACION':
                 watermarks.append('material')
 
-            datos = ( str(self.nro_orden) ,str(self.fecha_orden.strftime("%d-%m-%Y")),self.nombre_5.text(),self.telefono_5.text(), str((self.fecha_5.date().toPyDate()).strftime("%d-%m-%Y")),cantidades,descripciones,enchapado ,self.contacto_5.text(),self.oce_5.text() ,self.vendedor )
             self.crear_pdf(datos, datos_pdf ,watermarks)
             print('|--Pdf no encontrado, pero se acaba de crear')
         else:
@@ -1945,7 +1960,56 @@ class Vendedor(QMainWindow):
                     QMessageBox.about(self, 'ERROR', 'Solo ingrese numeros en el campo "Telefono" ')                   
         else:
             QMessageBox.about(self, 'Sugerencia', 'Los campos nombre, telefono son obligatorios.')
- 
+    
+    def duplicar_orden(self):
+
+        datos = self.datos_orden["datos"]
+        datos_pdf = self.datos_orden["datos_pdf"]
+        watermarks = self.datos_orden["watermarks"]
+
+        interno = self.datos_orden["interno"]
+        nro_doc = self.datos_orden["nro_doc"]
+        tipo_doc = self.datos_orden["tipo_doc"]
+        enchape = self.datos_orden["enchape"]
+
+        nombre= self.datos_orden["nombre"]
+        telefono = self.datos_orden["telefono"]
+        fecha_orden = str(datetime.now().date())
+        fecha_venta = self.datos_orden["fecha_venta"]
+        fecha_estimada = self.datos_orden["fecha_estimada"]
+        oce = self.datos_orden["oce"]
+        despacho = self.datos_orden["despacho"]
+        vendedor = self.datos_orden["vendedor"]
+        cont = self.datos_orden["cont"] #contacto
+        detalle = self.datos_orden["detalle"]
+
+        # DUPLICAR ORDEN DE TRABAJO
+        self.nro_orden = 0
+        if datos_pdf["tipo"] == "dimensionado":
+            self.nro_orden = self.conexion.root.registrar_orden_dimensionado( interno , str(fecha_venta), nombre , telefono, str(fecha_estimada) , detalle,tipo_doc, nro_doc,enchape,despacho,str(fecha_orden),cont,oce,vendedor)
+            datos[0] = str(self.nro_orden)
+        #v6.0
+        elif datos_pdf["tipo"]in ["elaboracion","carpinteria", "pallets","sin_transformacion"]:
+
+            if datos_pdf["tipo"] == "sin_transformacion":
+                watermarks.append('material')
+
+            self.nro_orden = self.conexion.root.registrar_orden_general(datos_pdf["tipo"] , nombre,telefono,str(fecha_orden), str(fecha_estimada),nro_doc,tipo_doc,cont,oce, despacho, interno ,detalle, str(fecha_venta), vendedor)                    
+            datos[0] = str(self.nro_orden)
+
+        else:
+            QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
+
+        if self.nro_orden != 0:
+            self.crear_vinculo(datos_pdf["tipo"])
+            print(f'(Duplicar orden) Creando PDF {datos_pdf["tipo"]} ...')
+            self.crear_pdf(datos, datos_pdf ,watermarks)
+            self.inicializar_buscar_venta()
+            boton = QMessageBox.question(self, f'Orden Duplicada correctamente', f'Nueva orden: {datos_pdf["tipo"]}| Nuevo Folio: {self.nro_orden} .\nDesea abrir el duplicado de Orden?')
+            if boton == QMessageBox.Yes:
+                self.ver_pdf(datos_pdf["tipo"])
+                
+
     def validar_manual_obs(self,obs):
         if self.manual:
             if obs != '':
@@ -4423,6 +4487,7 @@ class Vendedor(QMainWindow):
         self.fecha_orden = None #FECHA en la que se creo la orden, formato DATE 
         self.nro_reingreso = 0 #folio del reingreso
         self.aux_vendedor = None
+        self.datos_orden = {}
 
 # ------ Funciones del menu -----------
     def cerrar_sesion(self):
@@ -4620,6 +4685,7 @@ class Extra(QDialog):
         self.data = data # Vinculaciones
         self.btn_continuar.clicked.connect(self.continuar)
         self.btn_cancelar.clicked.connect(self.cancelar)
+        self.tableWidget.setColumnWidth(1,350)
         self.fr_header_info.hide()
         self.inicializar()
 

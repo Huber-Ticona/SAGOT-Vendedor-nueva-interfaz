@@ -12,3 +12,4 @@ venv
 *.spec
 Vendedor_setup.iss
 installer
+copiar_archivos.bat
