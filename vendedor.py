@@ -1,5 +1,4 @@
 import os
-import typing
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +22,8 @@ from openpyxl.utils import get_column_letter
 from subprocess import Popen
 from concurrent.futures import ThreadPoolExecutor
 from random import randint
-import requests 
+
+from app.modulos.helpers import Imagen
 
 class Vendedor(QMainWindow):
     ventana_login = 0
@@ -96,10 +96,12 @@ class Vendedor(QMainWindow):
 
         #crear orden
         self.btn_registrar_2.clicked.connect(self.registrar_orden)
+        self.btn_vale_despacho.clicked.connect(self.registrar_vale_despacho)
         self.btn_atras_2.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
         self.btn_agregar.clicked.connect(self.agregar)
         self.btn_eliminar.clicked.connect(self.eliminar)
         self.btn_rellenar.clicked.connect(self.rellenar)
+
         self.completer = QCompleter()
         self.completer.activated.connect(self.rellenar_datos_cliente)
         self.nombres = []
@@ -337,11 +339,13 @@ class Vendedor(QMainWindow):
                     QMessageBox.about(self ,'ERROR', 'Usuario o contraseña invalidas')
 
             except EOFError:
-                QMessageBox.about(self ,'Conexion', 'El servidor no responde')
+                #QMessageBox.about(self ,'Conexion', 'El servidor no responde')
+                self.conexion_perdida()
             except AttributeError:
                 pass
         else:
-            QMessageBox.about(self ,'Conexion', 'SIN CONEXION\nIntente una nueva conexion.\n(Boton "Conectar" o "Conectar manual")')
+            #QMessageBox.about(self ,'Conexion', 'SIN CONEXION\nIntente una nueva conexion.\n(Boton "Conectar" o "Conectar manual")')
+            self.conexion_perdida()
         
     def recordar_cuenta(self):
         
@@ -425,6 +429,17 @@ class Vendedor(QMainWindow):
         #self.buscar_actualizacion() v6.05 Se creo un launcher
 
         self.stackedWidget.setCurrentWidget(self.inicio)
+        # Se registran las conexiones de los botones
+        button_connections = {
+            self.btn_ver_pdf: self.ver_pdf,
+            self.btn_crear_pdf: self.crear_pdf,
+            # ... y así sucesivamente para todos los botones
+        }
+
+        """ for button, function in button_connections.items():
+            button.clicked.connect(function) """
+        
+
         print('#'*55)
     
     def conectar(self):
@@ -432,21 +447,28 @@ class Vendedor(QMainWindow):
         self.btn_conectar.setEnabled(False)
         self.lb_conexion.hide()
         self.lb_gif.show()
+        
 
-        if self.conexion == None:
+        if self.conexion is not None:
+            try:
+                # Realiza un ping para verificar la conexión
+                self.conexion.ping()
+                self.lb_conexion.setText('CONECTADO')
+            except (ConnectionResetError, EOFError):
+                self.conexion = None
+                self.lb_conexion.setText('CONEXIÓN PERDIDA')
+        else:
             try:
                 if self.host and self.puerto:
-                    self.conexion = rpyc.connect(self.host , self.puerto)
+                    self.conexion = rpyc.connect(self.host, self.puerto)
                     self.lb_conexion.setText('CONECTADO')
                 else:
                     self.lb_conexion.setText('Host y Puerto no encontrados')
-
             except ConnectionRefusedError:
                 self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
-                
             except socket.error:
                 self.lb_conexion.setText('SERVIDOR FUERA DE RED')
-
+        print("| (CONEXION) : ",self.conexion)
         self.lb_gif.hide()
         self.btn_conectar.setEnabled(True)
         self.lb_conexion.show()
@@ -472,7 +494,6 @@ class Vendedor(QMainWindow):
                     QMessageBox.about(self,'ERROR' ,'Ingrese solo numeros en el PUERTO')
                 except ConnectionRefusedError:
                     self.lb_conexion.setText('EL SERVIDOR NO RESPONDE')
-                    
                 except socket.error:
                     self.lb_conexion.setText('SERVIDOR FUERA DE LA RED')
                     #QMessageBox.about(self,'ERROR' ,'No se puede establecer la conexion con el servidor')
@@ -832,7 +853,7 @@ class Vendedor(QMainWindow):
                 self.tableWidget_1.removeRow(i - k)
                 k += 1
 
-# ------------ FUNCIONES PARA CREAR ORDEN ---------------------
+# ------------ FUNCIONES PARA VISTA CREAR ORDEN ---------------------
     def inicializar_crear_orden(self) :
         seleccion = self.tableWidget_1.currentRow()
         if seleccion != -1:
@@ -1083,6 +1104,40 @@ class Vendedor(QMainWindow):
             self.contacto_2.setText(str(self.contactos[index]))
         print('------- QCOMPLETE FIN --------------')
 
+    def registrar_vale_despacho(self):
+        print("|-- Visualizando VISTA CREAR VALE DESPACHO ...")
+        config = {
+            "model_nombres" : self.nombres
+        }
+        dialog = ValeDespacho(config,self )
+        if dialog.exec():
+            print("Dialog cerrado.")
+            datos = dialog.obtener_datos_validos()
+            datos["vendedor"] = self.datos_usuario[8]
+            datos["interno"] = self.inter
+            print("Datos: ",datos)
+            
+            if self.conexion:
+                try:
+                    vale_id = self.conexion.root.registrar_vale_despacho(datos)
+                    if vale_id:
+                        print("Vale creado exitosamente. id: ", vale_id)
+                        QMessageBox.about(self,"Vale registrado",f"Se genero el vale Nro {vale_id} exitosamente.")
+                        """ datos.pop('interno')
+                        datos.pop('vendedor')
+                        Imagen.crear_vale_despacho(datos) """
+                        self.conexion.root.imprimir_vale_despacho(vale_id)
+                    else:
+                        print("error al crear vale.")
+                        QMessageBox.about(self,"ERROR",f"Se genero un error al generar el vale.")
+                    
+                except EOFError:
+                    self.conexion_perdida()
+
+            else:
+                self.conexion_perdida()
+        
+        print("|-- FIN VISTA CREAR VALE DESPACHO. --")
 
     def registrar_orden(self):
         nombre = self.nombre_2.text().upper() #v5.9
@@ -1206,7 +1261,7 @@ class Vendedor(QMainWindow):
         else:
             QMessageBox.about(self, 'Sugerencia', 'Ingrese un nombre antes de continuar')
         
-# ------ Funciones de buscar orden de trabajo -------------
+# ------ Funciones de VISTA buscar orden de trabajo -------------
     def inicializar_buscar_orden(self):
         self.anterior = None #SABER SI VUELVE A ESTADISTICAS O AQUI
         self.anterior2 = None #SABER SI VUELVE A GESTION REINGRESOS O AKI
@@ -1781,7 +1836,7 @@ class Vendedor(QMainWindow):
 
         self.datos_orden["vendedor"] = self.txt_vendedor_5.text()
         self.datos_orden["cont"] = self.contacto_5.text()#contacto
-        self.datos_orden["detalle"] = json.dumps(self.detalle)
+        self.datos_orden["detalle"] = self.detalle
 
         self.datos_orden["datos"] = datos
         self.datos_orden["datos_pdf"] = datos_pdf
@@ -1963,51 +2018,103 @@ class Vendedor(QMainWindow):
     
     def duplicar_orden(self):
 
-        datos = self.datos_orden["datos"]
         datos_pdf = self.datos_orden["datos_pdf"]
         watermarks = self.datos_orden["watermarks"]
-
+        
         interno = self.datos_orden["interno"]
         nro_doc = self.datos_orden["nro_doc"]
         tipo_doc = self.datos_orden["tipo_doc"]
-        enchape = self.datos_orden["enchape"]
+        enchapado = self.datos_orden["enchape"]
+        if self.r_enchape_5.isChecked():
+            enchapado = 'SI'
 
-        nombre= self.datos_orden["nombre"]
-        telefono = self.datos_orden["telefono"]
-        fecha_orden = str(datetime.now().date())
+
+        nombre= self.nombre_5.text().upper() #self.datos_orden["nombre"]
+        telefono = self.telefono_5.text() #self.datos_orden["telefono"]
+        fecha_orden = datetime.now().date()
         fecha_venta = self.datos_orden["fecha_venta"]
-        fecha_estimada = self.datos_orden["fecha_estimada"]
-        oce = self.datos_orden["oce"]
+        fecha_estimada = self.fecha_5.date().toPyDate() # self.datos_orden["fecha_estimada"]
+        oce =  self.oce_5.text() #self.datos_orden["oce"]
+
         despacho = self.datos_orden["despacho"]
+        if self.r_despacho_5.isChecked():
+            despacho = 'SI'
+            watermarks.append('despacho') #v6.06
+
         vendedor = self.datos_orden["vendedor"]
-        cont = self.datos_orden["cont"] #contacto
+        cont = self.contacto_5.text().upper() #self.datos_orden["cont"] #contacto
         detalle = self.datos_orden["detalle"]
 
-        # DUPLICAR ORDEN DE TRABAJO
-        self.nro_orden = 0
-        if datos_pdf["tipo"] == "dimensionado":
-            self.nro_orden = self.conexion.root.registrar_orden_dimensionado( interno , str(fecha_venta), nombre , telefono, str(fecha_estimada) , detalle,tipo_doc, nro_doc,enchape,despacho,str(fecha_orden),cont,oce,vendedor)
-            datos[0] = str(self.nro_orden)
-        #v6.0
-        elif datos_pdf["tipo"]in ["elaboracion","carpinteria", "pallets","sin_transformacion"]:
+        print("duplicando ...")
 
-            if datos_pdf["tipo"] == "sin_transformacion":
-                watermarks.append('material')
-
-            self.nro_orden = self.conexion.root.registrar_orden_general(datos_pdf["tipo"] , nombre,telefono,str(fecha_orden), str(fecha_estimada),nro_doc,tipo_doc,cont,oce, despacho, interno ,detalle, str(fecha_venta), vendedor)                    
-            datos[0] = str(self.nro_orden)
-
+        cantidades,descripciones,valores_neto,vacias,correcto,lineas_totales = self.validar_item_orden(self.tb_modificar_orden)
+        x = [cantidades,descripciones,valores_neto,vacias,correcto,lineas_totales]
+        print(x)
+        datos = [0,str(fecha_orden.strftime("%d-%m-%Y")),nombre,telefono,str((fecha_estimada).strftime("%d-%m-%Y")),cantidades,descripciones,enchapado,cont,oce,vendedor ]
+        
+        if vacias:
+            QMessageBox.about(self, 'Alerta' ,'Una fila y/o columna esta vacia, rellenela para continuar' )
+        elif lineas_totales > 14:
+            QMessageBox.about(self, 'Alerta' ,'Filas totales: '+str(lineas_totales) + ' - El maximo soportado por el formato de la orden es de 14 filas.' )
+        elif correcto == False:
+            QMessageBox.about(self,'Alerta', 'Se encontro un error en una de las cantidades o Valores neto ingresados. Solo ingrese numeros en dichos campos')
         else:
-            QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')    
+            print("| (DUPLICAR ORDEN): TODOS LOS DATOS CORRECTOS")
+            print(f"| DETALLE: {detalle} -> tipo: {type(detalle)}")
 
-        if self.nro_orden != 0:
-            self.crear_vinculo(datos_pdf["tipo"])
-            print(f'(Duplicar orden) Creando PDF {datos_pdf["tipo"]} ...')
-            self.crear_pdf(datos, datos_pdf ,watermarks)
-            self.inicializar_buscar_venta()
-            boton = QMessageBox.question(self, f'Orden Duplicada correctamente', f'Nueva orden: {datos_pdf["tipo"]}| Nuevo Folio: {self.nro_orden} .\nDesea abrir el duplicado de Orden?')
-            if boton == QMessageBox.Yes:
-                self.ver_pdf(datos_pdf["tipo"])
+            print(f'| OLD CANTIDADES: {detalle["cantidades"]}')
+            print(f"| OLD descripciones: {detalle['descripciones']}")
+            print(f"| OLD netos: {detalle['valores_neto']}")
+
+            print(f"| NEW CANTIDADES: {cantidades}")
+            print(f"| NEW descripciones: {descripciones}")
+            print(f"| NEW netos: {valores_neto}")
+
+            detalle["cantidades"] = cantidades
+            detalle["descripciones"] = descripciones
+            detalle["valores_neto"] = valores_neto
+
+            detalle = json.dumps(detalle)
+
+            dialog = Duplicar(self)
+
+            if dialog.exec():
+                print("DIALOG ACEPTADO")
+                datos_pdf["tipo"] = dialog.obtener_area()
+
+                # DUPLICAR ORDEN DE TRABAJO
+                self.nro_orden = 0
+                if datos_pdf["tipo"] == "dimensionado":
+                    self.nro_orden = self.conexion.root.registrar_orden_dimensionado( interno , str(fecha_venta), nombre , telefono, str(fecha_estimada) , detalle,tipo_doc, nro_doc,enchapado,despacho,str(fecha_orden),cont,oce,vendedor)
+                    datos[0] = str(self.nro_orden)
+                #v6.0
+                elif datos_pdf["tipo"]in ["elaboracion","carpinteria", "pallets","sin_transformacion"]:
+
+                    if datos_pdf["tipo"] == "sin_transformacion":
+                        watermarks.append('material')
+
+                    self.nro_orden = self.conexion.root.registrar_orden_general(datos_pdf["tipo"] , nombre,telefono,str(fecha_orden), str(fecha_estimada),nro_doc,tipo_doc,cont,oce, despacho, interno ,detalle, str(fecha_venta), vendedor)                    
+                    datos[0] = str(self.nro_orden)
+                else:
+                    QMessageBox.about(self, 'ERROR', 'Seleccione un tipo de orden a generar, antes de proceder a registrar')  
+
+                # Se crea vinculo , PDF y se muestra.
+                if self.nro_orden != 0:
+                    self.crear_vinculo(datos_pdf["tipo"])
+                    print(f'(Duplicar orden) Creando PDF {datos_pdf["tipo"]} ...')
+                    self.crear_pdf(datos, datos_pdf ,watermarks)
+                    self.inicializar_buscar_venta()
+                    boton = QMessageBox.question(self, f'Orden Duplicada correctamente', f'Nueva orden: {datos_pdf["tipo"]}| Nuevo Folio: {self.nro_orden} .\nDesea abrir el duplicado de Orden?')
+                    if boton == QMessageBox.Yes:
+                        self.ver_pdf(datos_pdf["tipo"]) 
+            else:
+                print("Dialog rechazado")
+                return
+            
+            print("FIN DUPLICAR")
+
+
+        
                 
 
     def validar_manual_obs(self,obs):
@@ -4362,6 +4469,40 @@ class Vendedor(QMainWindow):
                 else:
                     #print('clave invalida')
                     QMessageBox.about(self,'ERROR' ,'La clave ingresada no es valida')
+    
+    def validar_item_orden(self,tabla):
+        lineas_totales = 0 #Para validar el total de lineas a mostrar en el PDF. (max 14 lineas)
+        cant = tabla.rowCount() #cantidad de items de la tabla
+        vacias = False
+        correcto = True
+        cantidades = []
+        descripciones = []
+        valores_neto = []
+        i = 0
+        while i< cant:
+            cantidad = tabla.item(i,0) #Collumna cantidades
+            descripcion = tabla.item(i,1) #Columna descripcion
+            neto = tabla.item(i,2) #Columna de valor neto
+            if cantidad != None and descripcion != None and neto != None :  #Checkea si se creo una fila, esta no este vacia.
+                if cantidad.text() != '' and descripcion.text() != '' and neto.text() != '' :  #Chekea si se modifico una fila, esta no este vacia
+                    try: 
+                        nueva_cant = cantidad.text().replace(',','.',3)
+                        nuevo_neto = neto.text().replace(',','.',3)
+                        cantidades.append( float(nueva_cant) )
+                        descripciones.append((descripcion.text()).upper() ) #v5.9
+                        lineas = self.separar(descripcion.text())
+                        lineas_totales = lineas_totales + len(lineas)
+                        valores_neto.append(float(nuevo_neto))
+
+                    except ValueError:
+                        correcto = False
+                else:
+                    vacias=True
+            else:
+                vacias = True
+            i+=1
+        return cantidades,descripciones,valores_neto,vacias,correcto,lineas_totales
+    
     def buscar_nro_orden(self,tupla):
         mayor = 0
         for item in tupla:
@@ -4716,6 +4857,97 @@ class Extra(QDialog):
     def cancelar(self):
         self.reject()
 
+class ValeDespacho(QDialog):
+    def __init__(self , config , parent = None):
+        super().__init__(parent)
+        uic.loadUi("app/ui/vale_despacho.ui", self)
+        self.config = config
+        self.completer = QCompleter()
+        self.btn_crear_vale.clicked.connect(self.validar_datos) # Se acepta el dialog.
+        self.btn_cancelar.clicked.connect(self.reject)
+        self.inicializar()
+
+    def inicializar(self):
+        logo = QPixmap("app/icono_imagen/madenco logo.png")
+        self.lb_logo.setPixmap(logo)
+
+        self.dt_fecha_estimada.setCalendarPopup(True)
+        fecha_actual = datetime.now()
+        self.dt_fecha_estimada.setDate( fecha_actual.date() )
+        self.dt_fecha_estimada.setTime( fecha_actual.time() )
+
+        print(type(self.config["model_nombres"]))
+        model = QStringListModel(self.config["model_nombres"])
+        
+        self.completer.setModel(model)
+        self.completer.setMaxVisibleItems(7)
+        self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+        #print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
+        self.txt_nombre.setCompleter(self.completer)
+
+    def validar_datos(self):
+        limites_min = [3,5,5,8,3]
+        params = dict(
+            nombre = self.txt_nombre.text() ,
+            direccion = self.txt_direccion.text(),
+            referencia = self.txt_referencia.text(),
+            telefono = self.txt_telefono.text(),
+            contacto = self.txt_contacto.text()
+            )
+        index = 0
+        estado = True
+        for key,value in params.items():
+            if len(value) >= limites_min[index]:
+                print(f"|(QDialog)| Key: {key} cumple el limite {limites_min[index]}.")
+            else:
+                print(f"|(QDialog)| Key: {key} no cumple el limite {limites_min[index]}.")
+                estado = False
+            index +=1
+        if estado:
+            self.accept()
+        else:
+            QMessageBox.about(self,"Datos Incompletos", "Algun dato incorrecto.")
+
+    def obtener_datos_validos(self):
+        print("(QDialog) Obteniendo datos...")
+
+        """ Parametros voucher Despacho """
+        params = dict(
+            nombre = self.txt_nombre.text() ,
+            direccion = self.txt_direccion.text(),
+            referencia = self.txt_referencia.text(),
+            telefono = self.txt_telefono.text(),
+            contacto = self.txt_contacto.text(),
+            fecha_estimada = str(self.dt_fecha_estimada.dateTime().toPyDateTime())
+            )
+        return params
+
+class Duplicar(QDialog):
+    def __init__(self,parent = None):
+        super().__init__(parent)
+        uic.loadUi("app/ui/duplicar.ui",self)
+        self.area = None
+        self.btn_aceptar.clicked.connect(self.actualizar_area)
+        self.btn_cancelar.clicked.connect(self.reject)
+    
+    def actualizar_area(self):
+        if self.r_dim.isChecked():
+            self.area = "dimensionado"
+        elif self.r_elab.isChecked():
+            self.area = "elaboracion"
+        elif self.r_carp.isChecked():
+            self.area = "carpinteria"
+        elif self.r_pall.isChecked():
+            self.area = "pallets"
+        elif self.r_sin_trans.isChecked():
+            self.area = "sin_transformacion"
+        else:
+            QMessageBox.warning(self,"FALTAN DATOS","Porfavor Seleccione el Area de la ORDEN DE TRABAJO\nAntes de continuar.")
+            return
+
+        self.accept()
+    def obtener_area(self):
+        return self.area #Devuelve el area de la nueva orden.
 
     
 class Canvas(FigureCanvas):

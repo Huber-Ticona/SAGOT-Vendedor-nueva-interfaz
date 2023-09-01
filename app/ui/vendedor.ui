@@ -801,7 +801,7 @@ border:1px solid orange;
 }</string>
             </property>
             <property name="currentIndex">
-             <number>9</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="inicio">
              <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -2007,6 +2007,19 @@ border:1px solid orange;
                   </widget>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="btn_vale_despacho">
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>GENERAR VALE DESPACHO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="btn_registrar_2">
                    <property name="maximumSize">
                     <size>
@@ -2527,12 +2540,12 @@ Detalle</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>150</width>
+                     <width>200</width>
                      <height>40</height>
                     </size>
                    </property>
                    <property name="text">
-                    <string>DUPLICAR ORDEN</string>
+                    <string>DUPLICAR y/o TRANSPASAR</string>
                    </property>
                   </widget>
                  </item>
