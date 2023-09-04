@@ -1,7 +1,13 @@
 [version 6.06 (16-8-2023)]
-- duplicar orden
+- duplicar orden y transpasar orden implementada
+- es posible modificar items de una orden al duplicarla o trasnpasarla de area.
 - mejora al iniciar app. Se agrego Hilo para separar conexion y no provocar latencia en el arranque de la app.
 - Animacion al realizar la conexion agregada.
+- creacion de voucher realizada.
+- Al crear voucher se añade vinculacion a documento de venta.
+- la impresion se decide por una modalidad: servidor o local.
+- vista previa de voucher añadida.
+
 
 
 [version 6.05 (8-8-2023)]

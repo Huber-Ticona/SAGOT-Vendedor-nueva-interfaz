@@ -801,7 +801,7 @@ border:1px solid orange;
 }</string>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="inicio">
              <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -1497,26 +1497,6 @@ border:1px solid orange;
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="btn_despacho_1">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>200</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>ACTUALIZAR DESPACHO
- A DOMICILIO</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <widget class="QPushButton" name="btn_crear_1">
                    <property name="minimumSize">
                     <size>
@@ -2016,6 +1996,19 @@ border:1px solid orange;
                    </property>
                    <property name="text">
                     <string>GENERAR VALE DESPACHO</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_ver_vale_despacho">
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>VER VALE DESPACHO</string>
                    </property>
                   </widget>
                  </item>

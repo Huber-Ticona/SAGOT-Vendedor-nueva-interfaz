@@ -36,7 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>CREAR VALE DESPACHO</string>
+    <string>VISTA PREVIA</string>
    </property>
   </widget>
   <widget class="QFrame" name="frame">

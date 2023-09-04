@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from  matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import QtCore, uic
 from PyQt5.QtWidgets import QLineEdit,QDialog,QMessageBox,QMainWindow,QCompleter,QTableWidgetItem,QDialogButtonBox,QFormLayout,QApplication,QWidget
-from PyQt5.QtGui import QPixmap , QIcon,QDesktopServices,QMovie,QColor
+from PyQt5.QtGui import QPixmap , QIcon,QDesktopServices,QMovie,QColor,QTransform
 from PyQt5.QtCore import Qt,QEasingCurve, QPropertyAnimation,QEvent,QStringListModel,QSize,QUrl,QTimer
 import rpyc
 import socket
@@ -73,6 +73,8 @@ class Vendedor(QMainWindow):
             "omitir_vinculo_exitoso" : False,
             "rango_dias": 7
         }
+        self.datos_orden = {}  #Datos necesarios para crear,actualizar una orden de trabajo.
+        self.datos_impresion = {} #Datos para impresion voucher.
 #--------------- FUNCIONES GLOBALES ---------
 
         self.cargar_config()
@@ -81,6 +83,7 @@ class Vendedor(QMainWindow):
         self.lista_productos = []
         self.lista_codigos = []
         self.style_line_edit = ""
+        self.aux_doc_venta = {} # Datos temporales de boleta,factura o guia. Usado para almacenar respectivos.
         #Login v6.0
         self.inicializar_login()
         self.btn_iniciar.clicked.connect(self.iniciar_session)
@@ -92,11 +95,11 @@ class Vendedor(QMainWindow):
         self.comboBox_1.currentIndexChanged['QString'].connect(self.filtrar_vendedor)
         self.btn_crear_1.clicked.connect(self.inicializar_crear_orden)
         self.btn_atras_1.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
-        self.btn_despacho_1.clicked.connect(self.asignar_despacho)
 
         #crear orden
         self.btn_registrar_2.clicked.connect(self.registrar_orden)
         self.btn_vale_despacho.clicked.connect(self.registrar_vale_despacho)
+        self.btn_ver_vale_despacho.clicked.connect(self.visualizar_vale_despacho)
         self.btn_atras_2.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
         self.btn_agregar.clicked.connect(self.agregar)
         self.btn_eliminar.clicked.connect(self.eliminar)
@@ -123,7 +126,6 @@ class Vendedor(QMainWindow):
         self.btn_atras_4.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
 
         #modificar orden
-        self.datos_orden = {}  #Datos necesarios para crear,actualizar una orden de trabajo.
         self.detalle = None
         self.aux_obs = '' # respaldo de observacion
         self.datosTablaOrden = None # Respalda la tabla de la orden.
@@ -289,6 +291,13 @@ class Vendedor(QMainWindow):
             self.aux_version = float(config["version"])
             self.lb_version.setText(str(self.version))
 
+        except Exception as e:
+            # Captura la excepción y muestra el mensaje de error
+            print("Error:", str(e))
+        
+        try:
+            self.datos_impresion["imprimir_voucher_en"] = config["imprimir_voucher_en"]
+            self.datos_impresion["nombre_impresora_voucher"] = config["nombre_impresora_voucher"]
         except Exception as e:
             # Captura la excepción y muestra el mensaje de error
             print("Error:", str(e))
@@ -528,7 +537,7 @@ class Vendedor(QMainWindow):
         largo = self.comboBox_1.count()
         if largo > 1:
             for i in range(largo):
-                #print("borranto: " + str(largo - 1) )
+                #print("borranto: " + str(largo - 1) 
                 self.comboBox_1.removeItem(1)
 
         if self.conexion:
@@ -540,6 +549,7 @@ class Vendedor(QMainWindow):
                     inter = int(inter)
                     consulta = self.conexion.root.buscar_venta_interno(inter)
                     guia = self.conexion.root.obtener_guia_interno(inter)
+                    print("(BUSQUEDA X INTERNO): ",consulta)
                     if consulta != None :
                         no_encontrados = False
                         print(consulta[1])
@@ -891,14 +901,19 @@ class Vendedor(QMainWindow):
                 self.tableWidget_2.setColumnWidth(1,650)
                 self.tableWidget_2.setColumnWidth(2,100)
 
-                
-                
-                
+                #------- DATOS PARA VINCULAR VALE DESPACHO A VINCULACIONES DEL DOCUMENTO ------------------#
+                self.aux_doc_venta = {} # Se limpia el contenido.
+                self.aux_doc_venta["interno"] = nro_interno
+                self.aux_doc_venta["tipo_doc"] = aux_tipo_doc
+                self.btn_ver_vale_despacho.hide()
+                self.btn_vale_despacho.show()
                 #------- se rellena la ventana ------------------#
                 try:
                     if aux_tipo_doc != 'GUIA' :
                         items = self.conexion.root.obtener_item_interno(nro_interno)
                         venta = self.conexion.root.obtener_venta_interno(nro_interno) #v5 nombre obtenido
+
+                        self.aux_doc_venta["vinculaciones"] = venta[6]
                         if venta[6]: #Se verifica existencia de vinculaciones.
                             vinculaciones = json.loads(venta[6])
                             print("vinculaciones: ", vinculaciones)
@@ -914,6 +929,16 @@ class Vendedor(QMainWindow):
                             except KeyError:
                                 print('|-- DOC SIN VINCULO(key) A ORDENES ... Continuando a vista crear orden...')
                                 pass
+                            # SE VERIFICA VALE DESPACHO ASOCIADO.
+                            try:
+                                if vinculaciones['vale_id']:
+                                    self.aux_doc_venta["vale_id"] = vinculaciones['vale_id']
+                                    print(f"(DOC_VENTA): TIENE VALE ASOCIADO -> {vinculaciones['vale_id']}.")
+                                    self.btn_ver_vale_despacho.show()
+                                    self.btn_vale_despacho.hide()
+                                    
+                            except KeyError:
+                                print("(DOC_VENTA): SIN VALE ASOCIADO.")
 
                         aux = datetime.fromisoformat(str(venta[3] ) )
                         self.fecha_venta = aux
@@ -938,6 +963,7 @@ class Vendedor(QMainWindow):
 
                     else:
                         guia = self.conexion.root.obtener_guia_interno(nro_interno)
+                        self.aux_doc_venta["vinculaciones"] = guia[6]
                         if guia[6]:
                             vinculaciones = json.loads(guia[6])
                             print("vinculaciones: ", vinculaciones)
@@ -953,6 +979,18 @@ class Vendedor(QMainWindow):
                             except KeyError:
                                 print('|-- DOC SIN VINCULO(key) A ORDENES ... Continuando a vista crear orden...')
                                 pass
+                            # SE VERIFICA VALE DESPACHO ASOCIADO.
+                            try:
+                                if vinculaciones['vale_id']:
+                                    self.aux_doc_venta["vale_id"] = vinculaciones['vale_id']
+                                    print(f"(DOC_VENTA): TIENE VALE ASOCIADO -> {vinculaciones['vale_id']}.")
+                                    self.btn_ver_vale_despacho.show()
+                                    self.btn_vale_despacho.hide()
+                                    
+                            except KeyError:
+                                print("(DOC_VENTA): SIN VALE ASOCIADO.")
+                                self.btn_ver_vale_despacho.hide()
+                                self.btn_vale_despacho.show()
 
                         #print(guia)
                         detalle = json.loads(guia[2])
@@ -1021,43 +1059,7 @@ class Vendedor(QMainWindow):
         else:
             QMessageBox.about(self,'ERROR', 'Seleccione una Fila antes de continuar')
 
-    def asignar_despacho(self):
-        seleccion = self.tableWidget_1.currentRow()
-        if seleccion != -1:
-            _item = self.tableWidget_1.item( seleccion, 0) 
-            if _item:            
-                interno = self.tableWidget_1.item(seleccion, 0 ).text()
-                aux_tipo_doc = self.tableWidget_1.item(seleccion, 1 ).text()
-                estado = self.tableWidget_1.item(seleccion, 7 ).text()
-                nro_interno = int(interno)
-                self.inter = nro_interno
-
-                print('-------------- ASIGNAR DESPACHO DOMICILIO ... para: '+ aux_tipo_doc+ ' ' + str(nro_interno) + '----------------')
-                dialog = InputDialog3(aux_tipo_doc, str(nro_interno), estado ,self)
-                if dialog.exec():
-                    print('dialog cerrado')
-                    new_estado = dialog.getInputs()
-                    aux = 'Estado actual: '+ estado +' | Estado Obtenido: ' + new_estado
-                    print(aux)
-
-                    if estado == new_estado:
-                        print('MISMOS ESTADOS, NO SE DETECTO CAMBIO')
-                        QMessageBox.about(self,'INFORMACIÓN', 'NO SE DETECTARON CAMBIOS\n' + aux )
-                    else:
-                        print('ESTADOS DISTINTOS, CAMBIO DETECTADO')
-                        try:
-                            if self.conexion.root.actualizar_despacho(aux_tipo_doc, nro_interno, new_estado):
-                                print('ASIGNACION DEL DESPACHO EXITOSO')
-                                self.tableWidget_1.setRowCount(0)
-                                QMessageBox.about(self,'EXITO', 'DESPACHO A DOMICILIO ASIGNADO CORRECTAMENTE')
-                            else:
-                                print('ASIGNACION DEL DESPACHO ERRONEA, intentelo mas tarde o contacte al soporte')
-                                QMessageBox.warning(self,'PELIGRO', 'ASIGNACION DEL DESPACHO ERRONEA, intentelo mas tarde o contacte al soporte')
-                        except EOFError:
-                            self.conexion_perdida()
-                print('-----------------------------------------------------------')
-        else:
-            QMessageBox.about(self,'ERROR', 'Seleccione una Fila antes de continuar')    
+     
     def rellenar(self):
         if self.items != ():
             self.tableWidget_2.setRowCount(0)
@@ -1111,7 +1113,7 @@ class Vendedor(QMainWindow):
         }
         dialog = ValeDespacho(config,self )
         if dialog.exec():
-            print("Dialog cerrado.")
+            print("Dialog ACEPTADO.")
             datos = dialog.obtener_datos_validos()
             datos["vendedor"] = self.datos_usuario[8]
             datos["interno"] = self.inter
@@ -1121,12 +1123,47 @@ class Vendedor(QMainWindow):
                 try:
                     vale_id = self.conexion.root.registrar_vale_despacho(datos)
                     if vale_id:
+                        # SE ASIGNA DESPACHO 'SI' A DOC VENTA.
+                        try:
+                            if self.conexion.root.actualizar_despacho(self.aux_doc_venta["tipo_doc"], self.aux_doc_venta["interno"], 'SI'):
+                                print('ASIGNACION DEL DESPACHO EXITOSO')
+                            else:
+                                print('ASIGNACION DEL DESPACHO ERRONEA, intentelo mas tarde o contacte al soporte')
+                                QMessageBox.warning(self,'PELIGRO', 'ASIGNACION DEL DESPACHO ERRONEA, intentelo mas tarde o contacte al soporte')
+                        except EOFError:
+                            self.conexion_perdida()
+
                         print("Vale creado exitosamente. id: ", vale_id)
-                        QMessageBox.about(self,"Vale registrado",f"Se genero el vale Nro {vale_id} exitosamente.")
+                        print("(AUX_DOC_VENTA): ",self.aux_doc_venta)
+                        try:
+                            if self.aux_doc_venta["vinculaciones"]:
+                                vinculaciones = json.loads(self.aux_doc_venta["vinculaciones"])
+                            else:
+                                vinculaciones = {}
+                            print("VINCULACIONES ACTUAL: ",vinculaciones)
+                            vinculaciones["vale_id"] = vale_id 
+                            print("VINCULACIONES DESPUES: ",vinculaciones)
+                            vinculaciones = json.dumps(vinculaciones)
+                            self.aux_doc_venta["vinculaciones"] = vinculaciones
+
+                            self.conexion.root.actualizar_vinculaciones(self.aux_doc_venta)
+
+
+
+                        except KeyError:
+                            print("Error de clave, no se encontro detalle en auxdocventa.")
                         """ datos.pop('interno')
                         datos.pop('vendedor')
                         Imagen.crear_vale_despacho(datos) """
-                        self.conexion.root.imprimir_vale_despacho(vale_id)
+                        
+
+                        boton = QMessageBox.question(self,
+                        "Vale registrado",
+                        f"Se genero el vale Nro {vale_id} exitosamente.\nDesea imprimir el vale desspacho?")
+                        if boton == QMessageBox.Yes:
+                            #self.ver_pdf(datos_pdf["tipo"])
+                            self.imprimir_voucher(vale_id)
+
                     else:
                         print("error al crear vale.")
                         QMessageBox.about(self,"ERROR",f"Se genero un error al generar el vale.")
@@ -1138,6 +1175,43 @@ class Vendedor(QMainWindow):
                 self.conexion_perdida()
         
         print("|-- FIN VISTA CREAR VALE DESPACHO. --")
+
+    def visualizar_vale_despacho(self):
+        vale_id = self.aux_doc_venta["vale_id"]
+        print(f"(VISUALIZANDO): VALE DESPACHO ID: {vale_id}")
+
+        resultado = self.conexion.root.obtener_vale_despacho_x_id(vale_id)
+        params = dict(
+        nombre = resultado[0],
+        direccion = resultado[1],
+        referencia = resultado[2],
+        telefono = resultado[3],
+        contacto = resultado[4],
+        fecha_estimada = str(resultado[5])
+        )
+        Imagen.crear_voucher(params)
+
+        dialog = VistaPrevia("imprimir", self)
+        if dialog.exec():
+            print("VISTA PREVIA ACEPTADA")
+            self.imprimir_voucher(vale_id=vale_id)
+            
+        print("(VISUALIZANDO): FIN. ")
+
+    def imprimir_voucher(self,vale_id):
+        print(" ******** IMPRIMIENDO VALEEE ********")
+
+        if self.datos_impresion["imprimir_voucher_en"] == "servidor":
+            print("|-- IMPRIMIENDO VOUCHER EN EL SERVIDOR...")
+            self.conexion.root.imprimir_vale_despacho(vale_id)
+        elif self.datos_impresion["imprimir_voucher_en"] == "local":
+            print("|-- IMPRIMIENDO VOUCHER LOCALMENTE ...")
+            status, mensaje = Imagen.imprimir_voucher(self.datos_impresion["nombre_impresora_voucher"])
+            QMessageBox.information(self, "IMPRESION", mensaje)
+            
+        self.tableWidget_1.setRowCount(0)
+        self.stackedWidget.setCurrentWidget(self.buscar_venta)
+        print("**************** FIN IMPRESION ****************")
 
     def registrar_orden(self):
         nombre = self.nombre_2.text().upper() #v5.9
@@ -4903,10 +4977,21 @@ class ValeDespacho(QDialog):
                 print(f"|(QDialog)| Key: {key} no cumple el limite {limites_min[index]}.")
                 estado = False
             index +=1
+            
         if estado:
-            self.accept()
+            new_params = self.obtener_datos_validos()
+            Imagen.crear_voucher(new_params)
+
+            dialog = VistaPrevia("generar",self)
+            if dialog.exec():
+                print("VISTA PREVIA ACEPTADA")
+                self.accept() 
+            else:
+                print("vista previa rechazada.")
         else:
             QMessageBox.about(self,"Datos Incompletos", "Algun dato incorrecto.")
+
+        
 
     def obtener_datos_validos(self):
         print("(QDialog) Obteniendo datos...")
@@ -4948,6 +5033,33 @@ class Duplicar(QDialog):
         self.accept()
     def obtener_area(self):
         return self.area #Devuelve el area de la nueva orden.
+class VistaPrevia(QDialog):
+    def __init__(self,modo ,parent = None):
+        super().__init__(parent)
+        uic.loadUi("app/ui/vista_previa_voucher.ui",self)
+        self.modo = modo
+        self.rotateImageAndSetLabel("app/icono_imagen/test.png", -90 )
+        self.btn_aceptar.clicked.connect(self.accept)
+        self.btn_cancelar.clicked.connect(self.reject)
+        self.inicializar()
+        
+    def inicializar(self):
+        if self.modo == "generar":
+            self.btn_aceptar.setText("GENERAR VALE DESPACHO")
+        elif self.modo == "imprimir":
+            self.btn_aceptar.setText("IMPRIMIR VALE DESPACHO")
+
+    def rotateImageAndSetLabel(self, image_path, angle):
+        pixmap = QPixmap(image_path)
+        if not pixmap.isNull():
+            # Rotar la imagen
+            transform = QTransform().rotate(angle)
+            rotated_pixmap = pixmap.transformed(transform, mode=Qt.SmoothTransformation)
+            
+            # Establecer la imagen rotada en el QLabel
+            self.lb_voucher.setPixmap(rotated_pixmap)
+        else:
+            self.lb_voucher.setText("No se pudo cargar la vista previa. \nContacte al soporte.")
 
     
 class Canvas(FigureCanvas):

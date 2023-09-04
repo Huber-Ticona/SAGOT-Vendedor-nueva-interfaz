@@ -17,5 +17,7 @@
     "omitir_uso_carpinteria": true,
     "omitir_vinculo_exitoso": true,
     "rango_dias": 7,
-    "test": "test"
+    "imprimir_voucher_en": "local",
+    "nombre_impresora_voucher": "POS-80C",
+    "__comentario_voucher__": "Puede tener 2 opciones: 'servidor' -> voucher se imprime en impresora o 'local' se imprime en pc"
 }

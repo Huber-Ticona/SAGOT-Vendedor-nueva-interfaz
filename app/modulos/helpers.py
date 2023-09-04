@@ -1,6 +1,7 @@
 
 from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageWin
 import win32ui
+from datetime import datetime
 
 class Imagen():
     valor = 222
@@ -12,7 +13,7 @@ class Imagen():
         print('hola22222222 desde imagen, val: ' , self.valor)
 
     @staticmethod
-    def crear_vale_despacho(datos):
+    def crear_voucher(datos):
         """ Parametros voucher Despacho """
         """ params = dict(
             nombre = "jose gutierrez",
@@ -20,9 +21,13 @@ class Imagen():
             referencia = "don guti",
             telefono = "+56 19028822",
             contacto = 'gitu@gmalin.com',
-            fecha_estimada_entrega = "2023-01-22"
+            fecha_estimada = "2023-01-22"
             ) """
         params = datos
+        fecha_estimada = datetime.fromisoformat(str(datos["fecha_estimada"])) 
+        fecha_estimada = str(fecha_estimada.strftime("%d-%m-%Y %H:%M:%S"))
+        params["fecha_estimada"] = fecha_estimada
+
         print("|--Params: " ,params)
         print(f"|-- Len: {len(params)}")
         for key,value in params.items():
@@ -32,7 +37,6 @@ class Imagen():
         dir_imagenes = "app/icono_imagen"
         nombre_imagen_final = "test.png"
 
-        print("|-- Abriendo imagen ...")
         #imagen = Image.open("app/icono_imagen/madenco logo.png")
         #INSERTANDO FECHA,tipo y folio
         #draw = ImageDraw.Draw(imagen)
@@ -66,21 +70,23 @@ class Imagen():
 
         margin_salto_linea = 150
         for key,value in params.items():
-            draw.text( (0, margin_salto_linea ),f"{key}: {value}", (0,0,0) ,font=font)
+            draw.text( (0, margin_salto_linea ),f"{key.upper()}:  {value.upper()}", (0,0,0) ,font=font)
             margin_salto_linea += 40
 
 
         filename = f"{dir_imagenes}/{nombre_imagen_final}"
+        img = img.rotate(-90,expand=True) #Se rota
         img.save(filename)
         print("|-- Imagen final guardada ...")
-    @staticmethod
-    def imprimir_cupon():
-        try:
-            print("Imprimiendo...")
 
+    @staticmethod
+    def imprimir_voucher(nombre_impresora):
+        print("Imprimiendo...")
+        try:
             file_name = "app/icono_imagen/test.png"
             #printer_name = "192.168.1.94"
-            printer_name = "POS-80C"
+            printer_name = nombre_impresora
+            print("(NOMBRE IMPRESORA): ",printer_name)
 
             hDC = win32ui.CreateDC()
             hDC.CreatePrinterDC(printer_name)
@@ -127,7 +133,7 @@ class Imagen():
             hDC.EndDoc ()
             hDC.DeleteDC ()
             print("Impresion finalizada")
-
-            return True
-        except:
-            return False
+            return True , "Voucher Impreso con exito."
+        except Exception as e:
+            print("ERROR: ",e)
+            return False , str(e)
