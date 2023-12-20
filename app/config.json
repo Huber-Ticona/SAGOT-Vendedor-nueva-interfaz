@@ -1,5 +1,5 @@
 {
-    "version": 6.06,
+    "version": 6.07,
     "environment": "development",
     "development": {
         "host": "127.0.0.1",
@@ -17,7 +17,15 @@
     "omitir_uso_carpinteria": true,
     "omitir_vinculo_exitoso": true,
     "rango_dias": 7,
-    "imprimir_voucher_en": "local",
-    "nombre_impresora_voucher": "POS-80C",
-    "__comentario_voucher__": "Puede tener 2 opciones: 'servidor' -> voucher se imprime en impresora o 'local' se imprime en pc"
+    "imprimir_voucher_en": "servidor",
+    "nombre_impresora_voucher": "192.168.1.94",
+    "__comentario_voucher__": "Puede tener 2 opciones: 'servidor' -> voucher se imprime en impresora o 'local' se imprime en pc",
+    "limites_params_vale": {
+        "nombre": 3,
+        "direccion": 5,
+        "referencia": 0,
+        "telefono": 9,
+        "contacto": 0
+    },
+    "url_google_form": "https://forms.gle/DNneSpLueTrZvLoU7"
 }

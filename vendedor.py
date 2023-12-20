@@ -23,7 +23,7 @@ from subprocess import Popen
 from concurrent.futures import ThreadPoolExecutor
 from random import randint
 
-from app.modulos.helpers import Imagen
+from app.modulos.helpers import Imagen, Funciones
 
 class Vendedor(QMainWindow):
     ventana_login = 0
@@ -98,7 +98,7 @@ class Vendedor(QMainWindow):
 
         #crear orden
         self.btn_registrar_2.clicked.connect(self.registrar_orden)
-        self.btn_vale_despacho.clicked.connect(self.registrar_vale_despacho)
+        self.btn_vale_despacho.clicked.connect(lambda: self.registrar_vale_despacho(None) ) #Sin datos extras
         self.btn_ver_vale_despacho.clicked.connect(self.visualizar_vale_despacho)
         self.btn_atras_2.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.buscar_venta))
         self.btn_agregar.clicked.connect(self.agregar)
@@ -222,6 +222,7 @@ class Vendedor(QMainWindow):
         self.btn_configuracion.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.configuracion))
         self.btn_inicio.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.inicio))
         self.btn_retiros.clicked.connect( lambda: QDesktopServices.openUrl(QUrl( self.url_retiros )))
+
         #SIDE MENU BOTONES
         self.btn_buscar.clicked.connect(self.inicializar_buscar_venta)
         self.btn_modificar.clicked.connect(self.inicializar_buscar_orden)
@@ -438,16 +439,25 @@ class Vendedor(QMainWindow):
         #self.buscar_actualizacion() v6.05 Se creo un launcher
 
         self.stackedWidget.setCurrentWidget(self.inicio)
-        # Se registran las conexiones de los botones
+        """# Se registran las conexiones de los botones
         button_connections = {
             self.btn_ver_pdf: self.ver_pdf,
             self.btn_crear_pdf: self.crear_pdf,
             # ... y así sucesivamente para todos los botones
         }
 
-        """ for button, function in button_connections.items():
+         for button, function in button_connections.items():
             button.clicked.connect(function) """
         
+        # Crear un QTextEdit para mostrar el contenido del archivo
+        print("|-- Leyendo historial ...")
+        self.txt_historial.setReadOnly(True)
+
+        # Leer el contenido del archivo y establecerlo en el QTextEdit
+        with open( "Historial_de_versiones.txt", 'r') as file:
+            content = file.read()
+            print("|-- len content historial: ", len(content))
+            self.txt_historial.setPlainText(content)
 
         print('#'*55)
     
@@ -1105,13 +1115,23 @@ class Vendedor(QMainWindow):
             self.telefono_2.setText(str(self.telefonos[index]))
             self.contacto_2.setText(str(self.contactos[index]))
         print('------- QCOMPLETE FIN --------------')
+     
 
-    def registrar_vale_despacho(self):
+    def registrar_vale_despacho(self,data):
         print("|-- Visualizando VISTA CREAR VALE DESPACHO ...")
+        if not data:
+            print("|-- Datos extras no obtenidos --> Sin Orden de trabajo.")
+            data = {
+                    "nombre" : self.nombre_2.text().upper(),
+                    "telefono" : str(self.telefono_2.text()) ,
+                    "contacto" : self.contacto_2.text().upper()
+                }
+
         config = {
-            "model_nombres" : self.nombres
+            "model_nombres" : self.nombres,
+            "aux_params" : data
         }
-        dialog = ValeDespacho(config,self )
+        dialog = ValeDespacho(config, self.conexion ,self )
         if dialog.exec():
             print("Dialog ACEPTADO.")
             datos = dialog.obtener_datos_validos()
@@ -1119,6 +1139,9 @@ class Vendedor(QMainWindow):
             datos["interno"] = self.inter
             print("Datos: ",datos)
             
+            print("(END)")
+            return 
+        
             if self.conexion:
                 try:
                     vale_id = self.conexion.root.registrar_vale_despacho(datos)
@@ -1214,6 +1237,7 @@ class Vendedor(QMainWindow):
         print("**************** FIN IMPRESION ****************")
 
     def registrar_orden(self):
+        print('|-- INICIANDO REGISTRO DE ORDEN DE TRABAJO ...')
         nombre = self.nombre_2.text().upper() #v5.9
         telefono = self.telefono_2.text()
         cont = self.contacto_2.text().upper() #5.9
@@ -1280,14 +1304,15 @@ class Vendedor(QMainWindow):
                             datos_pdf = { "tipo": "" , "facturar" : "NO" }
                             watermarks = []
                             self.nro_orden = 0
-
+                            # v6.07 Posible cambio a despachos.. 
+                            # Solamente el vale despacho puede modificar el estado despacho de una nota_venta.
                             if self.r_despacho.isChecked():
                                 despacho = 'SI'
                                 watermarks.append('despacho') #v5.9
-                                if self.conexion.root.actualizar_despacho(self.tipo_doc, self.inter , despacho):
+                                """ if self.conexion.root.actualizar_despacho(self.tipo_doc, self.inter , despacho):
                                     print('ORDEN CON DESPACHO -> CONFIRMA NOTA VENTA con DESPACHO.')
                                 else:
-                                    print('ORDEN CON DESPACHO ->Erro al actualizar DESPACHO A NOTA VENTA')
+                                    print('ORDEN CON DESPACHO ->Erro al actualizar DESPACHO A NOTA VENTA') """
 
                             # REGISTRO DE ORDEN DE TRABAJO
                             if self.r_dim.isChecked():
@@ -1319,10 +1344,28 @@ class Vendedor(QMainWindow):
                                 print(f'Creando PDF {datos_pdf["tipo"]} ...')
                                 datos = ( str(self.nro_orden) , str(fecha_orden.strftime("%d-%m-%Y")), nombre , telefono, str(fecha.strftime("%d-%m-%Y")) , cantidades, descripciones, enchape, cont,oce,self.vendedor)
                                 self.crear_pdf(datos, datos_pdf ,watermarks)
-                                self.inicializar_buscar_venta()
+                                
                                 boton = QMessageBox.question(self, f'Orden de {datos_pdf["tipo"]} registrada correctamente', 'Desea abrir la Orden?')
                                 if boton == QMessageBox.Yes:
                                     self.ver_pdf(datos_pdf["tipo"])
+                                
+                                if self.r_despacho.isChecked():
+                                    print("|-- CHECK Despacho domicilio Detectado ...")
+                                    print("|-- Procediendo a crear vale despacho manteniendo datos de orden...")
+
+                                    data = {
+                                        "nombre" : nombre,
+                                        "telefono" : telefono,
+                                        "contacto" : cont
+                                    }
+                                    self.registrar_vale_despacho(data)
+
+                                    """ nombre 
+                                    telefono 
+                                    cont  """
+                            print("|-- FIN REGISTRAR ORDEN DE TRABAJO.")
+                            self.inicializar_buscar_venta()
+
                             
                         except EOFError:
                             self.conexion_perdida()
@@ -4140,6 +4183,7 @@ class Vendedor(QMainWindow):
         print('|-- Obteniendo Clientes de ordenes ' )
         try:
             datos = self.conexion.root.obtener_clientes_de_ordenes()
+            print("(datos clientes ordenes type ): ", type(datos))
             #print(str(len(datos)))
             #print(str(type(datos)))
             #print('ordenes   | len: ' + str(len(datos)) + ' | type: '+ str(type(datos)))
@@ -4932,11 +4976,27 @@ class Extra(QDialog):
         self.reject()
 
 class ValeDespacho(QDialog):
-    def __init__(self , config , parent = None):
+    def __init__(self , config ,conn, parent = None):
         super().__init__(parent)
         uic.loadUi("app/ui/vale_despacho.ui", self)
         self.config = config
-        self.completer = QCompleter()
+        self.conexion = conn
+
+        self.nombres = [] #nombres
+        self.direcciones = [] #codigo
+        self.referencias = [] #descripcion
+        self.telefonos = [] #descripcion
+        self.contactos= [] #descripcion
+
+        self.completer_nombre = QCompleter()
+        self.completer_nombre.activated.connect(self.rellenar_datos_cliente)
+
+        self.completer_direccion = QCompleter()
+        self.completer_referencia = QCompleter()
+        self.completer_telefono = QCompleter()
+        self.completer_contacto = QCompleter()
+
+        self.limites_vale = [0,0,0,0,0]
         self.btn_crear_vale.clicked.connect(self.validar_datos) # Se acepta el dialog.
         self.btn_cancelar.clicked.connect(self.reject)
         self.inicializar()
@@ -4947,20 +5007,109 @@ class ValeDespacho(QDialog):
 
         self.dt_fecha_estimada.setCalendarPopup(True)
         fecha_actual = datetime.now()
+
+        # Añadir 3 días a la fecha actual
+        fecha_actual = fecha_actual + timedelta(days=3)
+
         self.dt_fecha_estimada.setDate( fecha_actual.date() )
         self.dt_fecha_estimada.setTime( fecha_actual.time() )
 
-        print(type(self.config["model_nombres"]))
+        if self.config["aux_params"]:
+            print(f"|(Vale despacho): Aux_params -> |{self.config['aux_params']}| type: {type(self.config['aux_params'] )} ")
+            self.txt_nombre.setText(self.config['aux_params']['nombre'])
+            self.txt_telefono.setText(str(self.config['aux_params']['telefono']))
+            self.txt_contacto.setText(self.config['aux_params']['contacto'])
+
+        """ print(type(self.config["model_nombres"]))
         model = QStringListModel(self.config["model_nombres"])
         
-        self.completer.setModel(model)
-        self.completer.setMaxVisibleItems(7)
-        self.completer.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+        self.completer_nombre.setModel(model)
+        self.completer_nombre.setMaxVisibleItems(7)
+        self.completer_nombre.setCaseSensitivity(0)  # 0: no es estricto con mayus | 1: es estricto con mayus
         #print(self.completer.filterMode()) #filtermode podria ser: coincidencias de inicio, fin o que basta que contenga.
-        self.txt_nombre.setCompleter(self.completer)
+        self.txt_nombre.setCompleter(self.completer_nombre)"""
+        #Se cargan COMPLETERS DE direccion ,referencia, telefono,contacto
+        if self.conexion:
+            try:
+                print("(VALEDESPACHO): OBTENIENDO ESTADISTICAS DE TODOS LOS VALES.")
+                resultado = self.conexion.root.obtener_vale_despacho_completer()
+                print("(RESULTADO TYPE)  : " ,type(resultado))
+                if resultado:
+                    datos = pd.DataFrame(resultado) #(nombre,direccion,referencia,telefono,contacto,fecha_estimada,fecha_real,vendedor,interno)
+                    self.nombres = datos[0].tolist() #nombres
+                    self.direcciones = datos[1].tolist() #codigo
+                    self.referencias = datos[2].tolist() #descripcion
+                    self.telefonos = datos[3].tolist() #descripcion
+                    self.contactos= datos[4].tolist() #descripcion
+
+                    model = QStringListModel(self.nombres)
+                    self.completer_nombre.setModel(model)
+                    self.completer_nombre.setMaxVisibleItems(7)
+                    self.completer_nombre.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                    self.txt_nombre.setCompleter(self.completer_nombre)
+
+    
+                    model = QStringListModel( list(set(self.direcciones)) ) #v6.07
+                    self.completer_direccion.setModel(model)
+                    self.completer_direccion.setMaxVisibleItems(7)
+                    self.completer_direccion.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                    self.txt_direccion.setCompleter(self.completer_direccion)
+
+                    model = QStringListModel( list(set(self.referencias)) ) #v6.07
+                    self.completer_referencia.setModel(model)
+                    self.completer_referencia.setMaxVisibleItems(7)
+                    self.completer_referencia.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                    self.txt_referencia.setCompleter(self.completer_referencia)
+
+                    model = QStringListModel( list(set(self.telefonos)) ) #v6.07
+                    self.completer_telefono.setModel(model)
+                    self.completer_telefono.setMaxVisibleItems(7)
+                    self.completer_telefono.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                    self.txt_telefono.setCompleter(self.completer_telefono)
+
+                    model = QStringListModel( list(set(self.contactos)) ) #v6.07
+                    self.completer_contacto.setModel(model)
+                    self.completer_contacto.setMaxVisibleItems(7)
+                    self.completer_contacto.setCaseSensitivity(0) # 0: no es estricto con mayus | 1: es estricto con mayus
+                    self.txt_contacto.setCompleter(self.completer_contacto)
+
+            except EOFError:
+                QMessageBox(self,"ERROR DE CONEXION", "Se perdio la conexion con el servidor.")
+                pass
+            except Exception as e:
+                print("(ERROR): OTRO ERROR DETECTADO -> ", str(e))
+                
+        # Se cargan config limites.
+        with open("app/config.json", "r") as f:
+            config = json.load(f)
+        try:
+            self.limites_vale = config["limites_params_vale"]
+        except KeyError:
+            print("(VALE DESPACHO): ERROR AL CARGAR LIMITES DE CONFIG.")
+            pass
+    def rellenar_datos_cliente(self):
+         
+        print('------- QCOMPLETE VALE DESPACHO ACTIVADO --------------')
+        nombre_cliente = self.txt_nombre.text()
+        print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+        try:
+            index = self.nombres.index(nombre_cliente)
+        except ValueError:
+            index = -1
+
+        if index >= 0:
+            #nombre_cliente = nombre_cliente.rstrip()
+            #print('Nombre: ' + nombre_cliente + ' | LEN: ' + str(len(nombre_cliente)) )
+            self.txt_direccion.setText(str(self.direcciones[index]))
+            self.txt_referencia.setText(str(self.referencias[index]))
+            self.txt_telefono.setText(str(self.telefonos[index]))
+            self.txt_contacto.setText(str(self.contactos[index]))
+
+        print('------- QCOMPLETE VALE DESPACHO FIN --------------')
 
     def validar_datos(self):
-        limites_min = [3,5,5,8,3]
+        limites_min = self.limites_vale #[nombre,direccion,referencia,telefono,contacto]
+        print("(VALE DESPACHO): Limites -> ", self.limites_vale )
         params = dict(
             nombre = self.txt_nombre.text() ,
             direccion = self.txt_direccion.text(),
@@ -4968,17 +5117,26 @@ class ValeDespacho(QDialog):
             telefono = self.txt_telefono.text(),
             contacto = self.txt_contacto.text()
             )
-        index = 0
+        incompletos = "Cantidades Minimas: \n "
         estado = True
         for key,value in params.items():
-            if len(value) >= limites_min[index]:
-                print(f"|(QDialog)| Key: {key} cumple el limite {limites_min[index]}.")
+            if len(value) >= limites_min[key]:
+                print(f"|(QDialog)| Key: {key} cumple el limite {limites_min[key]}.")
             else:
-                print(f"|(QDialog)| Key: {key} no cumple el limite {limites_min[index]}.")
+                print(f"|(QDialog)| Key: {key} no cumple el limite {limites_min[key]}.")
+                incompletos = incompletos + f"| Min  {str(key)} : {str(limites_min[key])} | " 
                 estado = False
-            index +=1
-            
+
         if estado:
+            # VALIDAR NUMERO TELEFONICO
+            pais_code = self.txt_code_telefono.text()
+            telefono = self.txt_telefono.text()
+            status , mensaje = Funciones.validar_telefono(pais_code, telefono)
+            if not status:
+                print(mensaje)
+                QMessageBox.about(self,"Numero de telefono", mensaje )
+                return
+                
             new_params = self.obtener_datos_validos()
             Imagen.crear_voucher(new_params)
 
@@ -4989,7 +5147,7 @@ class ValeDespacho(QDialog):
             else:
                 print("vista previa rechazada.")
         else:
-            QMessageBox.about(self,"Datos Incompletos", "Algun dato incorrecto.")
+            QMessageBox.about(self,"Datos Incompletos", str(incompletos) )
 
         
 
@@ -5001,7 +5159,7 @@ class ValeDespacho(QDialog):
             nombre = self.txt_nombre.text() ,
             direccion = self.txt_direccion.text(),
             referencia = self.txt_referencia.text(),
-            telefono = self.txt_telefono.text(),
+            telefono = self.txt_code_telefono.text().strip() + self.txt_telefono.text().strip(),
             contacto = self.txt_contacto.text(),
             fecha_estimada = str(self.dt_fecha_estimada.dateTime().toPyDateTime())
             )

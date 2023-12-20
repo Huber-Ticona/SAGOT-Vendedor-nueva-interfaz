@@ -1,3 +1,17 @@
+[version 6.08 (2-10-2023)]
+- (En espera)(Olvidado) Vale de despacho actualizado -> QR CODE agregado para redirigir a formulario google POST VENTA.
+- Mejora al crear un vale despacho. Se añade el campo codigo de pais, se realiza la validacion del codigo de pais 
+  y numero telefonico.
+
+ 
+[version 6.07 (2-10-2023)]
+- Al crear una orden con despacho a domicilio: automaticamente se solicita generar vale despacho domicilio.
+- Al crear una orden con despacho a domicilio: automaticamente se rellena nombre,telefono,contacto.
+- En la vista para rellenar los datos de un VALE DESPACHO: Al seleccionar un nombre del COMPLETER
+  se autorellenan todos los demas datos segun los registros de vales anteriores.
+- Los despachos a domicilio se registran solamente cuando se genera el vale de despacho a domicilio. Evitando el
+  despacho cuando se generaba una orden de trabajo con timbre despacho.
+
 [version 6.06 (16-8-2023)]
 - duplicar orden y transpasar orden implementada
 - es posible modificar items de una orden al duplicarla o trasnpasarla de area.
